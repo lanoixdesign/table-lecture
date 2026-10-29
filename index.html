@@ -289,7 +289,7 @@ function placeCard(r){
   x=Math.max(m,Math.min(W-cw-m,x));y=Math.max(80,Math.min(H-ch-84,y));
   cardEl.style.left=x+"px";cardEl.style.top=y+"px";
 }
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&","<":"<",">":">",'"':"""}[c]));}
+function esc(s){const d=document.createElement("div");d.textContent=String(s);return d.innerHTML;}
 
 /* ================= DÉTECTION ================= */
 function pickBest(preds){
