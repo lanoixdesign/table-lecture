@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#00141a">
+<title>Table de lecture — Analyse holographique</title>
+<style>
+:root{--c:#00f0ff;--c2:#7ffcff;--bg:#00090d;--warn:#ffb347}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--c);font-family:"Share Tech Mono","Consolas","Courier New",monospace;overflow:hidden}
+#stage{position:fixed;inset:0}
+video,#frozen{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#frozen{display:none}
+#ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,240,255,.05) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+.scan::after{content:"";position:absolute;left:0;right:0;height:18%;top:-20%;background:linear-gradient(180deg,transparent,rgba(0,240,255,.18),transparent);animation:sweep 3.2s linear infinite}
+@keyframes sweep{to{top:110%}}
+.vign{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 120px rgba(0,0,0,.85)}
+.corner{position:absolute;width:34px;height:34px;border:2px solid var(--c);opacity:.7;pointer-events:none}
+.tl{top:calc(env(safe-area-inset-top) + 10px);left:10px;border-right:0;border-bottom:0}
+.tr{top:calc(env(safe-area-inset-top) + 10px);right:10px;border-left:0;border-bottom:0}
+.bl{bottom:calc(env(safe-area-inset-bottom) + 84px);left:10px;border-right:0;border-top:0}
+.br{bottom:calc(env(safe-area-inset-bottom) + 84px);right:10px;border-left:0;border-top:0}
+#hud{position:absolute;top:calc(env(safe-area-inset-top) + 14px);left:54px;right:54px;font-size:11px;letter-spacing:2px;text-shadow:0 0 6px var(--c);display:flex;justify-content:space-between;pointer-events:none}
+#status{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 40px);transform:translateX(-50%);font-size:12px;letter-spacing:3px;padding:6px 14px;border:1px solid rgba(0,240,255,.5);background:rgba(0,20,26,.6);text-shadow:0 0 8px var(--c);white-space:nowrap;pointer-events:none}
+#status.blink{animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+#bar{position:absolute;left:0;right:0;bottom:0;padding:12px 12px calc(env(safe-area-inset-bottom) + 12px);display:flex;gap:8px;justify-content:center;background:linear-gradient(0deg,rgba(0,9,13,.95),transparent)}
+button,.btn{font:inherit;font-size:12px;letter-spacing:2px;color:var(--c);background:rgba(0,30,38,.7);border:1px solid var(--c);padding:12px 12px;border-radius:2px;text-transform:uppercase;box-shadow:0 0 10px rgba(0,240,255,.25),inset 0 0 10px rgba(0,240,255,.15);cursor:pointer;flex:1;max-width:170px;text-align:center}
+button.on{background:var(--c);color:#001218}
+#file{display:none}
+/* card */
+#card{position:absolute;width:min(300px,78vw);max-height:62vh;overflow:auto;padding:14px 14px 12px;background:linear-gradient(160deg,rgba(0,40,52,.82),rgba(0,12,18,.88));border:1px solid var(--c);box-shadow:0 0 18px rgba(0,240,255,.45),inset 0 0 24px rgba(0,240,255,.12);clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));opacity:0;transform:scale(.92);transition:opacity .35s,transform .35s;pointer-events:auto;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+#card.show{opacity:1;transform:scale(1)}
+#card::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,240,255,.06) 0 1px,transparent 1px 3px);pointer-events:none}
+#card .id{font-size:10px;opacity:.7;letter-spacing:2px;display:flex;justify-content:space-between}
+#card h2{font-size:22px;margin:6px 0 2px;color:#e8feff;text-shadow:0 0 10px var(--c);letter-spacing:1px}
+#card .cat{display:inline-block;font-size:10px;letter-spacing:2px;border:1px solid var(--c);padding:2px 6px;margin:4px 0 8px}
+#card .conf{height:4px;background:rgba(0,240,255,.15);margin:4px 0 10px}
+#card .conf i{display:block;height:100%;background:var(--c);box-shadow:0 0 8px var(--c);width:0;transition:width .8s}
+#card p{font-size:13px;line-height:1.45;color:#cffcff}
+#card h3{font-size:11px;letter-spacing:3px;margin:10px 0 4px;color:var(--c2)}
+#card ul{list-style:none;font-size:12px;line-height:1.4;color:#bff6ff}
+#card li{padding-left:14px;position:relative;margin-bottom:4px}
+#card li::before{content:"▸";position:absolute;left:0;color:var(--c)}
+#card .src{font-size:9px;opacity:.55;margin-top:8px;letter-spacing:1px}
+.type{border-right:2px solid var(--c);animation:caret .7s steps(2) infinite}
+@keyframes caret{50%{border-color:transparent}}
+/* start screen */
+#start{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px;background:radial-gradient(circle at 50% 40%,#003340,#00090d 70%)}
+#start h1{font-size:26px;letter-spacing:6px;text-shadow:0 0 14px var(--c)}
+#start p{font-size:13px;opacity:.8;max-width:340px;line-height:1.5}
+#start .ring{width:120px;height:120px;border:2px solid var(--c);border-radius:50%;border-top-color:transparent;animation:spin 2.4s linear infinite;box-shadow:0 0 20px rgba(0,240,255,.4)}
+@keyframes spin{to{transform:rotate(360deg)}}
+#start button{max-width:260px;width:100%;flex:none;font-size:14px;padding:16px}
+#load{font-size:11px;letter-spacing:2px;opacity:.8;min-height:1.4em}
+#err{color:var(--warn);font-size:12px;max-width:340px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <video id="v" playsinline muted autoplay></video>
+  <canvas id="frozen"></canvas>
+  <canvas id="ov"></canvas>
+  <div class="scan"></div><div class="vign"></div>
+  <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+  <div id="hud"><span>TABLE·LECTURE v1.0</span><span id="fps">-- FPS</span></div>
+  <div id="status">INITIALISATION</div>
+  <div id="card"></div>
+  <div id="bar">
+    <button id="bFreeze">⏸ Figer</button>
+    <button id="bSwitch">⟲ Caméra</button>
+    <label class="btn" for="file">▣ Photo</label>
+    <input type="file" id="file" accept="image/*">
+  </div>
+</div>
+<div id="start">
+  <div class="ring"></div>
+  <h1>TABLE DE LECTURE</h1>
+  <p>Pointez la caméra vers la table et posez un objet. Le système l'identifie et affiche sa fiche d'analyse. Touchez l'écran pour figer et analyser.</p>
+  <button id="bStart" disabled>Chargement…</button>
+  <div id="load">CHARGEMENT DES MODÈLES IA…</div>
+  <div id="err"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
+<script>
+"use strict";
+/* ================= DICTIONNAIRE ================= */
+const C = (n,cat,d,f)=>({n,cat,d,f});
+const DB = {
+ "bottle":C("Bouteille","Contenant","Récipient à goulot étroit servant à stocker et verser des liquides : eau, jus, vin, huile…",["Les plus anciennes bouteilles en verre datent d'environ 1500 av. J.-C., en Mésopotamie.","Une bouteille en plastique met plusieurs centaines d'années à se dégrader dans la nature.","La forme d'une bouteille de Coca-Cola est si célèbre qu'elle est une marque déposée."]),
+ "cup":C("Tasse","Vaisselle","Petit récipient avec ou sans anse, conçu pour boire des boissons chaudes ou froides.",["Le mot « tasse » vient de l'arabe « ṭāsa », qui désigne un bol.","Plus de 2 milliards de tasses de café sont bues chaque jour dans le monde.","La tasse à anse s'est popularisée en Europe au XVIIIᵉ siècle avec le thé."]),
+ "wine glass":C("Verre à pied","Vaisselle","Verre monté sur une tige : on le tient par le pied pour ne pas réchauffer la boisson.",["La forme du verre influence la perception des arômes du vin.","Le cristal contient traditionnellement de l'oxyde de plomb, qui le rend plus brillant.","Faire « chanter » un verre en frottant son bord est un phénomène de résonance."]),
+ "fork":C("Fourchette","Couvert","Ustensile à dents servant à piquer et porter les aliments à la bouche.",["La fourchette a longtemps été jugée efféminée et décadente en Europe.","Elle s'est généralisée en France sous Henri III, au XVIᵉ siècle.","Les fourchettes à 4 dents se sont imposées au XIXᵉ siècle."]),
+ "knife":C("Couteau","Couvert / Outil","Outil à lame tranchante, l'un des plus anciens inventés par l'humanité.",["Les premiers couteaux en pierre taillée ont plus de 2,5 millions d'années.","Le bout arrondi des couteaux de table aurait été imposé par Richelieu.","Un couteau en céramique reste tranchant beaucoup plus longtemps que l'acier."]),
+ "spoon":C("Cuillère","Couvert","Ustensile à petit creux pour manger les aliments liquides ou mous.",["La cuillère est le plus ancien des couverts de table.","« Naître avec une cuillère d'argent dans la bouche » signifie naître riche.","Les cuillères en bois sont toujours prisées en cuisine car elles ne rayent pas."]),
+ "bowl":C("Bol","Vaisselle","Récipient creux et arrondi pour les soupes, céréales ou salades.",["Les bols comptent parmi les plus anciens objets en céramique connus.","Au Japon, on soulève son bol pour manger : c'est poli.","Le « bol tibétain » produit un son grâce à la vibration du métal."]),
+ "banana":C("Banane","Fruit","Fruit tropical riche en potassium et en énergie, qui pousse en régimes.",["Botaniquement, la banane est une baie… et le bananier une herbe géante.","Les bananes sont légèrement radioactives à cause du potassium 40.","Presque toutes les bananes du commerce sont des clones de la variété Cavendish."]),
+ "apple":C("Pomme","Fruit","Fruit du pommier, croquant et sucré, l'un des plus consommés au monde.",["Il existe plus de 7 500 variétés de pommes.","Une pomme flotte car elle contient environ 25 % d'air.","Les pépins contiennent un composé qui libère du cyanure… en quantité infime."]),
+ "orange":C("Orange","Fruit","Agrume juteux riche en vitamine C, originaire d'Asie du Sud-Est.",["La couleur a été nommée d'après le fruit, et non l'inverse.","Dans les pays tropicaux, les oranges mûres restent souvent vertes.","Le Brésil est le premier producteur mondial d'oranges."]),
+ "sandwich":C("Sandwich","Plat","Garniture placée entre deux tranches de pain.",["Il doit son nom au comte de Sandwich, joueur de cartes du XVIIIᵉ siècle.","Les Français mangent plus de 2 milliards de sandwichs par an.","Le jambon-beurre est le sandwich le plus vendu en France."]),
+ "broccoli":C("Brocoli","Légume","Légume vert de la famille des choux, riche en vitamines et fibres.",["Le brocoli a été sélectionné par les Romains à partir du chou sauvage.","Il contient plus de vitamine C qu'une orange, à poids égal.","Sa forme est un bel exemple de structure fractale."]),
+ "carrot":C("Carotte","Légume","Racine comestible riche en bêta-carotène.",["Les premières carottes étaient violettes ou jaunes.","La carotte orange aurait été popularisée aux Pays-Bas au XVIIᵉ siècle.","Manger beaucoup de carottes peut légèrement colorer la peau en orange."]),
+ "pizza":C("Pizza","Plat","Galette de pâte garnie, cuite au four, originaire de Naples.",["La pizza Margherita aurait été créée en 1889 pour la reine Marguerite.","L'art du pizzaiolo napolitain est classé au patrimoine de l'UNESCO.","La France est l'un des plus gros consommateurs de pizza au monde."]),
+ "donut":C("Beignet (donut)","Pâtisserie","Pâtisserie frite en forme d'anneau, souvent glacée.",["Le trou aurait été inventé pour que la pâte cuise uniformément.","Il existe une Journée nationale du donut aux États-Unis.","Les Néerlandais en ont apporté l'ancêtre, l'« olykoek », en Amérique."]),
+ "cake":C("Gâteau","Pâtisserie","Préparation sucrée cuite au four, souvent pour les célébrations.",["La tradition des bougies d'anniversaire remonte à l'Allemagne du XVIIIᵉ siècle.","Le mot « cake » désigne en France un gâteau en forme de pain.","Le plus grand gâteau du monde pesait plus de 50 tonnes."]),
+ "book":C("Livre","Objet culturel","Ensemble de pages reliées contenant un texte : le support du savoir depuis des siècles.",["Gutenberg a imprimé sa Bible vers 1455, révolutionnant la diffusion des livres.","L'odeur des vieux livres vient de la dégradation de la lignine du papier.","Il existerait plus de 150 millions de livres différents publiés dans le monde."]),
+ "cell phone":C("Smartphone","Électronique","Téléphone mobile doté d'un ordinateur de poche, d'un écran tactile et de capteurs.",["Un smartphone actuel est des milliers de fois plus puissant que l'ordinateur d'Apollo 11.","Le premier appel depuis un téléphone portable date de 1973.","Il contient plus de 60 éléments chimiques différents, dont de l'or."]),
+ "laptop":C("Ordinateur portable","Électronique","Ordinateur compact et autonome, avec écran, clavier et batterie intégrés.",["L'Osborne 1 (1981), l'un des premiers portables, pesait 11 kg.","Le terme « laptop » signifie « sur les genoux » en anglais.","Sa batterie lithium-ion perd de la capacité à chaque cycle de charge."]),
+ "mouse":C("Souris d'ordinateur","Périphérique","Dispositif de pointage qui déplace le curseur à l'écran.",["Douglas Engelbart a présenté la première souris en 1968 : elle était en bois.","Son nom vient du câble qui ressemblait à une queue de souris.","Les souris optiques photographient la surface des milliers de fois par seconde."]),
+ "keyboard":C("Clavier","Périphérique","Ensemble de touches permettant de saisir du texte et des commandes.",["La disposition QWERTY a été conçue pour les machines à écrire au XIXᵉ siècle.","La France utilise l'AZERTY, la Suisse et l'Allemagne le QWERTZ.","Un clavier peut abriter plus de bactéries qu'une cuvette de toilettes."]),
+ "remote":C("Télécommande","Électronique","Boîtier permettant de commander un appareil à distance, souvent par infrarouge.",["La première télécommande TV, « Lazy Bones » (1950), était reliée par un fil.","La caméra d'un téléphone peut voir la lumière infrarouge d'une télécommande.","On perd en moyenne plusieurs jours de sa vie à chercher la télécommande."]),
+ "clock":C("Horloge","Mesure du temps","Instrument indiquant l'heure, mécanique ou électronique.",["Le sens des aiguilles imite l'ombre d'un cadran solaire dans l'hémisphère nord.","Les horloges atomiques ne dérivent que d'une seconde en millions d'années.","Dans les publicités, les montres affichent souvent 10 h 10 pour « sourire »."]),
+ "vase":C("Vase","Décoration","Récipient décoratif, souvent destiné à recevoir des fleurs.",["Un vase chinois de la dynastie Qing s'est vendu plus de 50 millions d'euros.","Le « vase de Soissons » est une célèbre anecdote de l'histoire de France.","Ajouter un peu de sucre dans l'eau prolonge la vie des fleurs coupées."]),
+ "scissors":C("Ciseaux","Outil","Outil à deux lames croisées articulées, pour couper papier, tissu, cheveux…",["Les premiers ciseaux connus remontent à l'Égypte ancienne, il y a 3 500 ans.","Léonard de Vinci est parfois crédité, à tort, de leur invention.","Il existe des ciseaux spécialement conçus pour les gauchers."]),
+ "teddy bear":C("Ours en peluche","Jouet","Peluche en forme d'ours, compagnon classique de l'enfance.",["Le nom « teddy » vient du président américain Theodore Roosevelt.","Le premier ours en peluche Steiff date de 1902.","Un ours Steiff rare s'est vendu plus de 150 000 €."]),
+ "toothbrush":C("Brosse à dents","Hygiène","Petite brosse servant à nettoyer les dents.",["Les premières brosses à poils auraient été inventées en Chine au XVᵉ siècle.","Il est conseillé de la changer tous les 3 mois.","Les poils étaient autrefois en poils de porc."]),
+ "hair drier":C("Sèche-cheveux","Électroménager","Appareil soufflant de l'air chaud pour sécher les cheveux.",["Le premier sèche-cheveux a été inventé en France par Alexandre Godefroy en 1890.","Les premiers modèles portables pesaient plus d'un kilo.","Certains modèles tournent à plus de 100 000 tours par minute."]),
+ "potted plant":C("Plante en pot","Végétal","Plante cultivée en contenant, pour décorer et purifier l'intérieur.",["Les plantes d'intérieur augmentent l'humidité de l'air.","Trop d'arrosage tue plus de plantes que la sécheresse.","Parler à ses plantes leur apporte… un peu de CO₂."]),
+ "tv":C("Écran / Téléviseur","Électronique","Écran d'affichage pour la télévision ou un ordinateur.",["La première démonstration publique de télévision date de 1926.","Un écran est composé de millions de pixels rouges, verts et bleus.","La TV couleur est arrivée en France en 1967."]),
+ "person":C("Humain","Être vivant","Homo sapiens : l'opérateur de cette table de lecture.",["Le corps humain contient environ 37 000 milliards de cellules.","Votre main compte 27 os.","Vous clignez des yeux environ 15 à 20 fois par minute."]),
+ "cat":C("Chat","Animal","Petit félin domestique, compagnon de l'humain depuis environ 9 500 ans.",["Un chat dort en moyenne 12 à 16 heures par jour.","Il ne miaule presque que pour communiquer avec les humains.","Il ne perçoit pas le goût sucré."]),
+ "dog":C("Chien","Animal","Canidé domestique, descendant du loup.",["Son odorat est jusqu'à 100 000 fois plus fin que le nôtre.","Chaque truffe de chien est unique, comme une empreinte digitale.","Il comprend en moyenne 150 mots."]),
+ "sports ball":C("Balle / Ballon","Sport","Objet sphérique utilisé dans de nombreux sports.",["Un ballon de foot classique comporte 32 panneaux.","Les premières balles de tennis étaient remplies de cheveux.","Une balle de golf a entre 300 et 500 alvéoles."]),
+ "chair":C("Chaise","Mobilier","Siège à dossier, sans accoudoirs, pour une personne.",["La chaise n° 14 de Thonet a été vendue à plus de 50 millions d'exemplaires.","Dans l'Antiquité, la chaise était réservée aux personnages importants.","Rester assis trop longtemps est mauvais pour la santé."]),
+ "dining table":C("Table","Mobilier","Surface plane sur pieds : ici, la surface d'analyse elle-même.",["Les tables rondes de la légende arthurienne évitaient toute hiérarchie.","Le mot vient du latin « tabula », planche.","Posez un objet dessus pour lancer l'analyse !"]),
+ "handbag":C("Sac à main","Accessoire","Petit sac porté à la main ou à l'épaule.",["Avant les poches, on portait de petites bourses attachées à la ceinture.","Certains sacs de luxe prennent de la valeur avec le temps.","Les poches n'ont été cousues dans les vêtements qu'au XVIIᵉ siècle."]),
+ "backpack":C("Sac à dos","Accessoire","Sac porté sur le dos grâce à deux bretelles.",["Ötzi, l'homme des glaces (5 300 ans), portait déjà un sac à dos.","Il ne devrait pas dépasser 10 % du poids de la personne.","La fermeture éclair l'a rendu populaire au XXᵉ siècle."]),
+ "umbrella":C("Parapluie","Accessoire","Toile tendue sur une armature pour se protéger de la pluie.",["Il descend de l'ombrelle, utilisée en Chine depuis plus de 3 000 ans.","Le parapluie pliant moderne a été breveté au XIXᵉ siècle.","Cherbourg est célèbre pour ses parapluies… et son film."]),
+ "tie":C("Cravate","Vêtement","Bande de tissu nouée autour du cou.",["Le mot vient des cavaliers croates (« Croates » → cravate) au XVIIᵉ siècle.","Il existe plus de 85 façons de nouer une cravate.","Le 18 octobre est la Journée mondiale de la cravate."]),
+ "suitcase":C("Valise","Bagage","Bagage rigide ou souple pour transporter ses affaires en voyage.",["La valise à roulettes n'a été commercialisée qu'en 1970.","Le mot vient de l'italien « valigia ».","Des millions de bagages sont égarés chaque année dans les aéroports."]),
+};
+const FR = {"bicycle":"Vélo","car":"Voiture","motorcycle":"Moto","airplane":"Avion","bus":"Bus","train":"Train","truck":"Camion","boat":"Bateau","traffic light":"Feu tricolore","fire hydrant":"Bouche d'incendie","stop sign":"Panneau stop","parking meter":"Parcmètre","bench":"Banc","bird":"Oiseau","horse":"Cheval","sheep":"Mouton","cow":"Vache","elephant":"Éléphant","bear":"Ours","zebra":"Zèbre","giraffe":"Girafe","frisbee":"Frisbee","skis":"Skis","snowboard":"Snowboard","kite":"Cerf-volant","baseball bat":"Batte de baseball","baseball glove":"Gant de baseball","skateboard":"Skateboard","surfboard":"Planche de surf","tennis racket":"Raquette de tennis","hot dog":"Hot-dog","couch":"Canapé","bed":"Lit","toilet":"Toilettes","microwave":"Micro-ondes","oven":"Four","toaster":"Grille-pain","sink":"Évier","refrigerator":"Réfrigérateur"};
+/* MobileNet (ImageNet) -> clé COCO ou libellé FR */
+const IMN = [
+ [/water bottle|pop bottle|beer bottle|wine bottle|water jug|pill bottle|whiskey jug/,"bottle"],
+ [/coffee ?mug|\bcup\b|teacup|espresso/,"cup"],[/goblet|red wine/,"wine glass"],
+ [/banana/,"banana"],[/granny smith|\bapple\b/,"apple"],[/\borange\b/,"orange"],[/broccoli/,"broccoli"],
+ [/notebook|laptop/,"laptop"],[/cellular telephone|cellphone|dial telephone|ipod|hand-held computer/,"cell phone"],
+ [/computer mouse|^mouse/,"mouse"],[/computer keyboard|typewriter keyboard|space bar/,"keyboard"],[/remote control/,"remote"],
+ [/wall clock|analog clock|digital clock|stopwatch/,"clock"],[/\bvase\b/,"vase"],[/book jacket|comic book|binder/,"book"],
+ [/teddy/,"teddy bear"],[/soup bowl|mixing bowl/,"bowl"],[/wooden spoon|ladle/,"spoon"],[/hair dryer|hand blower/,"hair drier"],
+ [/pizza/,"pizza"],[/television|monitor|screen/,"tv"],[/backpack/,"backpack"],[/umbrella/,"umbrella"],[/purse/,"handbag"],
+];
+const IMN_FR = [
+ [/ballpoint|fountain pen|quill/,"Stylo","Écriture"],[/pencil box|pencil sharpener/,"Trousse / taille-crayon","Papeterie"],
+ [/lighter/,"Briquet","Objet du quotidien"],[/wallet/,"Portefeuille","Accessoire"],[/sunglass/,"Lunettes de soleil","Accessoire"],
+ [/digital watch|analog watch|wristwatch/,"Montre","Mesure du temps"],[/lipstick/,"Rouge à lèvres","Cosmétique"],
+ [/candle/,"Bougie","Décoration"],[/teapot/,"Théière","Vaisselle"],[/lemon/,"Citron","Fruit"],[/strawberry/,"Fraise","Fruit"],
+ [/pineapple/,"Ananas","Fruit"],[/screwdriver/,"Tournevis","Outil"],[/hammer/,"Marteau","Outil"],[/padlock/,"Cadenas","Sécurité"],
+ [/envelope/,"Enveloppe","Papeterie"],[/matchstick/,"Allumettes","Objet du quotidien"],[/toilet tissue|paper towel/,"Papier absorbant","Hygiène"],
+ [/sunscreen|lotion/,"Flacon de crème","Cosmétique"],[/perfume/,"Parfum","Cosmétique"],[/joystick/,"Manette","Jeu"],
+ [/loupe|magnifying/,"Loupe","Optique"],[/rubber eraser/,"Gomme","Papeterie"],[/syringe/,"Seringue","Médical"],
+ [/headphone|earphone|earbud/,"Écouteurs","Audio"],[/plastic bag/,"Sac plastique","Contenant"],[/carton/,"Carton","Emballage"],
+ [/tennis ball/,"Balle de tennis","Sport"],[/rule,? |ruler/,"Règle","Papeterie"],[/mask/,"Masque","Accessoire"],
+ [/cucumber/,"Concombre","Légume"],[/bell pepper/,"Poivron","Légume"],[/mushroom/,"Champignon","Végétal"],
+];
+function cardFor(label, source){
+  const k=label.toLowerCase();
+  if(DB[k]) return {...DB[k],key:k,src:source};
+  if(source==="mobilenet"){
+    for(const [re,key] of IMN) if(re.test(k)) return {...DB[key],key,src:source};
+    for(const [re,n,cat] of IMN_FR) if(re.test(k)) return generic(n,cat,label,source);
+    const pretty=label.split(",")[0].trim();
+    return generic(pretty.charAt(0).toUpperCase()+pretty.slice(1),"Objet non répertorié",label,source);
+  }
+  return generic(FR[k]||label,"Objet détecté",label,source);
+}
+function generic(n,cat,raw,src){
+  return {n,cat,key:raw,src,d:`Objet identifié comme « ${n} ». Aucune fiche détaillée n'est encore enregistrée dans la base de la table de lecture.`,
+    f:[`Libellé brut du modèle : « ${raw.split(",")[0]} ».`,"Astuce : rapprochez l'objet ou améliorez l'éclairage pour affiner l'analyse.","Touchez l'écran pour figer l'image et relancer une analyse."]};
+}
+
+/* ================= ÉTAT ================= */
+const $=id=>document.getElementById(id);
+const video=$("v"), ov=$("ov"), ctx=ov.getContext("2d"), frozen=$("frozen"), fctx=frozen.getContext("2d");
+const cardEl=$("card"), statusEl=$("status");
+let coco=null, mnet=null, mnetLoading=null, stream=null, facing="environment";
+let frozenMode=false, running=false, busy=false;
+let cand=null;        // {label,src,since,box,score}
+let shown=null;       // {label,box,lastSeen,card}
+let lastHit=0, lastMnet=0, smoothBox=null;
+const STABLE_MS=1000, LOST_MS=1500, MIN_SCORE=0.5, MNET_MIN=0.25;
+window.__TL={ready:false,errors:[],last:null};
+
+function setStatus(t,blink){statusEl.textContent=t;statusEl.classList.toggle("blink",!!blink);}
+function iou(a,b){if(!a||!b)return 0;const x1=Math.max(a[0],b[0]),y1=Math.max(a[1],b[1]),x2=Math.min(a[0]+a[2],b[0]+b[2]),y2=Math.min(a[1]+a[3],b[1]+b[3]);const i=Math.max(0,x2-x1)*Math.max(0,y2-y1);return i/(a[2]*a[3]+b[2]*b[3]-i||1);}
+
+/* ================= MODÈLES ================= */
+async function loadModels(){
+  const L=$("load");
+  try{
+    try{await tf.setBackend("webgl");}catch(e){await tf.setBackend("cpu");}
+    await tf.ready();
+    L.textContent="MOTEUR : "+tf.getBackend().toUpperCase()+" · CHARGEMENT COCO-SSD…";
+    coco=await cocoSsd.load({base:"lite_mobilenet_v2"});
+    L.textContent="COCO-SSD PRÊT · CHARGEMENT MOBILENET…";
+    window.__TL.coco=true;
+    $("bStart").disabled=false;$("bStart").textContent="▶ Activer la table";
+    mnetLoading=mobilenet.load({version:2,alpha:1.0}).then(m=>{mnet=m;window.__TL.mobilenet=true;L.textContent="MODÈLES PRÊTS (COCO-SSD + MOBILENET)";return m;})
+      .catch(e=>{window.__TL.errors.push("mobilenet: "+e.message);L.textContent="COCO-SSD PRÊT (MobileNet indisponible)";});
+    await mnetLoading;
+    window.__TL.ready=true;
+  }catch(e){
+    window.__TL.errors.push(e.message);$("err").textContent="Erreur de chargement des modèles : "+e.message+". Vérifiez la connexion.";
+  }
+}
+
+/* ================= CAMÉRA ================= */
+async function startCam(){
+  if(stream) stream.getTracks().forEach(t=>t.stop());
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) throw new Error("Caméra indisponible (HTTPS requis).");
+  stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:720}}});
+  video.srcObject=stream; await video.play();
+  video.style.transform=facing==="user"?"scaleX(-1)":"";
+}
+
+/* ================= GÉOMÉTRIE (object-fit: cover) ================= */
+function fit(srcW,srcH){
+  const W=ov.clientWidth,H=ov.clientHeight,s=Math.max(W/srcW,H/srcH);
+  return {s,ox:(W-srcW*s)/2,oy:(H-srcH*s)/2,W,H};
+}
+function toScreen(b,f,mirror){
+  let x=b[0]*f.s+f.ox; const y=b[1]*f.s+f.oy,w=b[2]*f.s,h=b[3]*f.s;
+  if(mirror) x=f.W-x-w;
+  return [x,y,w,h];
+}
+function resize(){const d=devicePixelRatio||1;ov.width=ov.clientWidth*d;ov.height=ov.clientHeight*d;ctx.setTransform(d,0,0,d,0,0);}
+addEventListener("resize",resize);
+
+/* ================= DESSIN ================= */
+function drawBox(r,label,progress,locked){
+  const [x,y,w,h]=r, c="#00f0ff", L=Math.min(22,w/4,h/4);
+  ctx.save();ctx.strokeStyle=c;ctx.shadowColor=c;ctx.shadowBlur=12;ctx.lineWidth=2;
+  ctx.globalAlpha=.25;ctx.strokeRect(x,y,w,h);ctx.globalAlpha=1;ctx.lineWidth=3;
+  ctx.beginPath();
+  [[x,y,1,1],[x+w,y,-1,1],[x,y+h,1,-1],[x+w,y+h,-1,-1]].forEach(([px,py,sx,sy])=>{ctx.moveTo(px+sx*L,py);ctx.lineTo(px,py);ctx.lineTo(px,py+sy*L);});
+  ctx.stroke();
+  // ligne de scan dans la boîte
+  const t=(performance.now()%1400)/1400, sy=y+h*t;
+  const g=ctx.createLinearGradient(0,sy-14,0,sy+2);g.addColorStop(0,"rgba(0,240,255,0)");g.addColorStop(1,"rgba(0,240,255,.55)");
+  ctx.fillStyle=g;ctx.fillRect(x,sy-14,w,16);
+  ctx.fillStyle="rgba(0,240,255,.06)";ctx.fillRect(x,y,w,h);
+  // étiquette
+  ctx.shadowBlur=8;ctx.font="12px monospace";ctx.fillStyle=c;
+  ctx.fillText((locked?"◉ ":"◌ ")+label,x+4,Math.max(14,y-8));
+  if(!locked&&progress!=null){ctx.fillStyle="rgba(0,240,255,.2)";ctx.fillRect(x,y+h+6,w,4);ctx.fillStyle=c;ctx.fillRect(x,y+h+6,w*Math.min(1,progress),4);}
+  ctx.restore();
+}
+function drawReticle(){
+  const W=ov.clientWidth,H=ov.clientHeight,r=Math.min(W,H)*.22,t=performance.now()/1000;
+  ctx.save();ctx.translate(W/2,H/2);ctx.strokeStyle="rgba(0,240,255,.5)";ctx.shadowColor="#00f0ff";ctx.shadowBlur=8;ctx.lineWidth=1.5;
+  ctx.rotate(t*.6);ctx.setLineDash([12,10]);ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();
+  ctx.rotate(-t*1.2);ctx.setLineDash([3,14]);ctx.beginPath();ctx.arc(0,0,r*.8,0,Math.PI*2);ctx.stroke();ctx.restore();
+}
+
+/* ================= CARTE ================= */
+let cardSerial=0;
+function showCard(info,score){
+  cardSerial++;
+  const id="OBJ-"+String(Math.floor(Math.random()*9000)+1000);
+  cardEl.innerHTML=`<div class="id"><span>${id}</span><span>${new Date().toLocaleTimeString("fr-FR")}</span></div>
+   <h2 class="type" id="cn"></h2><span class="cat">${esc(info.cat.toUpperCase())}</span>
+   <div class="id"><span>CORRESPONDANCE</span><span>${Math.round(score*100)} %</span></div><div class="conf"><i></i></div>
+   <p>${esc(info.d)}</p><h3>LE SAVIEZ-VOUS ?</h3><ul>${info.f.map(x=>"<li>"+esc(x)+"</li>").join("")}</ul>
+   <div class="src">SOURCE : ${info.src==="coco"?"COCO-SSD (détection)":"MOBILENET (classification)"} · ${esc(info.key)}</div>`;
+  cardEl.classList.add("show");
+  requestAnimationFrame(()=>{const i=cardEl.querySelector(".conf i");if(i)i.style.width=Math.round(score*100)+"%";});
+  // effet machine à écrire
+  const s=cardSerial, h=$("cn"); let k=0;
+  (function ty(){if(s!==cardSerial)return;h.textContent=info.n.slice(0,++k);if(k<info.n.length)setTimeout(ty,45);else h.classList.remove("type");})();
+  window.__TL.last={name:info.n,label:info.key,src:info.src,score};
+}
+function hideCard(){cardEl.classList.remove("show");cardSerial++;}
+function placeCard(r){
+  const W=ov.clientWidth,H=ov.clientHeight,cw=cardEl.offsetWidth,ch=cardEl.offsetHeight,m=10;
+  let x,y;
+  if(!r){x=(W-cw)/2;y=H-ch-90;}
+  else{
+    const [bx,by,bw,bh]=r;
+    if(bx+bw+m+cw<W-m) x=bx+bw+m; else if(bx-m-cw>m) x=bx-m-cw; else x=(W-cw)/2;
+    y=by;
+    if(x===(W-cw)/2){ y=(by+bh+m+ch<H-80)?by+bh+m:Math.max(80,by-ch-m); }
+  }
+  x=Math.max(m,Math.min(W-cw-m,x));y=Math.max(80,Math.min(H-ch-84,y));
+  cardEl.style.left=x+"px";cardEl.style.top=y+"px";
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&","<":"<",">":">",'"':"""}[c]));}
+
+/* ================= DÉTECTION ================= */
+function pickBest(preds){
+  const ok=preds.filter(p=>p.score>=MIN_SCORE&&p.class!=="dining table");
+  if(!ok.length) return null;
+  // on privilégie les objets aux personnes (la main de l'utilisateur)
+  const nonP=ok.filter(p=>p.class!=="person");
+  const list=nonP.length?nonP:ok;
+  return list.sort((a,b)=>b.score*Math.sqrt(b.bbox[2]*b.bbox[3])-a.score*Math.sqrt(a.bbox[2]*a.bbox[3]))[0]; // score pondéré par la taille
+}
+function centerCrop(src,sw,sh){
+  const c=document.createElement("canvas"),s=Math.min(sw,sh)*.6;c.width=c.height=224;
+  c.getContext("2d").drawImage(src,(sw-s)/2,(sh-s)/2,s,s,0,0,224,224);return {c,box:[(sw-s)/2,(sh-s)/2,s,s]};
+}
+async function classify(src,sw,sh){
+  if(!mnet) return null;
+  const {c,box}=centerCrop(src,sw,sh);
+  const r=await mnet.classify(c,3);
+  if(r&&r[0]&&r[0].probability>=MNET_MIN) return {label:r[0].className,score:r[0].probability,box,src:"mobilenet"};
+  return null;
+}
+
+let fpsT=performance.now(),fpsN=0;
+async function loop(){
+  if(!running) return;
+  requestAnimationFrame(loop);
+  if(frozenMode) return;
+  ctx.clearRect(0,0,ov.clientWidth,ov.clientHeight);
+  const vw=video.videoWidth,vh=video.videoHeight; if(!vw) return;
+  const f=fit(vw,vh), mirror=facing==="user";
+  if(!busy){
+    busy=true;
+    detectStep(vw,vh).finally(()=>{busy=false;fpsN++;});
+  }
+  const now=performance.now();
+  if(now-fpsT>1000){$("fps").textContent=fpsN+" FPS · "+tf.getBackend().toUpperCase();fpsN=0;fpsT=now;}
+  // rendu
+  if(cand && (!shown||shown.label!==cand.label)){
+    const p=(now-cand.since)/STABLE_MS;
+    drawBox(toScreen(cand.box,f,mirror),labelFR(cand)+" "+Math.round(cand.score*100)+"%",p,false);
+    setStatus("ANALYSE"+".".repeat(1+Math.floor(now/300)%3),true);
+  }
+  if(shown){
+    smoothBox=smoothBox?smoothBox.map((v,i)=>v+(shown.box[i]-v)*.3):shown.box.slice();
+    const r=toScreen(smoothBox,f,mirror);
+    drawBox(r,shown.card.n.toUpperCase(),null,true);placeCard(r);
+    if(!cand||cand.label===shown.label) setStatus("◉ OBJET IDENTIFIÉ");
+    if(now-shown.lastSeen>LOST_MS){shown=null;smoothBox=null;hideCard();}
+  }
+  if(!cand&&!shown){drawReticle();setStatus("EN ATTENTE D'UN OBJET",false);}
+}
+function labelFR(c){return cardFor(c.label,c.src).n.toUpperCase();}
+
+async function detectStep(vw,vh){
+  const now=performance.now();
+  let hit=null;
+  const preds=await coco.detect(video,10);
+  const b=pickBest(preds);
+  if(b){hit={label:b.class,score:b.score,box:b.bbox,src:"coco"};lastHit=now;}
+  else if(now-lastHit>800 && mnet && now-lastMnet>700){
+    lastMnet=now; hit=await classify(video,vw,vh);
+    if(hit) lastHit=now;
+  } else if(cand && now-lastHit<800){ return; } // garde le candidat brièvement
+  track(hit,performance.now());
+}
+function track(hit,now){
+  if(!hit){ if(cand&&now-cand.seen>600) cand=null; return; }
+  if(cand && cand.label===hit.label){cand.box=hit.box;cand.score=hit.score;cand.seen=now;}
+  else cand={...hit,since:now,seen:now};
+  if(shown && shown.label===hit.label){shown.box=hit.box;shown.lastSeen=now;return;}
+  if(now-cand.since>=STABLE_MS){
+    const card=cardFor(cand.label,cand.src);
+    shown={label:cand.label,box:cand.box,lastSeen:now,card};smoothBox=null;
+    showCard(card,cand.score);
+  }
+}
+
+/* ================= FIGER / PHOTO ================= */
+async function analyseStill(src,sw,sh,mirror){
+  frozenMode=true;$("bFreeze").classList.add("on");$("bFreeze").textContent="▶ Reprendre";
+  hideCard();shown=null;cand=null;
+  const k=Math.min(1,1280/Math.max(sw,sh)), iw=sw, ih=sh; sw=Math.round(sw*k); sh=Math.round(sh*k);
+  frozen.width=sw;frozen.height=sh;fctx.save();if(mirror){fctx.translate(sw,0);fctx.scale(-1,1);}fctx.drawImage(src,0,0,iw,ih,0,0,sw,sh);fctx.restore();
+  frozen.style.display="block";
+  const f=fit(sw,sh),t0=performance.now();
+  setStatus("ANALYSE...",true);
+  let anim=true;
+  (function a(){if(!anim)return;ctx.clearRect(0,0,ov.clientWidth,ov.clientHeight);drawReticle();
+    const y=((performance.now()-t0)%1200)/1200*ov.clientHeight;ctx.fillStyle="rgba(0,240,255,.35)";ctx.fillRect(0,y,ov.clientWidth,3);requestAnimationFrame(a);})();
+  let hit=null;
+  try{
+    const b=pickBest(await coco.detect(frozen,10));
+    if(b) hit={label:b.class,score:b.score,box:b.bbox,src:"coco"};
+    else { if(!mnet&&mnetLoading) await mnetLoading; hit=await classify(frozen,sw,sh); }
+  }catch(e){window.__TL.errors.push(e.message);}
+  await new Promise(r=>setTimeout(r,Math.max(0,900-(performance.now()-t0))));
+  anim=false;ctx.clearRect(0,0,ov.clientWidth,ov.clientHeight);
+  if(!hit){setStatus("AUCUN OBJET RECONNU");window.__TL.last={name:null};return;}
+  const r=toScreen(hit.box,f,false), card=cardFor(hit.label,hit.src);
+  drawBox(r,card.n.toUpperCase(),null,true);setStatus("◉ OBJET IDENTIFIÉ");
+  showCard(card,hit.score);placeCard(r);
+}
+function resume(){
+  frozenMode=false;frozen.style.display="none";hideCard();shown=null;cand=null;
+  $("bFreeze").classList.remove("on");$("bFreeze").textContent="⏸ Figer";
+  if(!stream){setStatus("CAMÉRA INACTIVE — UTILISEZ « PHOTO »");}
+}
+function toggleFreeze(){
+  if(!coco) return;
+  if(frozenMode) return resume();
+  if(!video.videoWidth) return;
+  analyseStill(video,video.videoWidth,video.videoHeight,facing==="user");
+}
+$("bFreeze").onclick=e=>{e.stopPropagation();toggleFreeze();};
+$("stage").addEventListener("click",e=>{if(e.target.closest("#bar,#card"))return;toggleFreeze();});
+$("bSwitch").onclick=async e=>{e.stopPropagation();facing=facing==="environment"?"user":"environment";
+  try{await startCam();resume();}catch(err){setStatus("CAMÉRA : "+err.message);}};
+$("file").onchange=e=>{const f=e.target.files[0];if(!f||!coco)return;const img=new Image();
+  img.onload=()=>analyseStill(img,img.naturalWidth,img.naturalHeight,false);img.src=URL.createObjectURL(f);e.target.value="";};
+$("bStart").onclick=async()=>{
+  $("start").style.display="none";resize();running=true;
+  try{await startCam();setStatus("EN ATTENTE D'UN OBJET");}
+  catch(err){setStatus("CAMÉRA INDISPONIBLE");$("fps").textContent="";
+    alert("Impossible d'accéder à la caméra ("+err.message+").\nVérifiez l'autorisation et que la page est en HTTPS. Vous pouvez utiliser le bouton « Photo ».");}
+  loop();
+};
+addEventListener("error",e=>window.__TL.errors.push(String(e.message)));
+loadModels();
+</script>
+</body>
+</html>
