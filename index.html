@@ -155,7 +155,7 @@ body.off-anim #sel.run{animation:none}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v4.2</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span><span id="gear" role="button" aria-label="Paramètres" title="Paramètres">⚙</span></div>
+  <div id="hud"><span>TABLE·LECTURE v5</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span><span id="gear" role="button" aria-label="Paramètres" title="Paramètres">⚙</span></div>
   <div id="status">INITIALISATION</div>
   <div id="minis"></div>
   <div id="sel"></div>
@@ -174,7 +174,7 @@ body.off-anim #sel.run{animation:none}
   <div class="ring"></div>
   <h1>TABLE DE LECTURE</h1>
   <p>Pointez la caméra vers la table et posez un objet. Le système l'identifie et affiche sa fiche d'analyse. Touchez un objet pour ouvrir sa fiche complète, ou ailleurs pour figer l'image. « Multi » / « Un seul » change le mode d'affichage. Avec deux doigts (ou en glissant à la souris), encadrez un objet pour analyser seulement cette zone.</p>
-  <p>Aussi : météo locale, films & séries, programme TV et « C'est quoi ce film ? » en haut de l'écran.</p>
+  <p>Aussi : météo locale, films & séries, programme TV et « C'est quoi ce film ? » en haut de l'écran. Visages : cadre et expression ; reconnaissance de vos proches seulement si vous l'activez (MÉMOIRE › Visages). ⚙ Paramètres en haut à droite.</p>
   <button id="bStart" disabled>Chargement…</button>
   <div id="load">CHARGEMENT DES MODÈLES IA…</div>
   <div id="load2"></div>
@@ -286,7 +286,7 @@ const STABLE_MS=1000, LOST_MS=1500, PENDING_LOST_MS=900, MIN_SCORE=0.5, MNET_MIN
 window.__TL={ready:false,errors:[],last:null,objects:[]};
 /* ================= PARAMÈTRES (locaux) ================= */
 const PREF_DEF={wx:true,mem:true,fps:true,status:true,bMode:true,bFreeze:true,bSwitch:true,bPhoto:true,bLearn:true,bFilms:true,bTV:true,bReco:true,
-  codes:true,history:true,framing:true,pct:true,details:true,low:true,anim:true};
+  codes:true,history:true,framing:true,pct:true,details:true,low:true,anim:true,faces:true,faceExpr:true,faceReco:false};
 let PREF=(()=>{let o={};try{o=JSON.parse(localStorage.getItem("tableLecture.prefs"))||{};}catch(e){}return {...PREF_DEF,...o};})();
 const pref=k=>PREF[k]!==false;
 function applyPrefs(){
@@ -316,6 +316,7 @@ async function loadModels(){
     coco=await cocoSsd.load({base:"lite_mobilenet_v2"});
     L.textContent="COCO-SSD PRÊT (détection rapide)";
     if(pref("codes"))initScanner();
+    setTimeout(()=>ensureFaceModels(),1500);
     window.__TL.coco=true;
     $("bStart").disabled=false;$("bStart").textContent="▶ Activer la table";
     window.__TL.ready=true;
@@ -344,7 +345,7 @@ const clipOK=()=>window.CLIPX&&window.CLIPX.ready;
 let CONF_T=(()=>{const v=parseFloat(localStorage.getItem("tableLecture.seuil"));return v>=0.4&&v<=0.9?v:0.65;})();window.__TL.seuil=CONF_T;
 function setConfT(v){CONF_T=clamp(+v,0.4,0.9);try{localStorage.setItem("tableLecture.seuil",String(CONF_T));}catch(e){}window.__TL.seuil=CONF_T;}
 /* codes (lecture exacte) et objets appris (seuil propre LEARN_T) ne sont pas concernés */
-function isLow(t){return !!t&&!t.code&&!(t.card&&t.card.code)&&t.src!=="learned"&&!(t.card&&t.card.src==="learned")&&((t.card&&t.card.key==="cadre")||!(t.score>=CONF_T));}
+function isLow(t){return !!t&&t.src!=="face"&&!t.code&&!(t.card&&t.card.code)&&t.src!=="learned"&&!(t.card&&t.card.src==="learned")&&((t.card&&t.card.key==="cadre")||!(t.score>=CONF_T));}
 function lowCard(t){
   if(t.card.key==="cadre") return {...t.card,lowSearch:true};
   return {n:"Objet non identifié",cat:"Confiance trop faible",key:"bas",src:t.card.src,srcLabel:"SEUIL D'AFFICHAGE "+Math.round(CONF_T*100)+" %",lowSearch:true,
@@ -494,7 +495,12 @@ function openPanel(t){
     f.onsubmit=ev=>{ev.preventDefault();const q=f.querySelector("input").value.trim();if(!q)return;window.__TL.lowSearch=q;
       window.open("https://fr.wikipedia.org/w/index.php?search="+encodeURIComponent(q),"_blank","noopener");};
     $("pc").appendChild(f);}
-  if(!t.card.code){
+  if(t.src==="face"){
+    const b=document.createElement("button");b.className="pbtn";
+    if(pref("faceReco")){b.textContent=t.face&&t.face.name?"＋ Ajouter une vue de "+t.face.name+" (avec accord)":"＋ Enregistrer ce visage (avec accord)";b.onclick=ev=>{ev.stopPropagation();openFaceEnroll(t);};}
+    else{b.textContent="☺ Visages connus (désactivé)";b.onclick=ev=>{ev.stopPropagation();openFaces();};}
+    $("pc").appendChild(b);
+  }else if(!t.card.code){
     const b=document.createElement("button");b.className="pbtn";b.textContent="✎ Pas ça ? Apprendre cet objet";
     b.onclick=ev=>{ev.stopPropagation();openLearn(t);};$("pc").appendChild(b);
   }
@@ -568,12 +574,13 @@ function updateTracks(hits,now){
     let best=null,bi=0.15;
     for(const t of tracks){if(used.has(t)||t.label!==h.label)continue;const v=iou(t.box,h.box);if(v>bi){bi=v;best=t;}}
     if(!best&&!multi) best=tracks.find(t=>!used.has(t)&&t.label===h.label);
+    if(best&&h.face){best.face=h.face;const ex=c=>(c.short||"").replace(/ \d+ %$/,"");if(ex(best.card)!==ex(h.card)||best.card.n!==h.card.n){if(best.el){best.el.remove();best.el=null;}}best.card=h.card;}
     if(best){best.box=h.box;if(!best.refined||best.src==="coco")best.score=best.score*.6+h.score*.4;best.seen=now;if(!h.weak)best.weak=false;}
     else{best=mkTrack(h,now,!!h.code);tracks.push(best);}
     used.add(best);
     if(!best.stable&&now-best.since>=STABLE_MS&&(best.confirmed||!best.weak)) best.stable=true;
   }
-  tracks=tracks.filter(t=>{const slow=t.label.startsWith("clip:");const gone=now-t.seen>(t.stable?(slow?2400:LOST_MS):(slow?1800:PENDING_LOST_MS));if(gone)dropTrack(t);return !gone;});
+  tracks=tracks.filter(t=>{const slow=t.label.startsWith("clip:")||t.src==="face";const gone=now-t.seen>(t.stable?(slow?2400:LOST_MS):(slow?1800:PENDING_LOST_MS));if(gone)dropTrack(t);return !gone;});
   if(!multi){ // un seul objet affiché : on garde le plus récent stabilisé
     const st=tracks.filter(t=>t.stable).sort((a,b)=>b.since-a.since);
     st.slice(1).forEach(t=>{dropTrack(t);tracks.splice(tracks.indexOf(t),1);});
@@ -608,6 +615,7 @@ async function detectStep(vw,vh){
     lastScan=now;
     try{const ch=await scanCodes(video,1);if(ch.length){hits=ch.concat(hits);lastHit=now;lastCodeAt=now;}}catch(e){window.__TL.errors.push("scan: "+e.message);}
   }
+  if(pref("faces")){const fh=await faceStep(now);if(fh.length)hits=hits.concat(fh);}
   if(frozenMode) return;
   updateTracks(hits,performance.now());
   // affinage CLIP : une détection à la fois, dès qu'elle est un peu stable
@@ -686,7 +694,10 @@ async function analyseStill(src,sw,sh,mirror){
       hits=[];if(!mnet&&mnetLoading)await mnetLoading;const h=await classify(frozen,sw,sh);if(h)hits=[h];
     }else hits=hits.filter(h=>!h.weak);
   }catch(e){window.__TL.errors.push(e.message);}
-  hits=codeHits.concat(hits);
+  let faceHits=[];
+  if(pref("faces")){try{await faceModel("det");if(pref("faceExpr"))await faceModel("expr");if(pref("faceReco")&&faceDB.length)await faceModel("rec");
+    faceHits=await detectFaces(frozen,sw,sh);}catch(e){window.__TL.errors.push("visages: "+e.message);}}
+  hits=codeHits.concat(faceHits,hits);
   await new Promise(r=>setTimeout(r,Math.max(0,900-(performance.now()-t0))));
   analysing=false;stillHits=hits;buildStill();
 }
@@ -1011,7 +1022,8 @@ function openMemory(){
   if($("mclear"))$("mclear").onclick=e=>{e.stopPropagation();if(confirm("Effacer tous les objets appris ?")){learned=[];saveLearned();openMemory();}};
   renderCodeMemory(pc);
   const rg=document.createElement("div");rg.className="lf";
-  rg.innerHTML=`<button class="pbtn" id="toset">⚙ Paramètres (affichage, seuil des fiches…)</button>`;pc.appendChild(rg);
+  rg.innerHTML=`<h2 style="margin-top:18px">Visages</h2><p>${pref("faceReco")?faceDB.length+" proche(s) enregistré(s).":"Reconnaissance des proches désactivée (par défaut)."}</p><button class="pbtn" id="tofaces">☺ Visages connus…</button><button class="pbtn" id="toset">⚙ Paramètres (affichage, seuil des fiches…)</button>`;pc.appendChild(rg);
+  rg.querySelector("#tofaces").onclick=e=>{e.stopPropagation();openFaces();};
   rg.querySelector("#toset").onclick=e=>{e.stopPropagation();openSettings();};
   panel.classList.add("open");window.__TL.panel={memory:true};
 }
@@ -1020,7 +1032,9 @@ $("mem").addEventListener("click",e=>{e.stopPropagation();openMemory();});
 const SETTINGS=[["AFFICHAGE",[["wx","Pastille météo","Masquée : la météo n'est plus téléchargée"],["mem","Compteur MÉMOIRE","La mémoire reste accessible via ⚙"],["fps","Images/s et moteur (en haut à droite)"],["status","Bandeau d'état"],
    ["pct","Pourcentage de confiance","Dans les mini-fiches et les fiches"],["details","Détails des mini-fiches","Catégorie, ligne courte, « toucher pour la fiche »"],["low","Cadres « Objet non identifié »","Masqués : les objets sous le seuil n'apparaissent plus"],["anim","Animations de balayage et barres de progression"]]],
  ["BOUTONS",[["bMode","Multi / Un seul"],["bFreeze","⏸ Figer","Toucher une zone vide fige toujours l'image"],["bSwitch","⟲ Caméra (avant/arrière)"],["bPhoto","▣ Photo"],["bLearn","✚ Apprendre","Reste possible depuis une fiche (« Pas ça ? »)"],["bFilms","🎬 Films & Séries"],["bTV","📺 Prog. TV"],["bReco","🔍 C'est quoi ?"]]],
- ["FONCTIONS",[["codes","Lecture codes-barres / QR","Désactivée : le lecteur n'est ni chargé ni lancé"],["history","Historique des codes scannés","Désactivé : plus rien n'est enregistré"],["framing","Cadre à deux doigts / glisser à la souris"]]]];
+ ["FONCTIONS",[["codes","Lecture codes-barres / QR","Désactivée : le lecteur n'est ni chargé ni lancé"],["history","Historique des codes scannés","Désactivé : plus rien n'est enregistré"],["framing","Cadre à deux doigts / glisser à la souris"],
+   ["faces","Détection des visages","Cadre sur chaque visage ; modèle chargé seulement si activé"],["faceExpr","Estimation de l'expression","Indicative (joie, surprise…)"],
+   ["faceReco","Reconnaissance de mes proches enregistrés","Désactivée par défaut · jamais d'inconnus ni de célébrités · voir MÉMOIRE › Visages"]]]];
 function openSettings(){
   const pc=$("pc");
   pc.innerHTML=`<div class="lf"><div class="id"><span>PARAMÈTRES</span><span>STOCKÉS SUR CET APPAREIL</span></div><h2>Paramètres</h2>
@@ -1201,6 +1215,137 @@ function selClick(e){ // renvoie true si le clic concerne le cadre
 }
 window.TLSEL={get SEL(){return SEL;},get selT(){return selT;},dismissSel,analyzeSel};
 addEventListener("error",e=>window.__TL.errors.push(String(e.message)));
+/* ================= VISAGES (v5) : détection locale + reconnaissance OPT-IN des proches enregistrés ================= */
+/* Aucune identification d'inconnus ni de célébrités : seuls les visages enregistrés ici, avec accord, peuvent être nommés.
+   Seules des empreintes numériques (128 nombres) sont stockées sur cet appareil ; aucune image, aucun envoi. */
+const FACE={api:null,libP:null,det:false,expr:false,rec:false,loadP:{},busy:false,last:0,err:null};
+const FACE_URL="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/", FACE_MS=700, FACE_MATCH=0.5;
+const EXPR_FR={neutral:"neutre",happy:"joyeuse",sad:"triste",angry:"en colère",fearful:"inquiète",disgusted:"dégoûtée",surprised:"surprise"};
+let faceDB=(()=>{try{return JSON.parse(localStorage.getItem("tableLecture.faces"))||[];}catch(e){return [];}})();
+function saveFaces(){try{localStorage.setItem("tableLecture.faces",JSON.stringify(faceDB));}catch(e){alert("Mémoire du navigateur pleine.");}window.__TL.faceDB=faceDB.map(p=>p.name+":"+p.descs.length);}
+window.__TL.faceDB=faceDB.map(p=>p.name+":"+p.descs.length);
+function faceLib(){
+  if(!FACE.libP) FACE.libP=(async()=>{
+    const r=await fetch(FACE_URL+"dist/face-api.esm-nobundle.js");if(!r.ok)throw new Error("face-api HTTP "+r.status);
+    let code=await r.text();const n0=code.length;
+    code=code.replace(/import\*as \w+ from"@tensorflow\/[^"]+";/g,"").replace("w(n,mn);w(n,pn);w(n,un);","w(n,window.tf);");
+    if(code.length===n0)throw new Error("face-api : format inattendu");
+    const url=URL.createObjectURL(new Blob([code],{type:"text/javascript"}));
+    FACE.api=await import(url);return FACE.api;})();
+  return FACE.libP;
+}
+function faceModel(k){ // charge un modèle une seule fois, à la demande
+  if(!FACE.loadP[k]) FACE.loadP[k]=(async()=>{const api=await faceLib(),u=FACE_URL+"model";
+    if(k==="det"){await api.nets.tinyFaceDetector.loadFromUri(u);FACE.det=true;}
+    if(k==="expr"){await api.nets.faceExpressionNet.loadFromUri(u);FACE.expr=true;}
+    if(k==="rec"){await api.nets.faceLandmark68TinyNet.loadFromUri(u);await api.nets.faceRecognitionNet.loadFromUri(u);FACE.rec=true;}
+    window.__TL.face={det:FACE.det,expr:FACE.expr,rec:FACE.rec};
+  })().catch(e=>{FACE.loadP[k]=null;FACE.err=e.message;window.__TL.errors.push("visages: "+e.message);});
+  return FACE.loadP[k];
+}
+function ensureFaceModels(){
+  if(!pref("faces")||!window.tf)return;
+  faceModel("det");if(pref("faceExpr"))faceModel("expr");if(pref("faceReco"))faceModel("rec");
+}
+function faceMatch(desc){
+  let best=null;
+  for(const P of faceDB) for(const d of P.descs){let s=0;for(let i=0;i<128;i++){const v=desc[i]-d[i];s+=v*v;}s=Math.sqrt(s);if(!best||s<best.d)best={d:s,P};}
+  return best&&best.d<FACE_MATCH?best:null;
+}
+function faceCard(f){
+  const ex=f.expr?Object.entries(f.expr).sort((a,b)=>b[1]-a[1]):null, top=ex&&ex[0];
+  const short=top?EXPR_FR[top[0]]+" "+Math.round(top[1]*100)+" %":"expression non analysée";
+  const fl=[];
+  if(ex) fl.push("Expression estimée (indicatif) : "+ex.slice(0,3).map(([k,v])=>EXPR_FR[k]+" "+Math.round(v*100)+" %").join(", ")+".");
+  fl.push("Confiance de détection : "+Math.round(f.score*100)+" %.");
+  if(f.name) fl.push("Ressemblance avec l'empreinte enregistrée : "+Math.round((1-f.dist)*100)+" % (seuil de reconnaissance : distance < "+FACE_MATCH+").");
+  fl.push(f.name?"Reconnaissance locale : seules les personnes enregistrées avec leur accord (MÉMOIRE › Visages) peuvent être nommées.":
+    "La table n'identifie jamais une personne inconnue ni une célébrité. "+(pref("faceReco")?"Personne non enregistrée.":"Reconnaissance des proches désactivée (Paramètres)."));
+  return {n:f.name||"Visage",cat:f.name?"Proche connu":"Visage",key:"visage",src:"face",short,face:true,
+    srcLabel:"FACE-API (TINY FACE DETECTOR"+(ex?" + EXPRESSIONS":"")+(f.name?" + EMPREINTE LOCALE":"")+")",
+    d:f.name?("« "+f.name+" » reconnu(e) grâce à l'empreinte enregistrée sur cet appareil."):"Un visage est présent dans l'image. "+(top?"Son expression semble "+EXPR_FR[top[0]]+".":""),fh:"DÉTAILS",f:fl};
+}
+async function detectFaces(src,sw,sh){
+  if(!pref("faces"))return [];
+  if(!FACE.det){ensureFaceModels();return [];}
+  const api=FACE.api,opt=new api.TinyFaceDetectorOptions({inputSize:Math.max(sw,sh)>900?416:320,scoreThreshold:0.5});
+  const wantExpr=pref("faceExpr")&&FACE.expr, wantRec=pref("faceReco")&&FACE.rec&&faceDB.length>0;
+  if(pref("faceExpr")&&!FACE.expr)faceModel("expr");if(pref("faceReco")&&!FACE.rec)faceModel("rec");
+  let q=api.detectAllFaces(src,opt);
+  if(wantRec)q=q.withFaceLandmarks(true);
+  if(wantExpr)q=q.withFaceExpressions();
+  if(wantRec)q=q.withFaceDescriptors();
+  const res=(await q).slice(0,8);
+  const out=res.map(r=>{const d=r.detection||r,b=d.box,f={score:d.score,expr:wantExpr&&r.expressions?{...r.expressions}:null};
+    if(wantRec&&r.descriptor){const m=faceMatch(r.descriptor);if(m){f.name=m.P.name;f.dist=m.d;}}
+    return {label:f.name?"face:"+f.name:"face",score:d.score,box:[b.x,b.y,b.width,b.height],src:"face",refined:true,card:faceCard(f),face:f};});
+  window.__TL.faces=out.map(h=>({name:h.card.n,score:+h.score.toFixed(2),expr:h.card.short,known:!!h.face.name}));
+  return out;
+}
+async function faceStep(now){ // appelé par la boucle live
+  if(!pref("faces")||FACE.busy||now-FACE.last<FACE_MS||!video.videoWidth)return [];
+  FACE.last=now;FACE.busy=true;
+  try{return await detectFaces(video,video.videoWidth,video.videoHeight);}catch(e){window.__TL.errors.push("visages: "+e.message);return [];}
+  finally{FACE.busy=false;}
+}
+/* ---- enregistrement d'un visage (consentement explicite) ---- */
+async function captureDescriptor(t){
+  await faceModel("det");await faceModel("rec");if(!FACE.rec)throw new Error("Modèle de reconnaissance indisponible");
+  const api=FACE.api,src=frozenMode?frozen:video,sw=frozenMode?frozen.width:video.videoWidth,sh=frozenMode?frozen.height:video.videoHeight;
+  const res=await api.detectAllFaces(src,new api.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:0.5})).withFaceLandmarks(true).withFaceDescriptors();
+  if(!res.length)return null;
+  let pick=res[0];
+  if(t&&t.box){let bi=-1;for(const r of res){const b=r.detection.box,v=iou([b.x,b.y,b.width,b.height],t.box);if(v>bi){bi=v;pick=r;}}}
+  else pick=res.slice().sort((a,b)=>b.detection.box.area-a.detection.box.area)[0];
+  return Array.from(pick.descriptor,v=>+v.toFixed(5));
+}
+function openFaceEnroll(t){
+  const pc=$("pc");
+  pc.innerHTML=`<div class="lf"><div class="id"><span>VISAGES · ENREGISTREMENT</span><span>LOCAL</span></div><h2>Enregistrer un proche</h2>
+   <p>La table calcule une <b>empreinte numérique</b> du visage (128 nombres) et la garde <b>uniquement sur cet appareil</b>. Aucune photo n'est conservée, rien n'est envoyé sur Internet. Vous pourrez la supprimer à tout moment (MÉMOIRE › Visages).</p>
+   <p>${t?"Le visage touché sera utilisé.":"Le plus grand visage visible à l'image sera utilisé : la personne doit être face à la caméra."}</p>
+   <input id="fname" type="text" maxlength="30" placeholder="Prénom" autocomplete="off" style="width:100%;padding:10px;background:#0008;border:1px solid var(--c2);color:#e8fbff;font:inherit;margin:6px 0">
+   <label class="setg"><input type="checkbox" id="fok"><span><b>Je confirme que la personne est d'accord</b><small>pour que son visage soit mémorisé sur cet appareil afin d'afficher son prénom.</small></span></label>
+   <button class="pbtn" id="fsave" disabled>✔ Enregistrer ce visage</button> <button class="pbtn" id="fcancel">Annuler</button><div id="fmsg" class="warnbox" style="display:none"></div></div>`;
+  const nm=$("fname"),ok=$("fok"),sv=$("fsave"),msg=$("fmsg");
+  pc.querySelectorAll("input,label,button").forEach(el=>el.addEventListener("click",e=>e.stopPropagation()));
+  const upd=()=>{sv.disabled=!(ok.checked&&nm.value.trim());};nm.oninput=upd;ok.onchange=upd;
+  $("fcancel").onclick=()=>openFaces();
+  sv.onclick=async()=>{
+    if(!ok.checked||!nm.value.trim())return;
+    sv.disabled=true;msg.style.display="block";msg.textContent="Analyse du visage…";
+    try{const d=await captureDescriptor(t);
+      if(!d){msg.textContent="Aucun visage net trouvé. Placez la personne face à la caméra, bien éclairée, puis réessayez.";sv.disabled=false;return;}
+      const name=nm.value.trim().slice(0,30);let P=faceDB.find(p=>p.name.toLowerCase()===name.toLowerCase());
+      if(!P){P={name,descs:[],date:Date.now(),consent:true};faceDB.push(P);}
+      P.descs.push(d);if(P.descs.length>5)P.descs.shift();P.consent=true;saveFaces();
+      setStatus("✔ VISAGE ENREGISTRÉ : "+name.toUpperCase());openFaces("« "+name+" » enregistré(e) ("+P.descs.length+" vue(s)). Ajoutez d'autres vues pour une reconnaissance plus sûre.");
+      if(frozenMode&&!analysing){const fh=await detectFaces(frozen,frozen.width,frozen.height);stillHits=stillHits.filter(h=>h.src!=="face").concat(fh);buildStill();}
+    }catch(e){msg.textContent="Erreur : "+e.message;sv.disabled=false;}
+  };
+  panel.classList.add("open");window.__TL.panel={faceEnroll:true};
+}
+function openFaces(note){
+  const pc=$("pc"),on=pref("faceReco");
+  pc.innerHTML=`<div class="lf"><div class="id"><span>MÉMOIRE · VISAGES</span><span>${faceDB.length} PERSONNE(S)</span></div><h2>Visages connus</h2>
+   ${note?`<div class="warnbox">${esc(note)}</div>`:""}
+   <label class="setg"><input type="checkbox" id="frec"${on?" checked":""}><span>Reconnaître mes proches enregistrés<small>Désactivé par défaut. Les inconnus et les célébrités ne sont jamais identifiés.</small></span></label>
+   <p style="font-size:12px;opacity:.8">Seules des empreintes numériques sont stockées sur cet appareil (pas de photo, aucun envoi). La reconnaissance est indicative et peut se tromper (lumière, angle, lunettes, ressemblance).</p>
+   ${on?'<button class="pbtn" id="fadd">＋ Enregistrer un visage (avec accord)</button>':""}<div id="flist"></div>
+   ${faceDB.length?'<button class="pbtn" id="fclear">✖ Effacer tous les visages</button>':""}</div>`;
+  const L=$("flist");
+  faceDB.forEach(P=>{const d=document.createElement("div");d.className="memi";
+    d.innerHTML=`<div style="width:42px;height:42px;display:grid;place-items:center;border:1px solid var(--c2);flex:none">☺</div><div>${esc(P.name)}<small>${P.descs.length} empreinte(s) · ${new Date(P.date).toLocaleDateString("fr-FR")} · accord confirmé</small></div><button>Supprimer</button>`;
+    d.querySelector("button").onclick=e=>{e.stopPropagation();if(confirm("Supprimer le visage de « "+P.name+" » ?")){faceDB=faceDB.filter(x=>x!==P);saveFaces();openFaces();}};L.appendChild(d);});
+  const fr=$("frec");fr.onclick=e=>e.stopPropagation();fr.onchange=()=>{setPref("faceReco",fr.checked);openFaces();};
+  if($("fadd"))$("fadd").onclick=e=>{e.stopPropagation();openFaceEnroll(null);};
+  if($("fclear"))$("fclear").onclick=e=>{e.stopPropagation();if(confirm("Effacer tous les visages enregistrés ?")){faceDB=[];saveFaces();openFaces();}};
+  panel.classList.add("open");window.__TL.panel={faces:true};
+}
+addEventListener("tl-pref",e=>{const k=e.detail.k;if(["faces","faceExpr","faceReco","*"].includes(k))ensureFaceModels();
+  if((k==="faces"||k==="*")&&!pref("faces")){tracks.filter(t=>t.src==="face").forEach(t=>{dropTrack(t);});tracks=tracks.filter(t=>t.src!=="face");}});
+window.TLF={openFaces,openFaceEnroll,detectFaces,ensureFaceModels,get FACE(){return FACE;},get db(){return faceDB;}};
+
 loadModels();
 </script>
 <script>
