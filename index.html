@@ -65,7 +65,7 @@ body.off-wx #wx,body.off-mem #mem,body.off-fps #fps,body.off-status #status,body
 body.off-bPhoto #bar label.btn,body.off-bLearn #bLearn,body.off-bFilms #bFilms,body.off-bTV #bTV,body.off-bReco #bReco,body.off-history #chist,
 body.off-anim .scan,body.off-details .mini small,body.off-details .mini .tap,body.off-pct .mini .p,body.off-pct .fc .conf,body.off-pct .fc .pctrow{display:none!important}
 body.off-anim #sel.run{animation:none}
-#gear{position:fixed;top:calc(env(safe-area-inset-top) + 4px);left:calc(env(safe-area-inset-left) + 4px);z-index:6;width:44px;height:44px;max-width:44px;flex:none;padding:0;display:flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center;font-size:24px;letter-spacing:0;line-height:1;border-radius:50%;background:rgba(0,20,26,.85);text-shadow:0 0 8px var(--c);pointer-events:auto;text-transform:none}
+#gear{position:fixed;top:calc(env(safe-area-inset-top) + 4px);left:calc(env(safe-area-inset-left) + 4px);z-index:11;width:44px;height:44px;max-width:44px;flex:none;padding:0;display:flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center;font-size:24px;letter-spacing:0;line-height:1;border-radius:50%;background:rgba(0,20,26,.85);text-shadow:0 0 8px var(--c);pointer-events:auto;text-transform:none}
 #hud{overflow:hidden}#hud span{min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis}
 #offl{position:fixed;top:calc(env(safe-area-inset-top) + 52px);left:calc(env(safe-area-inset-left) + 4px);z-index:6;font-size:9px;letter-spacing:1px;padding:3px 6px;color:#ffd166;border:1px solid #ffd166;background:rgba(26,18,0,.85);box-shadow:0 0 8px rgba(255,209,102,.4);pointer-events:none}
 #offl[hidden],#upd[hidden],#toast[hidden]{display:none}
@@ -173,7 +173,7 @@ body.off-anim #sel.run{animation:none}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v5.2</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.2</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
+  <div id="hud"><span>TABLE·LECTURE v5.3</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.3</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
   <div id="status">INITIALISATION</div>
   <div id="minis"></div>
   <div id="sel"></div>
@@ -192,7 +192,7 @@ body.off-anim #sel.run{animation:none}
   <div class="ring"></div>
   <h1>TABLE DE LECTURE</h1>
   <p>Pointez la caméra vers la table et posez un objet. Le système l'identifie et affiche sa fiche d'analyse. Touchez un objet pour ouvrir sa fiche complète, ou ailleurs pour figer l'image. « Multi » / « Un seul » change le mode d'affichage. Avec deux doigts (ou en glissant à la souris), encadrez un objet pour analyser seulement cette zone.</p>
-  <p>Aussi : météo locale, films & séries, programme TV et « C'est quoi ce film ? » en haut de l'écran. Visages : cadre et expression ; reconnaissance de vos proches seulement si vous l'activez (MÉMOIRE › Visages). ⚙ Paramètres en haut à droite.</p>
+  <p>Aussi : météo locale, films & séries, programme TV et « C'est quoi ce film ? » en haut de l'écran. Visages : cadre et expression ; reconnaissance de vos proches seulement si vous l'activez (MÉMOIRE › Visages). ⚙ Paramètres : bouton rond en haut à gauche.</p>
   <button id="bStart" disabled>Chargement…</button>
   <div id="load">CHARGEMENT DES MODÈLES IA…</div>
   <div id="load2"></div>
@@ -1071,7 +1071,10 @@ function openSettings(){
   $("sreset").onclick=e=>{e.stopPropagation();if(confirm("Remettre tous les paramètres par défaut ?")){resetPrefs();CONF_T=0.65;window.__TL.seuil=CONF_T;openSettings();}};
   panel.classList.add("open");window.__TL.panel={settings:true};
 }
-$("gear").addEventListener("click",e=>{e.stopPropagation();openSettings();});
+$("gear").addEventListener("click",e=>{e.stopPropagation();const st=$("start");
+  if(st&&getComputedStyle(st).display!=="none"){st.dataset.hid="1";st.style.display="none";} // Paramètres depuis l'écran d'accueil
+  openSettings();});
+new MutationObserver(()=>{const st=$("start");if(st&&st.dataset.hid&&!$("panel").classList.contains("open")){delete st.dataset.hid;if(!running)st.style.display="";}}).observe($("panel"),{attributes:true,attributeFilter:["class"]});
 document.addEventListener("click",e=>{if(e.target&&e.target.id==="supd"){e.preventDefault();e.stopPropagation();checkUpdate(true);}},true);
 addEventListener("tl-pref",e=>{const k=e.detail.k;
   if((k==="codes"||k==="*")&&pref("codes")&&coco)initScanner();
@@ -1235,7 +1238,7 @@ function selClick(e){ // renvoie true si le clic concerne le cadre
 }
 window.TLSEL={get SEL(){return SEL;},get selT(){return selT;},dismissSel,analyzeSel};
 addEventListener("error",e=>window.__TL.errors.push(String(e.message)));
-const APP_VER="5.2";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
+const APP_VER="5.3";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
 function checkUpdate(manual){if(window.TLPWA&&TLPWA.reg)return TLPWA.check(manual);if(!manual&&navigator.serviceWorker&&navigator.serviceWorker.controller)return;fetch(location.pathname+"?nv="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const APP_VER="([^"]+)"/);const nv=m&&m[1];
   if(nv&&nv!==APP_VER){const k="tableLecture.upd."+nv;if(manual||!sessionStorage.getItem(k)){sessionStorage.setItem(k,"1");location.replace(location.pathname+"?v="+encodeURIComponent(nv));}}
   else if(manual)alert("Vous avez la dernière version (v"+APP_VER+").");}).catch(()=>{if(manual)alert("Vérification impossible (hors ligne ?).");});}
@@ -1821,7 +1824,7 @@ const fire=(n,d)=>dispatchEvent(new CustomEvent(n,{detail:d}));
 (()=>{
 const $=id=>document.getElementById(id);
 const P=window.TLPWA={reg:null,offline:!navigator.onLine};
-["upd","toast","offl"].forEach(id=>{const e=$(id);if(e)document.body.appendChild(e);}); // hors de tout contexte d'empilement
+["upd","toast","offl","gear"].forEach(id=>{const e=$(id);if(e)document.body.appendChild(e);}); // hors de tout contexte d'empilement
 function toast(msg,ms){const t=$("toast");if(!t)return;t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true;},ms||4500);}
 P.toast=toast;
 function setOff(){P.offline=!navigator.onLine;$("offl").hidden=!P.offline;window.__TL.offline=P.offline;}
