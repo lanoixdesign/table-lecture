@@ -62,7 +62,26 @@ button.on{background:var(--c);color:#001218}
 #panel .x{position:absolute;top:10px;right:10px;flex:none;width:42px;max-width:42px;padding:8px 0;z-index:1}
 #pc{padding-right:44px}
 @media(min-width:700px){#panel{left:auto;top:0;width:380px;max-height:none;border-top:0;border-left:1px solid var(--c);transform:translateX(105%)}}
-#bar button,#bar .btn{font-size:11px;letter-spacing:1px;padding:12px 4px}
+#bar{gap:5px}
+#panel:not(.open){pointer-events:none}
+#bar button,#bar .btn{font-size:10px;letter-spacing:.5px;padding:12px 2px}
+#hud{z-index:4;gap:6px}#hud span{white-space:nowrap}#hud #mem{font-size:9px;letter-spacing:1px;padding:4px 2px;margin-top:-4px;opacity:.85;pointer-events:auto;cursor:pointer;text-decoration:underline dotted}
+#load2{font-size:11px;letter-spacing:2px;opacity:.8;min-height:1.4em}
+#credits{font-size:10px;color:var(--c);opacity:.6}
+.pbtn{display:block;width:100%;max-width:none;margin-top:12px;flex:none}
+.lf label{display:block;font-size:11px;letter-spacing:2px;margin:10px 0 4px;color:var(--c2)}
+.lf input,.lf textarea{width:100%;font:inherit;font-size:16px;color:#e8feff;background:rgba(0,20,26,.8);border:1px solid var(--c);padding:8px;border-radius:2px}
+.lf textarea{height:60px;font-size:14px}
+.lf canvas{display:block;width:140px;height:140px;border:1px solid var(--c);margin:8px 0;box-shadow:0 0 12px rgba(0,240,255,.35)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{flex:none;max-width:none;font-size:10px;padding:6px 8px;letter-spacing:1px}
+.row{display:flex;gap:8px}.row button,.row .pbtn{max-width:none;width:auto;flex:1}
+.lf .id{padding-right:52px;gap:8px}
+.memi{display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(0,240,255,.25);padding:8px 0}
+.memi img{width:48px;height:48px;border:1px solid var(--c);object-fit:cover}
+.memi div{flex:1;font-size:13px;color:#e8feff}.memi small{display:block;font-size:10px;opacity:.7;color:var(--c)}
+.memi button{flex:none;max-width:none;font-size:10px;padding:8px}
+
 /* start screen */
 #start{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px;background:radial-gradient(circle at 50% 40%,#003340,#00090d 70%)}
 #start h1{font-size:26px;letter-spacing:6px;text-shadow:0 0 14px var(--c)}
@@ -81,7 +100,7 @@ button.on{background:var(--c);color:#001218}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v2.0</span><span id="fps">-- FPS</span></div>
+  <div id="hud"><span>TABLE·LECTURE v3.0</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div>
   <div id="status">INITIALISATION</div>
   <div id="minis"></div>
   <div id="card" class="fc"></div>
@@ -89,6 +108,7 @@ button.on{background:var(--c);color:#001218}
   <div id="bar">
     <button id="bMode">◫ Multi</button>
     <button id="bFreeze">⏸ Figer</button>
+    <button id="bLearn">✚ Apprendre</button>
     <button id="bSwitch">⟲ Caméra</button>
     <label class="btn" for="file">▣ Photo</label>
     <input type="file" id="file" accept="image/*">
@@ -100,12 +120,13 @@ button.on{background:var(--c);color:#001218}
   <p>Pointez la caméra vers la table et posez un objet. Le système l'identifie et affiche sa fiche d'analyse. Touchez un objet pour ouvrir sa fiche complète, ou ailleurs pour figer l'image. « Multi » / « Un seul » change le mode d'affichage.</p>
   <button id="bStart" disabled>Chargement…</button>
   <div id="load">CHARGEMENT DES MODÈLES IA…</div>
+  <div id="load2"></div>
+  <a id="credits" href="credits.html" target="_blank" rel="noopener">Crédits images et modèles</a>
   <div id="err"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
 <script>
 "use strict";
 /* ================= DICTIONNAIRE ================= */
@@ -180,6 +201,8 @@ const IMN_FR = [
 ];
 function cardFor(label, source){
   const k=label.toLowerCase();
+  const V=window.VOC&&window.VOC.cards[k];
+  if(V) return {...V,key:k,src:source};
   if(DB[k]) return {...DB[k],key:k,src:source};
   if(source==="mobilenet"){
     for(const [re,key] of IMN) if(re.test(k)) return {...DB[key],key,src:source};
@@ -220,16 +243,82 @@ async function loadModels(){
     await tf.ready();
     L.textContent="MOTEUR : "+tf.getBackend().toUpperCase()+" · CHARGEMENT COCO-SSD…";
     coco=await cocoSsd.load({base:"lite_mobilenet_v2"});
-    L.textContent="COCO-SSD PRÊT · CHARGEMENT MOBILENET…";
+    L.textContent="COCO-SSD PRÊT (détection rapide)";
     window.__TL.coco=true;
     $("bStart").disabled=false;$("bStart").textContent="▶ Activer la table";
-    mnetLoading=mobilenet.load({version:2,alpha:1.0}).then(m=>{mnet=m;window.__TL.mobilenet=true;L.textContent="MODÈLES PRÊTS (COCO-SSD + MOBILENET)";return m;})
-      .catch(e=>{window.__TL.errors.push("mobilenet: "+e.message);L.textContent="COCO-SSD PRÊT (MobileNet indisponible)";});
-    await mnetLoading;
     window.__TL.ready=true;
   }catch(e){
     window.__TL.errors.push(e.message);$("err").textContent="Erreur de chargement des modèles : "+e.message+". Vérifiez la connexion.";
   }
+}
+
+/* MobileNet : seulement si la mémoire étendue (MobileCLIP) est indisponible */
+function loadMobileNetFallback(){
+  if(mnetLoading) return mnetLoading;
+  const sc=document.createElement("script");sc.src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js";
+  mnetLoading=new Promise((res,rej)=>{sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);})
+    .then(()=>mobilenet.load({version:2,alpha:1.0})).then(m=>{mnet=m;window.__TL.mobilenet=true;$("mem").textContent="MÉMOIRE : MOBILENET";return m;})
+    .catch(e=>{window.__TL.errors.push("mobilenet: "+e.message);});
+  return mnetLoading;
+}
+addEventListener("clip-progress",e=>{const t="MÉMOIRE ÉTENDUE "+e.detail+" %";$("mem").textContent=t;$("load2").textContent=t;});
+addEventListener("clip-ready",()=>{const n=window.VOC.keys.length;$("mem").textContent="MÉMOIRE : "+n+" OBJETS";$("load2").textContent="MÉMOIRE ÉTENDUE PRÊTE · "+n+" OBJETS CONNUS";window.__TL.clip=true;});
+addEventListener("clip-failed",e=>{$("mem").textContent="MÉMOIRE ÉTENDUE INDISPONIBLE";$("load2").textContent="Mémoire étendue indisponible ("+e.detail+") — mode réduit";window.__TL.errors.push("clip: "+e.detail);loadMobileNetFallback();});
+
+/* ================= MÉMOIRE ÉTENDUE (MobileCLIP) & OBJETS APPRIS ================= */
+const CLIP_T=0.30, CLIP_WEAK=0.60, CLIP_CENTER=0.45, LEARN_T=0.86, COCO_WEAK=0.25;
+const clipOK=()=>window.CLIPX&&window.CLIPX.ready;
+function cropSquare(src,sw,sh,box,scale,flip){
+  const cx=box[0]+box[2]/2, cy=box[1]+box[3]/2; const s=Math.min(Math.max(box[2],box[3])*(scale||1.15),Math.max(sw,sh));
+  const c=document.createElement("canvas");c.width=c.height=256;const g=c.getContext("2d");
+  g.fillStyle="#7f7f7f";g.fillRect(0,0,256,256);
+  if(flip){g.translate(256,0);g.scale(-1,1);}
+  const x0=Math.max(0,cx-s/2),y0=Math.max(0,cy-s/2),x1=Math.min(sw,cx+s/2),y1=Math.min(sh,cy+s/2),k=256/s;
+  if(x1>x0&&y1>y0) g.drawImage(src,x0,y0,x1-x0,y1-y0,(x0-(cx-s/2))*k,(y0-(cy-s/2))*k,(x1-x0)*k,(y1-y0)*k);
+  return c;
+}
+function centerBox(sw,sh){const s=Math.min(sw,sh)*.6;return [(sw-s)/2,(sh-s)/2,s,s];}
+let learned=[];
+try{learned=JSON.parse(localStorage.getItem("tableLecture.learned")||"[]");}catch(e){learned=[];}
+function saveLearned(){try{localStorage.setItem("tableLecture.learned",JSON.stringify(learned));}catch(e){alert("Mémoire du navigateur pleine : supprimez des objets appris.");}}
+function learnedCard(L,sim){return {n:L.name,cat:"Objet appris",key:L.name,src:"learned",
+  d:L.note||("Objet que vous avez enseigné à la table le "+new Date(L.date).toLocaleDateString("fr-FR")+"."),
+  f:["Reconnu par comparaison avec "+L.embs.length+" empreinte(s) visuelle(s) enregistrée(s).","Ressemblance avec votre exemple : "+Math.round(sim*100)+" %.","Ajoutez d'autres vues de l'objet (bouton Apprendre) pour une reconnaissance plus sûre."]};}
+function dot(a,b,o){let s=0;for(let i=0;i<512;i++)s+=a[i]*b[o+i];return s;}
+async function clipRecognize(canvas){
+  const e=await window.CLIPX.embed(canvas);
+  let bl=null;
+  for(const L of learned) for(const v of L.embs){const s=dot(e,v,0);if(!bl||s>bl.s)bl={s,L};}
+  const V=window.VOC,n=V.keys.length,lg=new Float32Array(n);let m=-1e9;
+  for(let i=0;i<n;i++){lg[i]=100*dot(e,V.mat,i*512);if(lg[i]>m)m=lg[i];}
+  let z=0;for(let i=0;i<n;i++){lg[i]=Math.exp(lg[i]-m);z+=lg[i];}
+  const idx=[...lg.keys()].sort((a,b)=>lg[b]-lg[a]).slice(0,3);
+  const top=idx.map(i=>({key:V.keys[i],p:lg[i]/z}));
+  const r={key:top[0].key,p:top[0].p,top,emb:e,pOf:k=>{const i=V.keys.indexOf(k);return i<0?0:lg[i]/z;}};
+  if(bl&&bl.s>=LEARN_T){r.learned=true;r.card=learnedCard(bl.L,bl.s);r.sim=bl.s;}
+  window.__TL.lastClip=top.map(t=>t.key+":"+t.p.toFixed(2)).join(" ")+(bl?" | appris "+bl.L.name+":"+bl.s.toFixed(2):"");
+  return r;
+}
+/* applique le résultat CLIP à une détection (track ou hit) ; renvoie false si à rejeter */
+function applyClip(t,r,weak){
+  if(r.learned){t.card=r.card;t.score=r.sim;t.src="learned";return true;}
+  if(t.label==="person"&&!weak){ // une « personne » peu sûre n'est remplacée que si la mémoire étendue est quasi certaine
+    if(t.score<0.7&&r.p>=0.9){t.card=cardFor(r.key,"clip");t.score=r.p;t.src="clip";} return true;}
+  // détection COCO franche et plausible pour la mémoire étendue : on garde COCO
+  if(!weak&&t.src==="coco"&&t.score>=0.75&&r.pOf(t.label)>=0.02) return true;
+  if(r.p>=(weak?CLIP_WEAK:CLIP_T)){t.card=cardFor(r.key,"clip");t.score=r.p;t.src="clip";return true;}
+  return !weak;
+}
+let clipBusy=false;
+async function refineTrack(t,src,sw,sh){
+  clipBusy=true;t.refining=true;
+  try{
+    const r=await clipRecognize(cropSquare(src,sw,sh,t.box));
+    if(applyClip(t,r,t.weak)) t.confirmed=true; else t.rejected=true;
+    if(t.el){t.el.remove();t.el=null;}
+    if(cardTrackId===t.id) cardTrackId=null;
+  }catch(e){window.__TL.errors.push("clip: "+e.message);t.confirmed=!t.weak;t.rejected=t.weak;}
+  t.refining=false;t.refined=true;clipBusy=false;
 }
 
 /* ================= CAMÉRA ================= */
@@ -284,7 +373,7 @@ function cardHTML(info,score){
    <h2 class="nm type"></h2><span class="cat">${esc(info.cat.toUpperCase())}</span>
    <div class="id"><span>CORRESPONDANCE</span><span>${pct(score)}</span></div><div class="conf"><i></i></div>
    <p>${esc(info.d)}</p><h3>LE SAVIEZ-VOUS ?</h3><ul>${info.f.map(x=>"<li>"+esc(x)+"</li>").join("")}</ul>
-   <div class="src">SOURCE : ${info.src==="coco"?"COCO-SSD (détection)":"MOBILENET (classification)"} · ${esc(info.key)}</div>`;
+   <div class="src">SOURCE : ${({coco:"COCO-SSD (détection)",mobilenet:"MOBILENET (classification)",clip:"MOBILECLIP (mémoire étendue)",learned:"MÉMOIRE PERSONNELLE (objet appris)"})[info.src]||info.src} · ${esc(info.key)}</div>`;
 }
 let typeSerial=0;
 function fillCard(el,info,score){
@@ -307,6 +396,8 @@ function placeCard(r){
 function openPanel(t){
   panelTrackId=t.id;
   fillCard($("pc"),t.card,t.score);
+  const b=document.createElement("button");b.className="pbtn";b.textContent="✎ Pas ça ? Apprendre cet objet";
+  b.onclick=ev=>{ev.stopPropagation();openLearn(t);};$("pc").appendChild(b);
   panel.classList.add("open");
   window.__TL.panel={name:t.card.n,label:t.label};
 }
@@ -354,10 +445,20 @@ function layoutMinis(list,W,H){
 function filterPreds(preds){
   let ok=preds.filter(p=>p.score>=MIN_SCORE&&p.class!=="dining table");
   const nonP=ok.filter(p=>p.class!=="person"); if(nonP.length) ok=nonP; // on privilégie les objets à la main
-  return ok.sort((a,b)=>b.score*Math.sqrt(b.bbox[2]*b.bbox[3])-a.score*Math.sqrt(a.bbox[2]*a.bbox[3]))
-           .slice(0,MAX_OBJ).map(p=>({label:p.class,score:p.score,box:p.bbox,src:"coco"}));
+  ok=ok.sort((a,b)=>b.score*Math.sqrt(b.bbox[2]*b.bbox[3])-a.score*Math.sqrt(a.bbox[2]*a.bbox[3]));
+  const keep=[];for(const p of ok){if(!keep.some(q=>iou(q.bbox,p.bbox)>0.6))keep.push(p);}
+  const out=keep.slice(0,MAX_OBJ).map(p=>({label:p.class,score:p.score,box:p.bbox,src:"coco"}));
+  // détections faibles : candidates que la mémoire étendue (CLIP) doit confirmer
+  if(clipOK()){
+    const weak=preds.filter(p=>p.score>=COCO_WEAK&&p.score<MIN_SCORE&&p.class!=="dining table"&&p.class!=="person"&&!keep.some(q=>iou(q.bbox,p.bbox)>0.4))
+      .sort((a,b)=>b.score-a.score);
+    const wk=[];for(const p of weak){if(!wk.some(q=>iou(q.bbox,p.bbox)>0.4))wk.push(p);}
+    wk.slice(0,3).forEach(p=>{if(out.length<MAX_OBJ)out.push({label:p.class,score:p.score,box:p.bbox,src:"coco",weak:true});});
+  }
+  return out;
 }
-function mkTrack(h,now,stable){return {id:nextId++,label:h.label,src:h.src,box:h.box,score:h.score,since:now,seen:now,stable:!!stable,card:cardFor(h.label,h.src),sm:null};}
+function mkTrack(h,now,stable){return {id:nextId++,label:h.label,src:h.src,box:h.box,score:h.score,since:now,seen:now,stable:!!stable,card:h.card||cardFor(h.label,h.src),sm:null,
+  weak:!!h.weak,refined:!!h.refined,confirmed:!!h.refined||!h.weak};}
 function dropTrack(t){if(t.el){t.el.remove();t.el=null;}if(cardTrackId===t.id)hideCard();}
 function clearTracks(){tracks.forEach(dropTrack);tracks=[];}
 function updateTracks(hits,now){
@@ -367,12 +468,12 @@ function updateTracks(hits,now){
     let best=null,bi=0.15;
     for(const t of tracks){if(used.has(t)||t.label!==h.label)continue;const v=iou(t.box,h.box);if(v>bi){bi=v;best=t;}}
     if(!best&&!multi) best=tracks.find(t=>!used.has(t)&&t.label===h.label);
-    if(best){best.box=h.box;best.score=best.score*.6+h.score*.4;best.seen=now;}
+    if(best){best.box=h.box;if(!best.refined||best.src==="coco")best.score=best.score*.6+h.score*.4;best.seen=now;if(!h.weak)best.weak=false;}
     else{best=mkTrack(h,now,false);tracks.push(best);}
     used.add(best);
-    if(!best.stable&&now-best.since>=STABLE_MS) best.stable=true;
+    if(!best.stable&&now-best.since>=STABLE_MS&&(best.confirmed||!best.weak)) best.stable=true;
   }
-  tracks=tracks.filter(t=>{const gone=now-t.seen>(t.stable?LOST_MS:PENDING_LOST_MS);if(gone)dropTrack(t);return !gone;});
+  tracks=tracks.filter(t=>{const slow=t.label.startsWith("clip:");const gone=now-t.seen>(t.stable?(slow?2400:LOST_MS):(slow?1800:PENDING_LOST_MS));if(gone)dropTrack(t);return !gone;});
   if(!multi){ // un seul objet affiché : on garde le plus récent stabilisé
     const st=tracks.filter(t=>t.stable).sort((a,b)=>b.since-a.since);
     st.slice(1).forEach(t=>{dropTrack(t);tracks.splice(tracks.indexOf(t),1);});
@@ -391,13 +492,27 @@ async function classify(src,sw,sh){
 }
 async function detectStep(vw,vh){
   const now=performance.now();
-  let hits=filterPreds(await coco.detect(video,20));
-  if(hits.length) lastHit=now;
-  else if(now-lastHit>800&&mnet&&now-lastMnet>700){
-    lastMnet=now;const h=await classify(video,vw,vh);
-    if(h){hits=[h];lastHit=now;}
+  let hits=filterPreds(await coco.detect(video,20,COCO_WEAK));
+  if(hits.some(h=>!h.weak)) lastHit=now;
+  const anyObj=hits.some(h=>!h.weak)||tracks.some(t=>t.weak&&t.confirmed&&!t.rejected);
+  if(!anyObj&&now-lastHit>800&&now-lastMnet>900){
+    if(clipOK()&&!clipBusy){
+      lastMnet=now;clipBusy=true;
+      try{const box=centerBox(vw,vh),r=await clipRecognize(cropSquare(video,vw,vh,box,1));
+        if(r.learned||r.p>=CLIP_CENTER){const h={label:"clip:"+(r.learned?r.card.n:r.key),box,src:"clip",refined:true,score:0};applyClip(h,r,false);hits=[h];lastHit=now;}
+      }catch(e){window.__TL.errors.push("clip: "+e.message);}
+      clipBusy=false;
+    }else if(mnet){lastMnet=now;const h=await classify(video,vw,vh);if(h){hits=[h];lastHit=now;}}
   }
-  if(!frozenMode) updateTracks(hits,performance.now());
+  if(frozenMode) return;
+  updateTracks(hits,performance.now());
+  // affinage CLIP : une détection à la fois, dès qu'elle est un peu stable
+  if(clipOK()&&!clipBusy){
+    const t2=performance.now();
+    const c=tracks.filter(t=>!t.refined&&!t.refining&&t2-t.since>250&&t2-t.seen<200&&!(t.label==="person"&&!t.weak&&t2-t.since<1200))
+                  .sort((a,b)=>(a.weak-b.weak)||((a.label==="person")-(b.label==="person"))||(a.since-b.since))[0];
+    if(c) refineTrack(c,video,vw,vh);
+  }
 }
 
 /* ================= BOUCLE ================= */
@@ -420,7 +535,8 @@ function loop(){
   if(!geo.w){if(!frozenMode)drawReticle();return;}
   const f=fit(geo.w,geo.h);
   for(const t of tracks){t.sm=t.sm?t.sm.map((v,i)=>v+(t.box[i]-v)*.3):t.box.slice();t.r=toScreen(t.sm,f,geo.mirror);}
-  const stable=tracks.filter(t=>t.stable), pending=tracks.filter(t=>!t.stable);
+  for(const t of tracks) if(!t.stable&&t.confirmed&&!t.rejected&&now-t.since>=STABLE_MS) t.stable=true;
+  const stable=tracks.filter(t=>t.stable&&!t.rejected), pending=tracks.filter(t=>!t.stable&&!t.rejected&&(!t.weak||t.confirmed));
   pending.forEach(t=>drawBox(t.r,t.card.n.toUpperCase()+" "+pct(t.score),(now-t.since)/STABLE_MS,false));
   stable.forEach(t=>drawBox(t.r,t.card.n.toUpperCase(),null,true,t.id===panelTrackId));
   if(multi){ layoutMinis(stable,W,H); }
@@ -446,8 +562,20 @@ async function analyseStill(src,sw,sh,mirror){
   const t0=performance.now();analysing=true;
   let hits=[];
   try{
-    hits=filterPreds(await coco.detect(frozen,20));
-    if(!hits.length){if(!mnet&&mnetLoading)await mnetLoading;const h=await classify(frozen,sw,sh);if(h)hits=[h];}
+    hits=filterPreds(await coco.detect(frozen,20,COCO_WEAK));
+    if(clipOK()){
+      const kept=[];
+      for(const h of hits){
+        const r=await clipRecognize(cropSquare(frozen,sw,sh,h.box));h.clipTop=r.top;h.cocoScore=h.score;
+        if(applyClip(h,r,h.weak)){h.refined=true;kept.push(h);}
+      }
+      window.__TL.stillDebug=hits.map(h=>({coco:h.label,cs:+(h.cocoScore||h.score).toFixed(2),weak:!!h.weak,top:(h.clipTop||[]).map(t=>t.key+":"+t.p.toFixed(2)).join(" ")}));
+      hits=kept;
+      if(!hits.length){const box=centerBox(sw,sh),r=await clipRecognize(cropSquare(frozen,sw,sh,box,1));
+        if(r.learned||r.p>=CLIP_T){const h={label:"clip:"+(r.learned?r.card.n:r.key),box,src:"clip",refined:true,score:0};applyClip(h,r,false);hits=[h];}}
+    }else if(!hits.filter(h=>!h.weak).length){
+      hits=[];if(!mnet&&mnetLoading)await mnetLoading;const h=await classify(frozen,sw,sh);if(h)hits=[h];
+    }else hits=hits.filter(h=>!h.weak);
   }catch(e){window.__TL.errors.push(e.message);}
   await new Promise(r=>setTimeout(r,Math.max(0,900-(performance.now()-t0))));
   analysing=false;stillHits=hits;buildStill();
@@ -455,7 +583,7 @@ async function analyseStill(src,sw,sh,mirror){
 function buildStill(){
   clearTracks();const now=performance.now();
   (multi?stillHits:stillHits.slice(0,1)).forEach(h=>tracks.push(mkTrack(h,now,true)));
-  window.__TL.still=tracks.map(t=>({name:t.card.n,label:t.label,score:+t.score.toFixed(2)}));
+  window.__TL.still=tracks.map(t=>({name:t.card.n,key:t.card.key,src:t.card.src,score:+(+t.score).toFixed(2)}));
 }
 function resume(){
   frozenMode=false;analysing=false;frozen.style.display="none";clearTracks();hideCard();closePanel();
@@ -468,9 +596,75 @@ function toggleFreeze(){
   if(!video.videoWidth) return;
   analyseStill(video,video.videoWidth,video.videoHeight,facing==="user");
 }
+/* ================= MODE APPRENDRE ================= */
+let learnTarget=null;
+function learnSource(){return frozenMode?{src:frozen,w:frozen.width,h:frozen.height}:{src:video,w:video.videoWidth,h:video.videoHeight};}
+async function startLearn(t){
+  if(!clipOK()){alert("La mémoire étendue est encore en chargement… réessayez dans un instant.");return;}
+  if(!frozenMode){ if(!video.videoWidth){alert("Activez la caméra ou importez une photo d'abord.");return;}
+    await analyseStill(video,video.videoWidth,video.videoHeight,facing==="user"); }
+  openLearn(t||null);
+}
+function openLearn(t){
+  if(!frozenMode&&!t){startLearn();return;}
+  const S=learnSource(), cands=tracks.filter(x=>x.stable&&!x.rejected);
+  if(t&&!cands.includes(t)) cands.unshift(t);
+  learnTarget=t?{box:t.box,track:t}:(cands[0]?{box:cands[0].box,track:cands[0]}:{box:centerBox(S.w,S.h),track:null});
+  const pc=$("pc");panelTrackId=learnTarget.track?learnTarget.track.id:null;
+  pc.innerHTML=`<div class="lf"><div class="id"><span>MODE APPRENTISSAGE</span><span>${learned.length} OBJET(S) EN MÉMOIRE</span></div>
+   <h2>Apprendre un objet</h2><p>Choisissez la zone, donnez un nom : la table s'en souviendra sur cet appareil.</p>
+   <div class="chips" id="lchips"></div><canvas id="lprev" width="256" height="256"></canvas>
+   <label for="lname">NOM DE L'OBJET</label><input id="lname" maxlength="40" placeholder="ex. Ma tasse bleue" autocomplete="off">
+   <label for="lnote">NOTE (FACULTATIF)</label><textarea id="lnote" maxlength="240" placeholder="ex. Cadeau de Léa, à laver à la main"></textarea>
+   <div class="row"><button class="pbtn" id="lsave">✔ Enregistrer</button><button class="pbtn" id="lmem">☰ Mes objets</button></div></div>`;
+  const chips=$("lchips");
+  const add=(label,tgt)=>{const b=document.createElement("button");b.textContent=label;b.onclick=e=>{e.stopPropagation();learnTarget=tgt;panelTrackId=tgt.track?tgt.track.id:null;drawPrev();};chips.appendChild(b);};
+  cands.forEach(x=>add("#"+x.id+" "+x.card.n,{box:x.box,track:x}));
+  add("◎ Centre de l'image",{box:centerBox(S.w,S.h),track:null});
+  function drawPrev(){const c=cropSquare(S.src,S.w,S.h,learnTarget.box,learnTarget.track?1.15:1);$("lprev").getContext("2d").drawImage(c,0,0);
+    if(learnTarget.track&&learnTarget.track.card.src==="learned")$("lname").value=learnTarget.track.card.n;}
+  drawPrev();
+  $("lsave").onclick=e=>{e.stopPropagation();saveLearn();};
+  $("lmem").onclick=e=>{e.stopPropagation();openMemory();};
+  panel.classList.add("open");window.__TL.panel={learn:true};
+}
+async function saveLearn(){
+  const name=$("lname").value.trim(), note=$("lnote").value.trim();
+  if(!name){$("lname").focus();$("lname").placeholder="Donnez un nom, svp";return;}
+  const S=learnSource(),b=learnTarget.box,sc=learnTarget.track?1.15:1;
+  $("lsave").textContent="… ANALYSE";
+  const embs=[];
+  for(const [k,f] of [[sc,0],[sc*0.85,0],[sc*1.3,0],[sc,1]]){const e=await window.CLIPX.embed(cropSquare(S.src,S.w,S.h,b,k,f));embs.push(Array.from(e,x=>+x.toFixed(4)));}
+  const th=document.createElement("canvas");th.width=th.height=64;th.getContext("2d").drawImage(cropSquare(S.src,S.w,S.h,b,sc),0,0,64,64);
+  let L=learned.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(L){L.embs=L.embs.concat(embs).slice(-16);if(note)L.note=note;}
+  else{L={id:Date.now(),name,note,date:Date.now(),embs,thumb:th.toDataURL("image/jpeg",.7)};learned.push(L);}
+  saveLearned();
+  const card=learnedCard(L,1);
+  if(learnTarget.track){const t=learnTarget.track;t.card=card;t.score=1;t.src="learned";t.confirmed=true;t.stable=true;t.rejected=false;if(t.el){t.el.remove();t.el=null;}cardTrackId=null;}
+  else{const now=performance.now();const t=mkTrack({label:"learn:"+name,box:b,src:"learned",score:1,card,refined:true},now,true);tracks.push(t);}
+  window.__TL.learnedCount=learned.length;
+  closePanel();setStatus("✔ OBJET APPRIS : "+name.toUpperCase());
+}
+function openMemory(){
+  const pc=$("pc");
+  pc.innerHTML=`<div class="lf"><div class="id"><span>MÉMOIRE PERSONNELLE</span><span>${learned.length} OBJET(S)</span></div><h2>Mes objets appris</h2>
+   ${learned.length?"":"<p>Aucun objet appris pour l'instant. Utilisez « ✚ Apprendre ».</p>"}<div id="mlist"></div>
+   ${learned.length?'<button class="pbtn" id="mclear">✖ Tout effacer</button>':""}</div>`;
+  const ml=$("mlist");
+  learned.forEach(L=>{const d=document.createElement("div");d.className="memi";
+    d.innerHTML=`<img alt="" src="${L.thumb||""}"><div>${esc(L.name)}<small>${L.embs.length} empreinte(s) · ${new Date(L.date).toLocaleDateString("fr-FR")}${L.note?" · "+esc(L.note):""}</small></div><button>Supprimer</button>`;
+    d.querySelector("button").onclick=e=>{e.stopPropagation();if(confirm("Oublier « "+L.name+" » ?")){learned=learned.filter(x=>x!==L);saveLearned();openMemory();}};
+    ml.appendChild(d);});
+  if($("mclear"))$("mclear").onclick=e=>{e.stopPropagation();if(confirm("Effacer tous les objets appris ?")){learned=[];saveLearned();openMemory();}};
+  panel.classList.add("open");window.__TL.panel={memory:true};
+}
+$("bLearn").onclick=e=>{e.stopPropagation();if(analysing)return;startLearn();};
+$("mem").addEventListener("click",e=>{e.stopPropagation();openMemory();});
+
 function trackAt(x,y){
   const pad=8;
-  return tracks.filter(t=>t.stable&&t.r&&x>=t.r[0]-pad&&x<=t.r[0]+t.r[2]+pad&&y>=t.r[1]-pad&&y<=t.r[1]+t.r[3]+pad)
+  return tracks.filter(t=>t.stable&&!t.rejected&&t.r&&x>=t.r[0]-pad&&x<=t.r[0]+t.r[2]+pad&&y>=t.r[1]-pad&&y<=t.r[1]+t.r[3]+pad)
                .sort((a,b)=>a.r[2]*a.r[3]-b.r[2]*b.r[3])[0];
 }
 $("bFreeze").onclick=e=>{e.stopPropagation();toggleFreeze();};
@@ -501,6 +695,35 @@ $("bStart").onclick=async()=>{
 };
 addEventListener("error",e=>window.__TL.errors.push(String(e.message)));
 loadModels();
+</script>
+<script type="module">
+/* Mémoire étendue : MobileCLIP-S0 (vision) dans le navigateur + vocabulaire pré-calculé (vocab.json) */
+import {AutoProcessor,CLIPVisionModelWithProjection,RawImage,env} from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
+const ID="Xenova/mobileclip_s0";
+const fire=(n,d)=>dispatchEvent(new CustomEvent(n,{detail:d}));
+(async()=>{
+  try{
+    env.allowLocalModels=false;
+    const t0=performance.now();
+    const vocabP=fetch("vocab.json").then(r=>{if(!r.ok)throw new Error("vocabulaire "+r.status);return r.json();});
+    const files={};let last=-1;
+    const progress_callback=p=>{if(p.status==="progress"&&p.total){files[p.file]=[p.loaded,p.total];let a=0,b=0;for(const [l,t] of Object.values(files)){a+=l;b+=t;}
+      const v=Math.floor(100*a/b);if(v!==last){last=v;fire("clip-progress",v);}}};
+    fire("clip-progress",0);
+    const [proc,model,voc]=await Promise.all([AutoProcessor.from_pretrained(ID),
+      CLIPVisionModelWithProjection.from_pretrained(ID,{dtype:"fp16",device:"wasm",progress_callback}),vocabP]);
+    const bin=Uint8Array.from(atob(voc.emb),c=>c.charCodeAt(0)),i8=new Int8Array(bin.buffer),D=voc.dim,n=voc.keys.length,mat=new Float32Array(n*D);
+    for(let i=0;i<n;i++){let z=0;for(let j=0;j<D;j++){const v=i8[i*D+j];mat[i*D+j]=v;z+=v*v;}z=Math.sqrt(z)||1;for(let j=0;j<D;j++)mat[i*D+j]/=z;}
+    window.VOC={keys:voc.keys,mat,cards:voc.cards};
+    const run=async canvas=>{const inp=await proc(RawImage.fromCanvas(canvas));const {image_embeds}=await model(inp);
+      return Float32Array.from(image_embeds.normalize().tolist()[0]);};
+    let queue=Promise.resolve(); // une seule inférence à la fois (la session ONNX n'est pas réentrante)
+    window.CLIPX={ready:false,embed:canvas=>{const r=queue.then(()=>run(canvas));queue=r.catch(()=>{});return r;}};
+    const c=document.createElement("canvas");c.width=c.height=256;await window.CLIPX.embed(c); // préchauffage
+    window.CLIPX.ready=true;window.__TL.clipLoadMs=Math.round(performance.now()-t0);
+    fire("clip-ready");
+  }catch(e){console.error(e);fire("clip-failed",e.message||String(e));}
+})();
 </script>
 </body>
 </html>
