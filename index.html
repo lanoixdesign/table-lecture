@@ -34,19 +34,35 @@ button.on{background:var(--c);color:#001218}
 #card{position:absolute;width:min(300px,78vw);max-height:62vh;overflow:auto;padding:14px 14px 12px;background:linear-gradient(160deg,rgba(0,40,52,.82),rgba(0,12,18,.88));border:1px solid var(--c);box-shadow:0 0 18px rgba(0,240,255,.45),inset 0 0 24px rgba(0,240,255,.12);clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));opacity:0;transform:scale(.92);transition:opacity .35s,transform .35s;pointer-events:auto;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 #card.show{opacity:1;transform:scale(1)}
 #card::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,240,255,.06) 0 1px,transparent 1px 3px);pointer-events:none}
-#card .id{font-size:10px;opacity:.7;letter-spacing:2px;display:flex;justify-content:space-between}
-#card h2{font-size:22px;margin:6px 0 2px;color:#e8feff;text-shadow:0 0 10px var(--c);letter-spacing:1px}
-#card .cat{display:inline-block;font-size:10px;letter-spacing:2px;border:1px solid var(--c);padding:2px 6px;margin:4px 0 8px}
-#card .conf{height:4px;background:rgba(0,240,255,.15);margin:4px 0 10px}
-#card .conf i{display:block;height:100%;background:var(--c);box-shadow:0 0 8px var(--c);width:0;transition:width .8s}
-#card p{font-size:13px;line-height:1.45;color:#cffcff}
-#card h3{font-size:11px;letter-spacing:3px;margin:10px 0 4px;color:var(--c2)}
-#card ul{list-style:none;font-size:12px;line-height:1.4;color:#bff6ff}
-#card li{padding-left:14px;position:relative;margin-bottom:4px}
-#card li::before{content:"▸";position:absolute;left:0;color:var(--c)}
-#card .src{font-size:9px;opacity:.55;margin-top:8px;letter-spacing:1px}
+.fc .id{font-size:10px;opacity:.7;letter-spacing:2px;display:flex;justify-content:space-between}
+.fc h2{font-size:22px;margin:6px 0 2px;color:#e8feff;text-shadow:0 0 10px var(--c);letter-spacing:1px}
+.fc .cat{display:inline-block;font-size:10px;letter-spacing:2px;border:1px solid var(--c);padding:2px 6px;margin:4px 0 8px}
+.fc .conf{height:4px;background:rgba(0,240,255,.15);margin:4px 0 10px}
+.fc .conf i{display:block;height:100%;background:var(--c);box-shadow:0 0 8px var(--c);width:0;transition:width .8s}
+.fc p{font-size:13px;line-height:1.45;color:#cffcff}
+.fc h3{font-size:11px;letter-spacing:3px;margin:10px 0 4px;color:var(--c2)}
+.fc ul{list-style:none;font-size:12px;line-height:1.4;color:#bff6ff}
+.fc li{padding-left:14px;position:relative;margin-bottom:4px}
+.fc li::before{content:"▸";position:absolute;left:0;color:var(--c)}
+.fc .src{font-size:9px;opacity:.55;margin-top:8px;letter-spacing:1px}
 .type{border-right:2px solid var(--c);animation:caret .7s steps(2) infinite}
 @keyframes caret{50%{border-color:transparent}}
+#minis{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.mini{position:absolute;left:0;top:0;width:min(158px,42vw);padding:6px 8px;background:rgba(0,24,32,.84);border:1px solid var(--c);box-shadow:0 0 10px rgba(0,240,255,.4),inset 0 0 12px rgba(0,240,255,.1);clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));pointer-events:auto;cursor:pointer;animation:pop .35s ease-out;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.mini.hl{background:rgba(0,70,85,.9);box-shadow:0 0 18px var(--c)}
+.mini b{display:flex;justify-content:space-between;gap:6px;font-size:13px;color:#e8feff;text-shadow:0 0 6px var(--c)}
+.mini b em{font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini b span{color:var(--c);font-size:11px;white-space:nowrap}
+.mini small{display:block;font-size:10px;color:#bff6ff;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.mini .tap{display:block;font-style:normal;font-size:8px;letter-spacing:1px;opacity:.5;margin-top:2px}
+@keyframes pop{from{opacity:0;clip-path:polygon(0 0,0 0,0 0,0 0,0 0,0 0)}}
+#panel{position:absolute;left:0;right:0;bottom:0;max-height:74vh;overflow:auto;z-index:5;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px);background:linear-gradient(160deg,rgba(0,42,54,.96),rgba(0,10,15,.98));border-top:1px solid var(--c);box-shadow:0 -6px 30px rgba(0,240,255,.35);transform:translateY(105%);transition:transform .35s ease}
+#panel.open{transform:none}
+#panel::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,240,255,.05) 0 1px,transparent 1px 3px);pointer-events:none}
+#panel .x{position:absolute;top:10px;right:10px;flex:none;width:42px;max-width:42px;padding:8px 0;z-index:1}
+#pc{padding-right:44px}
+@media(min-width:700px){#panel{left:auto;top:0;width:380px;max-height:none;border-top:0;border-left:1px solid var(--c);transform:translateX(105%)}}
+#bar button,#bar .btn{font-size:11px;letter-spacing:1px;padding:12px 4px}
 /* start screen */
 #start{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px;background:radial-gradient(circle at 50% 40%,#003340,#00090d 70%)}
 #start h1{font-size:26px;letter-spacing:6px;text-shadow:0 0 14px var(--c)}
@@ -65,10 +81,13 @@ button.on{background:var(--c);color:#001218}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v1.0</span><span id="fps">-- FPS</span></div>
+  <div id="hud"><span>TABLE·LECTURE v2.0</span><span id="fps">-- FPS</span></div>
   <div id="status">INITIALISATION</div>
-  <div id="card"></div>
+  <div id="minis"></div>
+  <div id="card" class="fc"></div>
+  <div id="panel"><button id="px" class="x" aria-label="Fermer">✕</button><div id="pc" class="fc"></div></div>
   <div id="bar">
+    <button id="bMode">◫ Multi</button>
     <button id="bFreeze">⏸ Figer</button>
     <button id="bSwitch">⟲ Caméra</button>
     <label class="btn" for="file">▣ Photo</label>
@@ -78,7 +97,7 @@ button.on{background:var(--c);color:#001218}
 <div id="start">
   <div class="ring"></div>
   <h1>TABLE DE LECTURE</h1>
-  <p>Pointez la caméra vers la table et posez un objet. Le système l'identifie et affiche sa fiche d'analyse. Touchez l'écran pour figer et analyser.</p>
+  <p>Pointez la caméra vers la table et posez un objet. Le système l'identifie et affiche sa fiche d'analyse. Touchez un objet pour ouvrir sa fiche complète, ou ailleurs pour figer l'image. « Multi » / « Un seul » change le mode d'affichage.</p>
   <button id="bStart" disabled>Chargement…</button>
   <div id="load">CHARGEMENT DES MODÈLES IA…</div>
   <div id="err"></div>
@@ -178,17 +197,20 @@ function generic(n,cat,raw,src){
 /* ================= ÉTAT ================= */
 const $=id=>document.getElementById(id);
 const video=$("v"), ov=$("ov"), ctx=ov.getContext("2d"), frozen=$("frozen"), fctx=frozen.getContext("2d");
-const cardEl=$("card"), statusEl=$("status");
+const cardEl=$("card"), statusEl=$("status"), minis=$("minis"), panel=$("panel");
 let coco=null, mnet=null, mnetLoading=null, stream=null, facing="environment";
-let frozenMode=false, running=false, busy=false;
-let cand=null;        // {label,src,since,box,score}
-let shown=null;       // {label,box,lastSeen,card}
-let lastHit=0, lastMnet=0, smoothBox=null;
-const STABLE_MS=1000, LOST_MS=1500, MIN_SCORE=0.5, MNET_MIN=0.25;
-window.__TL={ready:false,errors:[],last:null};
+let multi=true, frozenMode=false, analysing=false, running=false, busy=false;
+let tracks=[], nextId=1, lastHit=0, lastMnet=0, stillHits=[], cardTrackId=null, panelTrackId=null;
+let geo={w:0,h:0,mirror:false};
+const STABLE_MS=1000, LOST_MS=1500, PENDING_LOST_MS=900, MIN_SCORE=0.5, MNET_MIN=0.25, MAX_OBJ=6;
+window.__TL={ready:false,errors:[],last:null,objects:[]};
 
-function setStatus(t,blink){statusEl.textContent=t;statusEl.classList.toggle("blink",!!blink);}
+function setStatus(t,blink){if(statusEl.textContent!==t)statusEl.textContent=t;statusEl.classList.toggle("blink",!!blink);}
 function iou(a,b){if(!a||!b)return 0;const x1=Math.max(a[0],b[0]),y1=Math.max(a[1],b[1]),x2=Math.min(a[0]+a[2],b[0]+b[2]),y2=Math.min(a[1]+a[3],b[1]+b[3]);const i=Math.max(0,x2-x1)*Math.max(0,y2-y1);return i/(a[2]*a[3]+b[2]*b[3]-i||1);}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function overlap(a,b){const w=Math.min(a[0]+a[2],b[0]+b[2])-Math.max(a[0],b[0]),h=Math.min(a[1]+a[3],b[1]+b[3])-Math.max(a[1],b[1]);return w>0&&h>0?w*h:0;}
+function esc(s){const d=document.createElement("div");d.textContent=String(s);return d.innerHTML;}
+const pct=s=>Math.round(s*100)+" %";
 
 /* ================= MODÈLES ================= */
 async function loadModels(){
@@ -220,32 +242,23 @@ async function startCam(){
 }
 
 /* ================= GÉOMÉTRIE (object-fit: cover) ================= */
-function fit(srcW,srcH){
-  const W=ov.clientWidth,H=ov.clientHeight,s=Math.max(W/srcW,H/srcH);
-  return {s,ox:(W-srcW*s)/2,oy:(H-srcH*s)/2,W,H};
-}
-function toScreen(b,f,mirror){
-  let x=b[0]*f.s+f.ox; const y=b[1]*f.s+f.oy,w=b[2]*f.s,h=b[3]*f.s;
-  if(mirror) x=f.W-x-w;
-  return [x,y,w,h];
-}
+function fit(srcW,srcH){const W=ov.clientWidth,H=ov.clientHeight,s=Math.max(W/srcW,H/srcH);return {s,ox:(W-srcW*s)/2,oy:(H-srcH*s)/2,W,H};}
+function toScreen(b,f,mirror){let x=b[0]*f.s+f.ox;const y=b[1]*f.s+f.oy,w=b[2]*f.s,h=b[3]*f.s;if(mirror)x=f.W-x-w;return [x,y,w,h];}
 function resize(){const d=devicePixelRatio||1;ov.width=ov.clientWidth*d;ov.height=ov.clientHeight*d;ctx.setTransform(d,0,0,d,0,0);}
 addEventListener("resize",resize);
 
 /* ================= DESSIN ================= */
-function drawBox(r,label,progress,locked){
+function drawBox(r,label,progress,locked,hl){
   const [x,y,w,h]=r, c="#00f0ff", L=Math.min(22,w/4,h/4);
-  ctx.save();ctx.strokeStyle=c;ctx.shadowColor=c;ctx.shadowBlur=12;ctx.lineWidth=2;
-  ctx.globalAlpha=.25;ctx.strokeRect(x,y,w,h);ctx.globalAlpha=1;ctx.lineWidth=3;
+  ctx.save();ctx.strokeStyle=c;ctx.shadowColor=c;ctx.shadowBlur=hl?22:12;ctx.lineWidth=2;
+  ctx.globalAlpha=hl?.6:.25;ctx.strokeRect(x,y,w,h);ctx.globalAlpha=1;ctx.lineWidth=hl?4:3;
   ctx.beginPath();
   [[x,y,1,1],[x+w,y,-1,1],[x,y+h,1,-1],[x+w,y+h,-1,-1]].forEach(([px,py,sx,sy])=>{ctx.moveTo(px+sx*L,py);ctx.lineTo(px,py);ctx.lineTo(px,py+sy*L);});
   ctx.stroke();
-  // ligne de scan dans la boîte
   const t=(performance.now()%1400)/1400, sy=y+h*t;
   const g=ctx.createLinearGradient(0,sy-14,0,sy+2);g.addColorStop(0,"rgba(0,240,255,0)");g.addColorStop(1,"rgba(0,240,255,.55)");
   ctx.fillStyle=g;ctx.fillRect(x,sy-14,w,16);
-  ctx.fillStyle="rgba(0,240,255,.06)";ctx.fillRect(x,y,w,h);
-  // étiquette
+  ctx.fillStyle=hl?"rgba(0,240,255,.14)":"rgba(0,240,255,.06)";ctx.fillRect(x,y,w,h);
   ctx.shadowBlur=8;ctx.font="12px monospace";ctx.fillStyle=c;
   ctx.fillText((locked?"◉ ":"◌ ")+label,x+4,Math.max(14,y-8));
   if(!locked&&progress!=null){ctx.fillStyle="rgba(0,240,255,.2)";ctx.fillRect(x,y+h+6,w,4);ctx.fillStyle=c;ctx.fillRect(x,y+h+6,w*Math.min(1,progress),4);}
@@ -257,48 +270,113 @@ function drawReticle(){
   ctx.rotate(t*.6);ctx.setLineDash([12,10]);ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();
   ctx.rotate(-t*1.2);ctx.setLineDash([3,14]);ctx.beginPath();ctx.arc(0,0,r*.8,0,Math.PI*2);ctx.stroke();ctx.restore();
 }
+function drawLink(r,m){
+  const cx=m[0]+m[2]/2,cy=m[1]+m[3]/2,px=clamp(cx,r[0],r[0]+r[2]),py=clamp(cy,r[1],r[1]+r[3]);
+  const qx=clamp(px,m[0],m[0]+m[2]),qy=clamp(py,m[1],m[1]+m[3]);
+  ctx.save();ctx.strokeStyle="rgba(0,240,255,.7)";ctx.shadowColor="#00f0ff";ctx.shadowBlur=6;ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(qx,qy);ctx.stroke();ctx.fillStyle="#00f0ff";ctx.beginPath();ctx.arc(px,py,3,0,7);ctx.fill();ctx.restore();
+}
 
-/* ================= CARTE ================= */
-let cardSerial=0;
-function showCard(info,score){
-  cardSerial++;
+/* ================= FICHES ================= */
+function cardHTML(info,score){
   const id="OBJ-"+String(Math.floor(Math.random()*9000)+1000);
-  cardEl.innerHTML=`<div class="id"><span>${id}</span><span>${new Date().toLocaleTimeString("fr-FR")}</span></div>
-   <h2 class="type" id="cn"></h2><span class="cat">${esc(info.cat.toUpperCase())}</span>
-   <div class="id"><span>CORRESPONDANCE</span><span>${Math.round(score*100)} %</span></div><div class="conf"><i></i></div>
+  return `<div class="id"><span>${id}</span><span>${new Date().toLocaleTimeString("fr-FR")}</span></div>
+   <h2 class="nm type"></h2><span class="cat">${esc(info.cat.toUpperCase())}</span>
+   <div class="id"><span>CORRESPONDANCE</span><span>${pct(score)}</span></div><div class="conf"><i></i></div>
    <p>${esc(info.d)}</p><h3>LE SAVIEZ-VOUS ?</h3><ul>${info.f.map(x=>"<li>"+esc(x)+"</li>").join("")}</ul>
    <div class="src">SOURCE : ${info.src==="coco"?"COCO-SSD (détection)":"MOBILENET (classification)"} · ${esc(info.key)}</div>`;
-  cardEl.classList.add("show");
-  requestAnimationFrame(()=>{const i=cardEl.querySelector(".conf i");if(i)i.style.width=Math.round(score*100)+"%";});
-  // effet machine à écrire
-  const s=cardSerial, h=$("cn"); let k=0;
-  (function ty(){if(s!==cardSerial)return;h.textContent=info.n.slice(0,++k);if(k<info.n.length)setTimeout(ty,45);else h.classList.remove("type");})();
-  window.__TL.last={name:info.n,label:info.key,src:info.src,score};
 }
-function hideCard(){cardEl.classList.remove("show");cardSerial++;}
+let typeSerial=0;
+function fillCard(el,info,score){
+  el.innerHTML=cardHTML(info,score);
+  requestAnimationFrame(()=>{const i=el.querySelector(".conf i");if(i)i.style.width=Math.round(score*100)+"%";});
+  const s=++typeSerial,h=el.querySelector(".nm");let k=0;
+  (function ty(){if(s!==typeSerial)return;h.textContent=info.n.slice(0,++k);if(k<info.n.length)setTimeout(ty,45);else h.classList.remove("type");})();
+}
+function showCard(info,score){fillCard(cardEl,info,score);cardEl.classList.add("show");window.__TL.last={name:info.n,label:info.key,src:info.src,score};}
+function hideCard(){cardEl.classList.remove("show");cardTrackId=null;}
 function placeCard(r){
   const W=ov.clientWidth,H=ov.clientHeight,cw=cardEl.offsetWidth,ch=cardEl.offsetHeight,m=10;
-  let x,y;
-  if(!r){x=(W-cw)/2;y=H-ch-90;}
-  else{
-    const [bx,by,bw,bh]=r;
-    if(bx+bw+m+cw<W-m) x=bx+bw+m; else if(bx-m-cw>m) x=bx-m-cw; else x=(W-cw)/2;
-    y=by;
-    if(x===(W-cw)/2){ y=(by+bh+m+ch<H-80)?by+bh+m:Math.max(80,by-ch-m); }
-  }
-  x=Math.max(m,Math.min(W-cw-m,x));y=Math.max(80,Math.min(H-ch-84,y));
+  let x,y;const [bx,by,bw,bh]=r;
+  if(bx+bw+m+cw<W-m) x=bx+bw+m; else if(bx-m-cw>m) x=bx-m-cw; else x=(W-cw)/2;
+  y=by;
+  if(x===(W-cw)/2){ y=(by+bh+m+ch<H-80)?by+bh+m:Math.max(80,by-ch-m); }
+  x=clamp(x,m,W-cw-m);y=Math.max(80,Math.min(H-ch-84,y));
   cardEl.style.left=x+"px";cardEl.style.top=y+"px";
 }
-function esc(s){const d=document.createElement("div");d.textContent=String(s);return d.innerHTML;}
+function openPanel(t){
+  panelTrackId=t.id;
+  fillCard($("pc"),t.card,t.score);
+  panel.classList.add("open");
+  window.__TL.panel={name:t.card.n,label:t.label};
+}
+function closePanel(){panel.classList.remove("open");panelTrackId=null;window.__TL.panel=null;}
+$("px").onclick=e=>{e.stopPropagation();closePanel();};
 
-/* ================= DÉTECTION ================= */
-function pickBest(preds){
-  const ok=preds.filter(p=>p.score>=MIN_SCORE&&p.class!=="dining table");
-  if(!ok.length) return null;
-  // on privilégie les objets aux personnes (la main de l'utilisateur)
-  const nonP=ok.filter(p=>p.class!=="person");
-  const list=nonP.length?nonP:ok;
-  return list.sort((a,b)=>b.score*Math.sqrt(b.bbox[2]*b.bbox[3])-a.score*Math.sqrt(a.bbox[2]*a.bbox[3]))[0]; // score pondéré par la taille
+/* mini-fiches (mode Multi) */
+function mkMini(t){
+  const el=document.createElement("div");el.className="mini";el.dataset.id=t.id;
+  const line=t.card.d.startsWith("Objet identifié")?"Fiche simplifiée":t.card.d.split(/[.:;]/)[0];
+  el.innerHTML=`<b><em>${esc(t.card.n)}</em><span class="p">${pct(t.score)}</span></b><small>${esc(t.card.cat)} · ${esc(line)}</small><i class="tap">TOUCHER POUR LA FICHE ▸</i>`;
+  minis.appendChild(el);return el;
+}
+function layoutMinis(list,W,H){
+  const placed=[], m=6, top=74, bot=84;
+  list.slice().sort((a,b)=>a.r[1]-b.r[1]).forEach(t=>{
+    if(!t.el) t.el=mkMini(t);
+    const p=t.el.querySelector(".p"), v=pct(t.score); if(p.textContent!==v) p.textContent=v;
+    const cw=t.el.offsetWidth,ch=t.el.offsetHeight,[x,y,w,h]=t.r;
+    const cands=[[x+w+m,y],[x-cw-m,y],[x,y+h+m],[x,y-ch-m],[x+w-cw-m,y+h-ch-m]];
+    let best=null;
+    for(const [ax,ay] of cands){
+      const r=[clamp(ax,m,W-cw-m),clamp(ay,top,H-ch-bot),cw,ch];
+      const cost=placed.reduce((s,q)=>s+overlap(r,q),0)*10+Math.abs(r[0]-ax)+Math.abs(r[1]-ay);
+      if(!best||cost<best.cost)best={r,cost};
+      if(cost===0)break;
+    }
+    let r=best.r;
+    if(placed.some(q=>overlap(r,q))){ // recherche verticale d'une place libre
+      for(let d=1;d<30;d++){const dy=(d%2?1:-1)*Math.ceil(d/2)*(ch/2+3);
+        const r2=[r[0],clamp(r[1]+dy,top,H-ch-bot),cw,ch];
+        if(!placed.some(q=>overlap(r2,q))){r=r2;break;}
+        const r3=[clamp(W-cw-m-r[0]+m,m,W-cw-m),r2[1],cw,ch];
+        if(!placed.some(q=>overlap(r3,q))){r=r3;break;}}
+    }
+    placed.push(r);
+    t.cp=t.cp?t.cp.map((v,i)=>v+(r[i]-v)*.25):r.slice();
+    t.el.style.left=t.cp[0]+"px";t.el.style.top=t.cp[1]+"px";
+    t.el.classList.toggle("hl",t.id===panelTrackId);
+    drawLink(t.r,[t.cp[0],t.cp[1],cw,ch]);
+  });
+}
+
+/* ================= SUIVI ================= */
+function filterPreds(preds){
+  let ok=preds.filter(p=>p.score>=MIN_SCORE&&p.class!=="dining table");
+  const nonP=ok.filter(p=>p.class!=="person"); if(nonP.length) ok=nonP; // on privilégie les objets à la main
+  return ok.sort((a,b)=>b.score*Math.sqrt(b.bbox[2]*b.bbox[3])-a.score*Math.sqrt(a.bbox[2]*a.bbox[3]))
+           .slice(0,MAX_OBJ).map(p=>({label:p.class,score:p.score,box:p.bbox,src:"coco"}));
+}
+function mkTrack(h,now,stable){return {id:nextId++,label:h.label,src:h.src,box:h.box,score:h.score,since:now,seen:now,stable:!!stable,card:cardFor(h.label,h.src),sm:null};}
+function dropTrack(t){if(t.el){t.el.remove();t.el=null;}if(cardTrackId===t.id)hideCard();}
+function clearTracks(){tracks.forEach(dropTrack);tracks=[];}
+function updateTracks(hits,now){
+  if(!multi) hits=hits.slice(0,1);
+  const used=new Set();
+  for(const h of hits){
+    let best=null,bi=0.15;
+    for(const t of tracks){if(used.has(t)||t.label!==h.label)continue;const v=iou(t.box,h.box);if(v>bi){bi=v;best=t;}}
+    if(!best&&!multi) best=tracks.find(t=>!used.has(t)&&t.label===h.label);
+    if(best){best.box=h.box;best.score=best.score*.6+h.score*.4;best.seen=now;}
+    else{best=mkTrack(h,now,false);tracks.push(best);}
+    used.add(best);
+    if(!best.stable&&now-best.since>=STABLE_MS) best.stable=true;
+  }
+  tracks=tracks.filter(t=>{const gone=now-t.seen>(t.stable?LOST_MS:PENDING_LOST_MS);if(gone)dropTrack(t);return !gone;});
+  if(!multi){ // un seul objet affiché : on garde le plus récent stabilisé
+    const st=tracks.filter(t=>t.stable).sort((a,b)=>b.since-a.since);
+    st.slice(1).forEach(t=>{dropTrack(t);tracks.splice(tracks.indexOf(t),1);});
+  }
 }
 function centerCrop(src,sw,sh){
   const c=document.createElement("canvas"),s=Math.min(sw,sh)*.6;c.width=c.height=224;
@@ -311,104 +389,109 @@ async function classify(src,sw,sh){
   if(r&&r[0]&&r[0].probability>=MNET_MIN) return {label:r[0].className,score:r[0].probability,box,src:"mobilenet"};
   return null;
 }
-
-let fpsT=performance.now(),fpsN=0;
-async function loop(){
-  if(!running) return;
-  requestAnimationFrame(loop);
-  if(frozenMode) return;
-  ctx.clearRect(0,0,ov.clientWidth,ov.clientHeight);
-  const vw=video.videoWidth,vh=video.videoHeight; if(!vw) return;
-  const f=fit(vw,vh), mirror=facing==="user";
-  if(!busy){
-    busy=true;
-    detectStep(vw,vh).finally(()=>{busy=false;fpsN++;});
-  }
-  const now=performance.now();
-  if(now-fpsT>1000){$("fps").textContent=fpsN+" FPS · "+tf.getBackend().toUpperCase();fpsN=0;fpsT=now;}
-  // rendu
-  if(cand && (!shown||shown.label!==cand.label)){
-    const p=(now-cand.since)/STABLE_MS;
-    drawBox(toScreen(cand.box,f,mirror),labelFR(cand)+" "+Math.round(cand.score*100)+"%",p,false);
-    setStatus("ANALYSE"+".".repeat(1+Math.floor(now/300)%3),true);
-  }
-  if(shown){
-    smoothBox=smoothBox?smoothBox.map((v,i)=>v+(shown.box[i]-v)*.3):shown.box.slice();
-    const r=toScreen(smoothBox,f,mirror);
-    drawBox(r,shown.card.n.toUpperCase(),null,true);placeCard(r);
-    if(!cand||cand.label===shown.label) setStatus("◉ OBJET IDENTIFIÉ");
-    if(now-shown.lastSeen>LOST_MS){shown=null;smoothBox=null;hideCard();}
-  }
-  if(!cand&&!shown){drawReticle();setStatus("EN ATTENTE D'UN OBJET",false);}
-}
-function labelFR(c){return cardFor(c.label,c.src).n.toUpperCase();}
-
 async function detectStep(vw,vh){
   const now=performance.now();
-  let hit=null;
-  const preds=await coco.detect(video,10);
-  const b=pickBest(preds);
-  if(b){hit={label:b.class,score:b.score,box:b.bbox,src:"coco"};lastHit=now;}
-  else if(now-lastHit>800 && mnet && now-lastMnet>700){
-    lastMnet=now; hit=await classify(video,vw,vh);
-    if(hit) lastHit=now;
-  } else if(cand && now-lastHit<800){ return; } // garde le candidat brièvement
-  track(hit,performance.now());
-}
-function track(hit,now){
-  if(!hit){ if(cand&&now-cand.seen>600) cand=null; return; }
-  if(cand && cand.label===hit.label){cand.box=hit.box;cand.score=hit.score;cand.seen=now;}
-  else cand={...hit,since:now,seen:now};
-  if(shown && shown.label===hit.label){shown.box=hit.box;shown.lastSeen=now;return;}
-  if(now-cand.since>=STABLE_MS){
-    const card=cardFor(cand.label,cand.src);
-    shown={label:cand.label,box:cand.box,lastSeen:now,card};smoothBox=null;
-    showCard(card,cand.score);
+  let hits=filterPreds(await coco.detect(video,20));
+  if(hits.length) lastHit=now;
+  else if(now-lastHit>800&&mnet&&now-lastMnet>700){
+    lastMnet=now;const h=await classify(video,vw,vh);
+    if(h){hits=[h];lastHit=now;}
   }
+  if(!frozenMode) updateTracks(hits,performance.now());
+}
+
+/* ================= BOUCLE ================= */
+let fpsT=performance.now(),fpsN=0;
+function loop(){
+  if(!running) return;
+  requestAnimationFrame(loop);
+  const W=ov.clientWidth,H=ov.clientHeight,now=performance.now();
+  ctx.clearRect(0,0,W,H);
+  if(!frozenMode){
+    const vw=video.videoWidth,vh=video.videoHeight;
+    if(vw){geo={w:vw,h:vh,mirror:facing==="user"};
+      if(!busy&&coco){busy=true;detectStep(vw,vh).catch(e=>window.__TL.errors.push(e.message)).finally(()=>{busy=false;fpsN++;});}}
+  }
+  if(now-fpsT>1000){$("fps").textContent=(frozenMode?"FIGÉ":fpsN+" FPS")+" · "+(window.tf?tf.getBackend().toUpperCase():"");fpsN=0;fpsT=now;}
+  if(analysing){
+    drawReticle();const y=(now%1200)/1200*H;ctx.fillStyle="rgba(0,240,255,.35)";ctx.fillRect(0,y,W,3);
+    setStatus("ANALYSE"+".".repeat(1+Math.floor(now/300)%3),true);return;
+  }
+  if(!geo.w){if(!frozenMode)drawReticle();return;}
+  const f=fit(geo.w,geo.h);
+  for(const t of tracks){t.sm=t.sm?t.sm.map((v,i)=>v+(t.box[i]-v)*.3):t.box.slice();t.r=toScreen(t.sm,f,geo.mirror);}
+  const stable=tracks.filter(t=>t.stable), pending=tracks.filter(t=>!t.stable);
+  pending.forEach(t=>drawBox(t.r,t.card.n.toUpperCase()+" "+pct(t.score),(now-t.since)/STABLE_MS,false));
+  stable.forEach(t=>drawBox(t.r,t.card.n.toUpperCase(),null,true,t.id===panelTrackId));
+  if(multi){ layoutMinis(stable,W,H); }
+  else{
+    const s=stable[0];
+    if(s){ if(cardTrackId!==s.id){showCard(s.card,s.score);cardTrackId=s.id;} placeCard(s.r); }
+    else if(cardTrackId!==null) hideCard();
+  }
+  window.__TL.objects=stable.map(t=>t.card.n);
+  if(pending.length&&!frozenMode) setStatus("ANALYSE"+".".repeat(1+Math.floor(now/300)%3)+(stable.length?" ("+stable.length+" IDENTIFIÉ"+(stable.length>1?"S":"")+")":""),true);
+  else if(stable.length) setStatus("◉ "+(stable.length>1?stable.length+" OBJETS IDENTIFIÉS":"OBJET IDENTIFIÉ")+(frozenMode?" · FIGÉ":""));
+  else if(frozenMode) setStatus("AUCUN OBJET RECONNU · TOUCHEZ POUR REPRENDRE");
+  else {drawReticle();setStatus("EN ATTENTE D'UN OBJET");}
 }
 
 /* ================= FIGER / PHOTO ================= */
 async function analyseStill(src,sw,sh,mirror){
   frozenMode=true;$("bFreeze").classList.add("on");$("bFreeze").textContent="▶ Reprendre";
-  hideCard();shown=null;cand=null;
-  const k=Math.min(1,1280/Math.max(sw,sh)), iw=sw, ih=sh; sw=Math.round(sw*k); sh=Math.round(sh*k);
+  closePanel();clearTracks();hideCard();
+  const k=Math.min(1,1280/Math.max(sw,sh)),iw=sw,ih=sh;sw=Math.round(sw*k);sh=Math.round(sh*k);
   frozen.width=sw;frozen.height=sh;fctx.save();if(mirror){fctx.translate(sw,0);fctx.scale(-1,1);}fctx.drawImage(src,0,0,iw,ih,0,0,sw,sh);fctx.restore();
-  frozen.style.display="block";
-  const f=fit(sw,sh),t0=performance.now();
-  setStatus("ANALYSE...",true);
-  let anim=true;
-  (function a(){if(!anim)return;ctx.clearRect(0,0,ov.clientWidth,ov.clientHeight);drawReticle();
-    const y=((performance.now()-t0)%1200)/1200*ov.clientHeight;ctx.fillStyle="rgba(0,240,255,.35)";ctx.fillRect(0,y,ov.clientWidth,3);requestAnimationFrame(a);})();
-  let hit=null;
+  frozen.style.display="block";geo={w:sw,h:sh,mirror:false};
+  const t0=performance.now();analysing=true;
+  let hits=[];
   try{
-    const b=pickBest(await coco.detect(frozen,10));
-    if(b) hit={label:b.class,score:b.score,box:b.bbox,src:"coco"};
-    else { if(!mnet&&mnetLoading) await mnetLoading; hit=await classify(frozen,sw,sh); }
+    hits=filterPreds(await coco.detect(frozen,20));
+    if(!hits.length){if(!mnet&&mnetLoading)await mnetLoading;const h=await classify(frozen,sw,sh);if(h)hits=[h];}
   }catch(e){window.__TL.errors.push(e.message);}
   await new Promise(r=>setTimeout(r,Math.max(0,900-(performance.now()-t0))));
-  anim=false;ctx.clearRect(0,0,ov.clientWidth,ov.clientHeight);
-  if(!hit){setStatus("AUCUN OBJET RECONNU");window.__TL.last={name:null};return;}
-  const r=toScreen(hit.box,f,false), card=cardFor(hit.label,hit.src);
-  drawBox(r,card.n.toUpperCase(),null,true);setStatus("◉ OBJET IDENTIFIÉ");
-  showCard(card,hit.score);placeCard(r);
+  analysing=false;stillHits=hits;buildStill();
+}
+function buildStill(){
+  clearTracks();const now=performance.now();
+  (multi?stillHits:stillHits.slice(0,1)).forEach(h=>tracks.push(mkTrack(h,now,true)));
+  window.__TL.still=tracks.map(t=>({name:t.card.n,label:t.label,score:+t.score.toFixed(2)}));
 }
 function resume(){
-  frozenMode=false;frozen.style.display="none";hideCard();shown=null;cand=null;
+  frozenMode=false;analysing=false;frozen.style.display="none";clearTracks();hideCard();closePanel();
   $("bFreeze").classList.remove("on");$("bFreeze").textContent="⏸ Figer";
-  if(!stream){setStatus("CAMÉRA INACTIVE — UTILISEZ « PHOTO »");}
+  if(!stream){geo={w:0,h:0,mirror:false};setStatus("CAMÉRA INACTIVE — UTILISEZ « PHOTO »");}
 }
 function toggleFreeze(){
-  if(!coco) return;
+  if(!coco||analysing) return;
   if(frozenMode) return resume();
   if(!video.videoWidth) return;
   analyseStill(video,video.videoWidth,video.videoHeight,facing==="user");
 }
+function trackAt(x,y){
+  const pad=8;
+  return tracks.filter(t=>t.stable&&t.r&&x>=t.r[0]-pad&&x<=t.r[0]+t.r[2]+pad&&y>=t.r[1]-pad&&y<=t.r[1]+t.r[3]+pad)
+               .sort((a,b)=>a.r[2]*a.r[3]-b.r[2]*b.r[3])[0];
+}
 $("bFreeze").onclick=e=>{e.stopPropagation();toggleFreeze();};
-$("stage").addEventListener("click",e=>{if(e.target.closest("#bar,#card"))return;toggleFreeze();});
+$("bMode").onclick=e=>{e.stopPropagation();multi=!multi;
+  $("bMode").textContent=multi?"◫ Multi":"◻ Un seul";$("bMode").classList.toggle("on",!multi);
+  closePanel();hideCard();if(frozenMode&&!analysing)buildStill();else clearTracks();};
+$("stage").addEventListener("click",e=>{
+  if(e.target.closest("#bar"))return;
+  if(panel.classList.contains("open")){ if(!e.target.closest("#panel")) closePanel(); return; }
+  const mini=e.target.closest(".mini");
+  if(mini){const t=tracks.find(t=>t.id===+mini.dataset.id);if(t)openPanel(t);return;}
+  if(e.target.closest("#card")){const t=tracks.find(t=>t.id===cardTrackId);if(t)openPanel(t);return;}
+  const rc=ov.getBoundingClientRect(),t=trackAt(e.clientX-rc.left,e.clientY-rc.top);
+  if(t){openPanel(t);return;}
+  toggleFreeze();
+});
 $("bSwitch").onclick=async e=>{e.stopPropagation();facing=facing==="environment"?"user":"environment";
   try{await startCam();resume();}catch(err){setStatus("CAMÉRA : "+err.message);}};
 $("file").onchange=e=>{const f=e.target.files[0];if(!f||!coco)return;const img=new Image();
-  img.onload=()=>analyseStill(img,img.naturalWidth,img.naturalHeight,false);img.src=URL.createObjectURL(f);e.target.value="";};
+  img.onload=()=>{if(!running){$("start").style.display="none";resize();running=true;loop();}analyseStill(img,img.naturalWidth,img.naturalHeight,false);};
+  img.src=URL.createObjectURL(f);e.target.value="";};
 $("bStart").onclick=async()=>{
   $("start").style.display="none";resize();running=true;
   try{await startCam();setStatus("EN ATTENTE D'UN OBJET");}
