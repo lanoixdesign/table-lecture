@@ -95,6 +95,34 @@ button.on{background:var(--c);color:#001218}
 .memi div{flex:1;font-size:13px;color:#e8feff}.memi small{display:block;font-size:10px;opacity:.7;color:var(--c)}
 .memi button{flex:none;max-width:none;font-size:10px;padding:8px}
 
+/* v4 : météo, films, programme TV */
+#xtra{position:absolute;top:calc(env(safe-area-inset-top) + 74px);left:10px;right:10px;display:flex;align-items:flex-start;gap:6px;z-index:4;pointer-events:none}
+#xtra>*{pointer-events:auto}
+#wx{flex:none;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 6px;max-width:44vw;padding:4px 9px 5px;border:1px solid var(--c);background:rgba(0,20,26,.72);box-shadow:0 0 10px rgba(0,240,255,.3),inset 0 0 10px rgba(0,240,255,.12);clip-path:polygon(0 0,calc(100% - 7px) 0,100% 7px,100% 100%,7px 100%,0 calc(100% - 7px));cursor:pointer;text-shadow:0 0 6px var(--c)}
+#wx i{font-style:normal;font-size:15px}#wx b{font-size:17px;color:#e8feff}
+#wx span{font-size:9px;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:22vw}
+#wx small{flex-basis:100%;font-size:9px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#bff6ff}
+#xbtns{margin-left:auto;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:5px;max-width:54vw}
+#xbtns button{flex:none;max-width:none;font-size:9px;letter-spacing:1px;padding:7px 7px}
+.tvrow{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(0,240,255,.2);cursor:pointer}
+.tvrow img,.tvrow .ph{width:42px;height:42px;object-fit:contain;background:rgba(230,250,255,.92);border:1px solid var(--c);flex:none}
+.ph{display:flex;align-items:center;justify-content:center;width:48px;height:48px;flex:none;border:1px solid var(--c);color:var(--c);font-size:16px;background:rgba(0,40,52,.6)}
+.tvrow .ph{font-size:10px;color:#00141a}
+.tvrow div{flex:1;min-width:0}.tvrow b{font-size:12px;color:#e8feff;display:block;letter-spacing:1px}
+.tvrow small{display:block;font-size:11px;color:#bff6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tvrow small em{font-style:normal;color:#e8feff}
+.tvrow .dim,.fc .note,.note{font-size:10px;opacity:.65}
+.prog{display:block;height:3px;background:rgba(0,240,255,.15);margin-top:4px}.prog u{display:block;height:100%;background:var(--c);box-shadow:0 0 6px var(--c)}
+.memi.film{cursor:pointer}.memi.film small{white-space:normal}
+.prow .t{color:var(--c);font-weight:normal;margin-right:4px}.live{color:#ff5a5a;font-size:9px;letter-spacing:1px}
+.fc .poster{float:right;width:96px;max-height:150px;object-fit:cover;border:1px solid var(--c);margin:0 0 8px 10px;background:#012;box-shadow:0 0 12px rgba(0,240,255,.35)}
+.fc .shot{display:block;max-width:100%;max-height:150px;border:1px solid var(--c);margin:8px 0}
+.fc .tabs{margin:6px 0 4px}
+.hours{display:flex;gap:4px}.hours div{flex:1;text-align:center;border:1px solid rgba(0,240,255,.35);padding:4px 0;font-size:11px;color:#e8feff}
+.hours i{display:block;font-style:normal;font-size:16px}.hours small{display:block;font-size:9px;opacity:.7;color:var(--c)}
+.conf-h{border-color:#3dff8b!important;color:#3dff8b}.conf-m{border-color:var(--warn)!important;color:var(--warn)}.conf-l{border-color:#ff7b7b!important;color:#ff7b7b}
+.blink{animation:blink 1s steps(2) infinite}
+#rsteps li{font-size:12px}
+
 /* start screen */
 #start{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px;background:radial-gradient(circle at 50% 40%,#003340,#00090d 70%)}
 #start h1{font-size:26px;letter-spacing:6px;text-shadow:0 0 14px var(--c)}
@@ -113,7 +141,7 @@ button.on{background:var(--c);color:#001218}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v3.1</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div>
+  <div id="hud"><span>TABLE·LECTURE v4</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div>
   <div id="status">INITIALISATION</div>
   <div id="minis"></div>
   <div id="card" class="fc"></div>
@@ -131,6 +159,7 @@ button.on{background:var(--c);color:#001218}
   <div class="ring"></div>
   <h1>TABLE DE LECTURE</h1>
   <p>Pointez la caméra vers la table et posez un objet. Le système l'identifie et affiche sa fiche d'analyse. Touchez un objet pour ouvrir sa fiche complète, ou ailleurs pour figer l'image. « Multi » / « Un seul » change le mode d'affichage.</p>
+  <p>Aussi : météo locale, films & séries, programme TV et « C'est quoi ce film ? » en haut de l'écran.</p>
   <button id="bStart" disabled>Chargement…</button>
   <div id="load">CHARGEMENT DES MODÈLES IA…</div>
   <div id="load2"></div>
@@ -968,6 +997,417 @@ $("bStart").onclick=async()=>{
 };
 addEventListener("error",e=>window.__TL.errors.push(String(e.message)));
 loadModels();
+</script>
+<script>
+/* ===== v4 : météo, films & séries, programme TV, reconnaissance TV (tout côté navigateur, sans clé obligatoire) ===== */
+(function(){
+"use strict";
+const T=window.__TL;T.weather=null;T.guide=null;T.films=null;T.tvreco=null;
+const enc=encodeURIComponent;
+const norm=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’'`]/g," ").replace(/[^a-z0-9+]+/g," ").trim();
+async function getJ(url,opt,ms){const ac=new AbortController(),t=setTimeout(()=>ac.abort(),ms||12000);
+  try{const r=await fetch(url,Object.assign({signal:ac.signal},opt||{}));if(!r.ok){const e=new Error("HTTP "+r.status);e.status=r.status;throw e;}return await r.json();}
+  finally{clearTimeout(t);}}
+const pc=$("pc");
+let ACT={},actN=0;
+function act(fn){const k="x"+(++actN);ACT[k]=fn;return `data-x="${k}"`;}
+pc.addEventListener("click",e=>{const b=e.target.closest("[data-x]");if(!b)return;const f=ACT[b.dataset.x];if(f){e.stopPropagation();e.preventDefault();f(b,e);}});
+function page(html,meta){ACT=Object.fromEntries(Object.entries(ACT).slice(-400));pc.innerHTML=html;panelTrackId=null;panel.classList.add("open");panel.scrollTop=0;T.panel=Object.assign({page:true},meta||{});return pc;}
+function onEnter(id,fn){const el=$(id);if(el)el.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();fn();}});}
+const hhmm=t=>new Date(t).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+const openExt=u=>{try{const x=new URL(u);if(x.protocol==="https:")window.open(x.href,"_blank","noopener,noreferrer");}catch(e){}};
+const li=(k,v)=>v?`<li>${esc(k)} : ${esc(v)}</li>`:"";
+const loading=(title,what)=>page(`<div class="id"><span>${esc(title)}</span><span>…</span></div><h2>${esc(what)}</h2><p class="blink">Recherche en cours…</p>`,{loading:true});
+
+/* ---------- MÉTÉO (Open-Meteo, sans clé) ---------- */
+const WMO={0:["Ciel dégagé","☀"],1:["Plutôt dégagé","🌤"],2:["Partiellement nuageux","⛅"],3:["Couvert","☁"],45:["Brouillard","🌫"],48:["Brouillard givrant","🌫"],51:["Bruine légère","🌦"],53:["Bruine","🌦"],55:["Bruine dense","🌧"],56:["Bruine verglaçante","🌧"],57:["Bruine verglaçante","🌧"],61:["Pluie faible","🌧"],63:["Pluie","🌧"],65:["Forte pluie","🌧"],66:["Pluie verglaçante","🌧"],67:["Pluie verglaçante","🌧"],71:["Neige faible","🌨"],73:["Neige","🌨"],75:["Forte neige","❄"],77:["Grains de neige","🌨"],80:["Averses","🌦"],81:["Averses","🌧"],82:["Fortes averses","⛈"],85:["Averses de neige","🌨"],86:["Fortes averses de neige","❄"],95:["Orage","⛈"],96:["Orage avec grêle","⛈"],99:["Orage avec grêle","⛈"]};
+const wmo=(c,day)=>{const w=WMO[c]||["Temps indéterminé","?"];return (c<=1&&day===0)?[c===0?"Nuit claire":"Nuit peu nuageuse","☾"]:w;};
+const DEF_PLACE={name:"Bordeaux",lat:44.8412,lon:-0.5805,mode:"default"};
+let place=lsGet("tableLecture.weather.place",null)||DEF_PLACE,wx=null,wxErr=null,geoState="";
+async function loadWeather(){
+  try{
+    wx=await getJ(`https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&current=temperature_2m,apparent_temperature,weather_code,is_day,relative_humidity_2m,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability,is_day&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=2&timezone=auto`);wxErr=null;
+  }catch(e){wxErr=e.message;}
+  renderWx();
+  T.weather=wx?{place:place.name,mode:place.mode,temp:wx.current.temperature_2m,feels:wx.current.apparent_temperature,text:wmo(wx.current.weather_code,wx.current.is_day)[0],geo:geoState}:{error:wxErr,place:place.name,geo:geoState};
+}
+function renderWx(){
+  const el=$("wx");if(!el)return;
+  if(!wx){el.innerHTML=`<i>?</i><b>--°</b><span>${esc(place.name.toUpperCase())}</span><small>Météo indisponible</small>`;return;}
+  const c=wx.current,[txt,ic]=wmo(c.weather_code,c.is_day);
+  el.innerHTML=`<i>${ic}</i><b>${Math.round(c.temperature_2m)}°</b><span>${esc(place.name.toUpperCase())}</span><small>${esc(txt)} · ressenti ${Math.round(c.apparent_temperature)}°</small>`;
+}
+function locate(){
+  if(!navigator.geolocation){geoState="indisponible";return Promise.resolve(false);}
+  geoState="demande";
+  return new Promise(res=>navigator.geolocation.getCurrentPosition(async p=>{
+      const lat=+p.coords.latitude.toFixed(3),lon=+p.coords.longitude.toFixed(3);let name="Ma position";
+      try{const g=await getJ(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=fr`,null,8000);name=g.city||g.locality||g.principalSubdivision||name;}catch(e){}
+      place={name,lat,lon,mode:"gps"};lsSet("tableLecture.weather.place",place);geoState="ok";await loadWeather();res(true);},
+    async err=>{geoState=err.code===1?"refusée":"échec";if(place.mode==="gps"){/* garde la dernière position connue */}else if(place.mode!=="manual")place=DEF_PLACE;await loadWeather();res(false);},
+    {enableHighAccuracy:false,timeout:12000,maximumAge:600000}));
+}
+function openWeather(msg){
+  let h=`<div class="id"><span>MÉTÉO · ${place.mode==="gps"?"POSITION GPS":place.mode==="manual"?"VILLE CHOISIE":"PAR DÉFAUT"}</span><span>${hhmm(Date.now())}</span></div>`;
+  if(wx){const c=wx.current,[txt,ic]=wmo(c.weather_code,c.is_day),off=wx.utc_offset_seconds*1000,now=Date.now();
+    const hrs=[];wx.hourly.time.forEach((t,i)=>{const ts=Date.parse(t+"Z")-off;if(ts>now-1800e3&&hrs.length<6)hrs.push(`<div><small>${hhmm(ts)}</small><i>${wmo(wx.hourly.weather_code[i],wx.hourly.is_day[i])[1]}</i><b>${Math.round(wx.hourly.temperature_2m[i])}°</b><small>${wx.hourly.precipitation_probability[i]??"-"} %</small></div>`);});
+    const d=wx.daily;
+    h+=`<h2>${ic} ${Math.round(c.temperature_2m)}° · ${esc(place.name)}</h2><span class="cat">${esc(txt.toUpperCase())}</span>
+    <p>Ressenti ${Math.round(c.apparent_temperature)}° · humidité ${c.relative_humidity_2m} % · vent ${Math.round(c.wind_speed_10m)} km/h</p>
+    <h3>PROCHAINES HEURES</h3><div class="hours">${hrs.join("")}</div><small class="note">Ligne du bas : risque de pluie.</small>
+    <h3>AUJOURD'HUI · DEMAIN</h3><ul><li>Aujourd'hui : ${Math.round(d.temperature_2m_min[0])}° / ${Math.round(d.temperature_2m_max[0])}° · ${esc(wmo(d.weather_code[0],1)[0])}</li><li>Demain : ${Math.round(d.temperature_2m_min[1])}° / ${Math.round(d.temperature_2m_max[1])}° · ${esc(wmo(d.weather_code[1],1)[0])}</li></ul>`;
+  }else h+=`<h2>Météo indisponible</h2><p>${esc(wxErr||"Chargement…")}</p>`;
+  if(geoState==="refusée")h+=`<div class="warnbox">Localisation refusée : la météo affiche ${esc(place.name)}. Choisissez une ville ci-dessous, ou autorisez la localisation dans les réglages du navigateur puis touchez « Ma position ».</div>`;
+  if(msg)h+=`<div class="warnbox">${esc(msg)}</div>`;
+  h+=`<h3>CHANGER DE LIEU</h3><div class="lf"><input id="wq" type="search" enterkeyhint="search" placeholder="Ville (ex. Bordeaux)" autocomplete="off"></div>
+  <div class="row"><button class="pbtn" ${act(citySearch)}>🔎 Chercher</button><button class="pbtn" ${act(async()=>{const ok=await locate();openWeather(ok?"":"Position indisponible ("+(geoState||"?")+").");})}>📍 Ma position</button></div><div id="wres"></div>
+  <div class="src">Données météo : Open-Meteo.com (CC BY 4.0) · nom de ville : BigDataCloud / Open-Meteo Geocoding. Aucune position n'est conservée ailleurs que sur cet appareil.</div>`;
+  page(h,{weather:true});onEnter("wq",citySearch);
+}
+async function citySearch(){
+  const q=($("wq")||{}).value;if(!q||!q.trim())return;const box=$("wres");box.innerHTML="<p class='blink'>Recherche…</p>";
+  try{const d=await getJ(`https://geocoding-api.open-meteo.com/v1/search?name=${enc(q.trim())}&count=6&language=fr&format=json`);
+    const r=d.results||[];if(!r.length){box.innerHTML="<p>Aucune ville trouvée.</p>";return;}
+    box.innerHTML=r.map(c=>`<div class="memi"><div>${esc(c.name)}<small>${esc([c.admin1,c.country].filter(Boolean).join(", "))}</small></div><button ${act(async()=>{place={name:c.name,lat:+c.latitude.toFixed(3),lon:+c.longitude.toFixed(3),mode:"manual"};lsSet("tableLecture.weather.place",place);await loadWeather();openWeather();})}>Choisir</button></div>`).join("");
+  }catch(e){box.innerHTML=`<p>Recherche impossible (${esc(e.message)}).</p>`;}
+}
+
+/* ---------- FILMS, SÉRIES, STARS (Wikipédia/Wikidata ; TMDB si clé personnelle) ---------- */
+let tmdbKey=lsGet("tableLecture.tmdb.key","")||"",filmFilter="all",lastQ="";
+function tmdb(path,params){const u=new URL("https://api.themoviedb.org/3"+path);u.searchParams.set("language","fr-FR");
+  for(const k in params||{})u.searchParams.set(k,params[k]);const opt={};
+  if(/^eyJ/.test(tmdbKey))opt.headers={Authorization:"Bearer "+tmdbKey,accept:"application/json"};else u.searchParams.set("api_key",tmdbKey);
+  return getJ(u.toString(),opt);}
+const KIND_FR={film:"FILM",serie:"SÉRIE / ÉMISSION",person:"STAR / PERSONNALITÉ"};
+const KRE={film:/\b(film|films|telefilm|long metrage|court metrage|documentaire)\b/,serie:/\b(serie|feuilleton|sitcom|emission|tele realite|anime|mini serie|telenovela|jeu televise|programme televise)\b/,
+  person:/\b(acteur|actrice|comedien|comedienne|realisateur|realisatrice|chanteur|chanteuse|humoriste|animateur|animatrice|presentateur|presentatrice|scenariste|mannequin|rappeur|rappeuse|musicien|musicienne|producteur|productrice|personnalite|doubleur|doubleuse|cineaste|vidéaste|videaste|youtubeur|youtubeuse|influenceur|influenceuse|sportif|sportive|footballeur|footballeuse|joueur|joueuse|danseur|danseuse|ecrivain|ecrivaine|journaliste|chef cuisinier|cuisinier|compositeur|compositrice|chef d orchestre|auteur|autrice|photographe|directeur de la photographie|monteur|monteuse)\b/};
+function kindOf(desc,title){const d=norm(desc);let best=null,pos=1e9;
+  for(const k in KRE){const m=d.match(KRE[k]);if(m&&m.index<pos){pos=m.index;best=k;}}
+  if(!best&&/\((film|téléfilm)/i.test(title))best="film";if(!best&&/\(série/i.test(title))best="serie";return best;}
+async function wikiSearch(q){
+  const d=await getJ(`https://fr.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&generator=search&gsrsearch=${enc(q)}&gsrlimit=20&gsrnamespace=0&prop=pageprops|pageimages|description&ppprop=wikibase_item|disambiguation&piprop=thumbnail&pithumbsize=200`);
+  const pages=Object.values((d.query||{}).pages||{}).sort((a,b)=>a.index-b.index);
+  return pages.filter(p=>!(p.pageprops&&"disambiguation" in p.pageprops)&&!/^(Liste |Saison \d|Épisodes? d)/.test(p.title)).map(p=>{const desc=p.description||"";
+    return {src:"wiki",title:p.title.replace(/ \((film|série télévisée|série|téléfilm|émission)[^)]*\)$/i,""),page:p.title,desc,kind:kindOf(desc,p.title),
+      year:(desc.match(/\b(19|20)\d\d\b/)||[""])[0],thumb:p.thumbnail&&p.thumbnail.source,qid:p.pageprops&&p.pageprops.wikibase_item};});
+}
+async function tmdbSearch(q){const d=await tmdb("/search/multi",{query:q,include_adult:"false"});
+  return (d.results||[]).filter(r=>["movie","tv","person"].includes(r.media_type)).map(r=>({src:"tmdb",id:r.id,mt:r.media_type,kind:r.media_type==="movie"?"film":r.media_type==="tv"?"serie":"person",
+    title:r.title||r.name,year:(r.release_date||r.first_air_date||"").slice(0,4),
+    desc:r.media_type==="person"?((r.known_for_department==="Acting"?"Interprète":r.known_for_department||"")+((r.known_for||[]).length?" · "+r.known_for.slice(0,3).map(k=>k.title||k.name).join(", "):"")):(r.overview||"").slice(0,110),
+    thumb:(r.poster_path||r.profile_path)?"https://image.tmdb.org/t/p/w154"+(r.poster_path||r.profile_path):null,vote:r.vote_average}));}
+function openFilms(q,run){
+  page(`<div class="id"><span>FILMS · SÉRIES · STARS</span><span>${tmdbKey?"TMDB + WIKIPÉDIA":"WIKIPÉDIA · WIKIDATA"}</span></div><h2>Films & Séries</h2>
+  <div class="chips tabs"><button ${act(()=>openGuide())}>📺 Programme TV</button><button ${act(()=>startReco())}>🔍 C'est quoi ce film ?</button><button ${act(openKey)}>⚙ Clé TMDB${tmdbKey?" ✓":""}</button></div>
+  <div class="lf"><label for="fq">TITRE, SÉRIE OU NOM D'UNE STAR</label><input id="fq" type="search" enterkeyhint="search" autocomplete="off" placeholder="ex. Intouchables, Lupin, Omar Sy"></div>
+  <div class="chips" id="ffil">${[["all","Tout"],["film","Films"],["serie","Séries"],["person","Stars"]].map(([k,l])=>`<button class="${k===filmFilter?"on":""}" ${act(b=>{filmFilter=k;pc.querySelectorAll("#ffil button").forEach(x=>x.classList.toggle("on",x===b));const v=$("fq").value.trim();if(v)doSearch(v);})}>${l}</button>`).join("")}</div>
+  <button class="pbtn" ${act(()=>doSearch($("fq").value))}>🔎 Rechercher</button><div id="fres"></div>
+  <div class="src">${tmdbKey?"Recherche via TMDB (votre clé) · ":""}Textes : Wikipédia (CC BY-SA 4.0) · données : Wikidata (CC0).</div>`,{films:true});
+  $("fq").value=q||lastQ||"";onEnter("fq",()=>doSearch($("fq").value));
+  if(run&&q)doSearch(q);
+}
+async function doSearch(q){
+  q=String(q||"").trim();if(!q)return;lastQ=q;const box=$("fres");if(!box)return;box.innerHTML="<p class='blink'>Recherche…</p>";
+  let res=[],err="",via="Wikipédia";
+  if(tmdbKey){try{res=await tmdbSearch(q);via="TMDB";}catch(e){err="TMDB : "+(e.status===401?"clé refusée":e.message)+" — résultats Wikipédia à la place. ";}}
+  if(!res.length){try{res=await wikiSearch(q);via="Wikipédia";}catch(e){err+="Wikipédia injoignable ("+e.message+").";}}
+  if(filmFilter!=="all")res=res.filter(r=>r.kind===filmFilter);else if(via==="Wikipédia"){const k=res.filter(r=>r.kind);if(k.length)res=k;}
+  res=res.slice(0,12);
+  T.films={q,via,n:res.length,results:res.map(r=>({title:r.title,kind:r.kind,year:r.year}))};
+  if(!$("fres"))return;
+  $("fres").innerHTML=(err?`<div class="warnbox">${esc(err)}</div>`:"")+(res.length?res.map(r=>`<div class="memi film" ${act(()=>openWork(r))}>${r.thumb?`<img alt="" loading="lazy" src="${esc(r.thumb)}">`:`<span class="ph">${r.kind==="person"?"☺":"▶"}</span>`}<div>${esc(r.title)}<small>${esc([KIND_FR[r.kind]||"AUTRE",r.year,r.vote?"★ "+r.vote.toFixed(1)+"/10":""].filter(Boolean).join(" · "))}${r.desc?"<br>"+esc(r.desc):""}</small></div><button>Fiche</button></div>`).join("")
+    :`<p>Aucun résultat pour « ${esc(q)} »${filmFilter!=="all"?" dans cette catégorie":""}.</p>`);
+}
+function openWork(r){return r.src==="tmdb"?tmdbDetail(r):wikiDetail(r);}
+async function wdLabels(ids){ids=[...new Set(ids)].slice(0,50);if(!ids.length)return {};
+  const d=await getJ(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${ids.join("|")}&props=labels&languages=fr|en&format=json&origin=*`).catch(()=>({entities:{}}));
+  const o={};for(const [k,v] of Object.entries(d.entities||{})){const l=v.labels||{};o[k]=(l.fr||l.en||{}).value||k;}return o;}
+function fmtDate(s,yearOnly){if(!s)return "";const m=s.match(/^[+-]?(\d{1,4})-(\d\d)-(\d\d)/);if(!m)return "";if(yearOnly||m[2]==="00")return m[1];
+  if(m[3]==="00")return new Date(Date.UTC(+m[1],m[2]-1,1)).toLocaleDateString("fr-FR",{month:"long",year:"numeric",timeZone:"UTC"});
+  return new Date(Date.UTC(+m[1],m[2]-1,+m[3])).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric",timeZone:"UTC"});}
+const searchChip=(name,kind)=>`<button ${act(()=>{filmFilter=kind||"all";openFilms(name,true);})}>${esc(name)}</button>`;
+async function wikiDetail(r){
+  loading("FICHE",r.title);
+  const [sum,ent]=await Promise.all([getJ(`https://fr.wikipedia.org/api/rest_v1/page/summary/${enc(r.page.replace(/ /g,"_"))}`).catch(()=>null),
+    r.qid?getJ(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${r.qid}&props=claims|sitelinks&sitefilter=enwiki|frwiki&format=json&origin=*`).then(d=>d.entities[r.qid]).catch(()=>null):null]);
+  const cl=(ent&&ent.claims)||{};
+  const ids=p=>(cl[p]||[]).map(s=>s.mainsnak.datavalue&&s.mainsnak.datavalue.value&&s.mainsnak.datavalue.value.id).filter(Boolean);
+  const str=p=>(cl[p]||[]).map(s=>s.mainsnak.datavalue&&s.mainsnak.datavalue.value).filter(v=>typeof v==="string");
+  const time=p=>(cl[p]||[]).map(s=>s.mainsnak.datavalue&&s.mainsnak.datavalue.value.time).filter(Boolean).sort()[0]||"";
+  const qty=p=>{const v=(cl[p]||[])[0];return v&&v.mainsnak.datavalue?Math.round(+v.mainsnak.datavalue.value.amount):null;};
+  const human=ids("P31").includes("Q5")||r.kind==="person";
+  const reviews=[];(cl.P444||[]).forEach(s=>{const v=s.mainsnak.datavalue&&s.mainsnak.datavalue.value,q=s.qualifiers&&s.qualifiers.P447&&s.qualifiers.P447[0].datavalue;if(typeof v==="string"&&q){const i=reviews.findIndex(x=>x.by===q.value.id);if(i>=0)reviews.splice(i,1);reviews.push({v,by:q.value.id});}});
+  const P=human?{occ:ids("P106").slice(0,5),born:ids("P19").slice(0,1)}:{dir:ids("P57").slice(0,3),cast:ids("P161").slice(0,12),gen:ids("P136").slice(0,4),cty:ids("P495").slice(0,3),net:ids("P449").slice(0,2),crea:ids("P170").slice(0,3)};
+  const L=await wdLabels([].concat(...Object.values(P),reviews.map(x=>x.by)));
+  const lab=a=>[...new Set(a.map(i=>L[i]||i))];
+  let img=sum&&sum.thumbnail&&sum.thumbnail.source,imgSrc="Wikipédia";
+  const enTitle=ent&&ent.sitelinks&&ent.sitelinks.enwiki&&ent.sitelinks.enwiki.title;
+  if(!img&&human&&str("P18")[0]){img="https://commons.wikimedia.org/wiki/Special:FilePath/"+enc(str("P18")[0])+"?width=300";imgSrc="Wikimedia Commons";}
+  if(!img&&enTitle){const s2=await getJ(`https://en.wikipedia.org/api/rest_v1/page/summary/${enc(enTitle.replace(/ /g,"_"))}`).catch(()=>null);if(s2&&s2.thumbnail){img=s2.thumbnail.source;imgSrc="Wikipédia (en)";}}
+  const extract=(sum&&sum.extract)||r.desc||"";
+  let h=`<div class="id"><span>FICHE · ${human?"STAR / PERSONNALITÉ":KIND_FR[r.kind]||"ŒUVRE"}</span><span>${esc(r.qid||"")}</span></div>
+   ${img?`<img class="poster" alt="" src="${esc(img)}">`:""}<h2>${esc(r.title)}</h2><span class="cat">${esc((sum&&sum.description||r.desc||"").toUpperCase().slice(0,60))}</span>
+   <h3>${human?"BIOGRAPHIE (WIKIPÉDIA)":"RÉSUMÉ (WIKIPÉDIA)"}</h3><p>${esc(extract.length>760?extract.slice(0,760)+"…":extract)}</p><h3>INFOS</h3><ul>`;
+  let filmo="";
+  if(human){
+    h+=li("Naissance",[fmtDate(time("P569")),lab(P.born)[0]].filter(Boolean).join(" · "))+li("Décès",fmtDate(time("P570")))+li("Métiers",lab(P.occ).join(", "));
+    try{const qy=`SELECT ?w ?wLabel (MIN(?d) AS ?date) WHERE { {?w wdt:P161 wd:${r.qid}} UNION {?w wdt:P57 wd:${r.qid}} OPTIONAL{?w wdt:P577 ?d} SERVICE wikibase:label { bd:serviceParam wikibase:language "fr,en". } } GROUP BY ?w ?wLabel ORDER BY DESC(?date) LIMIT 16`;
+      const d=await getJ("https://query.wikidata.org/sparql?format=json&query="+enc(qy),{headers:{Accept:"application/sparql-results+json"}},15000);
+      const rows=d.results.bindings.filter(b=>!/^Q\d+$/.test(b.wLabel.value));
+      if(rows.length)filmo=`<h3>FILMOGRAPHIE (WIKIDATA, RÉCENTS D'ABORD)</h3><div class="chips">${rows.map(b=>searchChip(b.wLabel.value+(b.date?" ("+b.date.value.slice(0,4)+")":""))).join("")}</div>`;
+    }catch(e){}
+  }else{
+    const y=fmtDate(time("P577"),true),y1=fmtDate(time("P580"),true),y2=fmtDate(time("P582"),true);
+    h+=li("Sortie",y)+li("Diffusion",y1?(y1+(y2?" – "+y2:" – …")):"")+li("Réalisation",lab(P.dir).join(", "))+li("Création",lab(P.crea).join(", "))+li("Genre",lab(P.gen).join(", "))+li("Pays",lab(P.cty).join(", "))+li("Chaîne d'origine",lab(P.net).join(", "))
+      +li("Durée",qty("P2047")?qty("P2047")+" min":"")+li("Saisons",qty("P2437"))+li("Épisodes",qty("P1113"))
+      +(reviews.length?li("Notes",reviews.slice(-3).map(x=>x.v+" ("+(L[x.by]||"?")+")").join(" · ")):li("Note","non renseignée sur Wikidata"+(tmdbKey?"":" (ajoutez une clé TMDB pour la note des spectateurs)")));
+  }
+  h+="</ul>"+filmo;
+  if(!human&&P.cast.length)h+=`<h3>DISTRIBUTION</h3><div class="chips">${lab(P.cast).map(n=>searchChip(n,"person")).join("")}</div>`;
+  if(!human){const plat=[];if(str("P1874").length)plat.push("Netflix");if(str("P7595").length||str("P7596").length)plat.push("Disney+");if(str("P8298").length)plat.push("HBO Max");
+    h+=`<h3>OÙ REGARDER ?</h3><p>${plat.length?"Présent au catalogue de : "+plat.join(", ")+" (selon Wikidata ; le catalogue varie selon le pays et dans le temps).":"Pas d'information fiable sans clé TMDB."}</p>
+     <button class="pbtn act" ${act(()=>openExt("https://www.justwatch.com/fr/recherche?q="+enc(r.title)))}>↗ Chercher sur JustWatch (France)</button>`;}
+  const imdb=str("P345")[0];
+  h+=`<div class="row">${sum&&sum.content_urls?`<button class="pbtn act" ${act(()=>openExt(sum.content_urls.mobile.page))}>↗ Wikipédia</button>`:""}${imdb?`<button class="pbtn act" ${act(()=>openExt("https://www.imdb.com/"+(imdb[0]==="n"?"name":"title")+"/"+imdb+"/"))}>↗ IMDb</button>`:""}</div>
+   <button class="pbtn" ${act(()=>openFilms(lastQ))}>◂ Retour à la recherche</button>
+   <div class="src">Texte : Wikipédia (CC BY-SA 4.0) · données : Wikidata (CC0)${img?" · image : "+imgSrc+" (voir la licence sur la page source)":""}.</div>`;
+  page(h,{work:r.title,src:"wiki",human});
+  T.films=Object.assign(T.films||{},{detail:{title:r.title,human,hasExtract:!!extract,cast:human?0:P.cast.length,filmo:!!filmo,img:!!img}});
+}
+async function tmdbDetail(r){
+  loading("FICHE TMDB",r.title);
+  try{
+    if(r.mt==="person"){
+      const d=await tmdb(`/person/${r.id}`,{append_to_response:"combined_credits"});let bio=d.biography;
+      if(!bio){const e=await tmdb(`/person/${r.id}`,{language:"en-US"}).catch(()=>({}));bio=e.biography||"";}
+      const cr=((d.combined_credits||{}).cast||[]).filter(c=>c.title||c.name).sort((a,b)=>(b.popularity||0)-(a.popularity||0)).slice(0,14);
+      page(`<div class="id"><span>FICHE · STAR</span><span>TMDB</span></div>${d.profile_path?`<img class="poster" alt="" src="https://image.tmdb.org/t/p/w185${d.profile_path}">`:""}
+        <h2>${esc(d.name)}</h2><span class="cat">${esc((d.known_for_department==="Acting"?"Interprète":d.known_for_department||"").toUpperCase())}</span>
+        <h3>BIOGRAPHIE</h3><p>${esc(bio.length>760?bio.slice(0,760)+"…":bio||"Pas de biographie.")}</p>
+        <h3>INFOS</h3><ul>${li("Naissance",[d.birthday&&fmtDate(d.birthday),d.place_of_birth].filter(Boolean).join(" · "))}${li("Décès",d.deathday&&fmtDate(d.deathday))}</ul>
+        <h3>CONNU(E) POUR</h3><div class="chips">${cr.map(c=>`<button ${act(()=>tmdbDetail({src:"tmdb",id:c.id,mt:c.media_type,title:c.title||c.name}))}>${esc((c.title||c.name)+((c.release_date||c.first_air_date)?" ("+(c.release_date||c.first_air_date).slice(0,4)+")":""))}</button>`).join("")}</div>
+        <button class="pbtn" ${act(()=>openFilms(lastQ))}>◂ Retour à la recherche</button><div class="src">Source : TMDB. Ce produit utilise l'API TMDB mais n'est ni approuvé ni certifié par TMDB.</div>`,{work:d.name,src:"tmdb"});
+      return;
+    }
+    const tv=r.mt==="tv",d=await tmdb(`/${tv?"tv":"movie"}/${r.id}`,{append_to_response:"credits,watch/providers,external_ids"});
+    let ov=d.overview;if(!ov){const e=await tmdb(`/${tv?"tv":"movie"}/${r.id}`,{language:"en-US"}).catch(()=>({}));ov=e.overview?e.overview+" (résumé en anglais)":"";}
+    const cast=((d.credits||{}).cast||[]).slice(0,12),dir=((d.credits||{}).crew||[]).filter(c=>c.job==="Director").map(c=>c.name).slice(0,3);
+    const wp=((d["watch/providers"]||{}).results||{}).FR;
+    const prov=k=>wp&&wp[k]?wp[k].map(p=>p.provider_name).join(", "):"";
+    const title=d.title||d.name,date=d.release_date||d.first_air_date||"";
+    page(`<div class="id"><span>FICHE · ${tv?"SÉRIE":"FILM"}</span><span>TMDB</span></div>${d.poster_path?`<img class="poster" alt="" src="https://image.tmdb.org/t/p/w185${d.poster_path}">`:""}
+      <h2>${esc(title)}</h2><span class="cat">${esc([tv?"SÉRIE":"FILM",date.slice(0,4),(d.genres||[]).map(g=>g.name).slice(0,2).join(", ")].filter(Boolean).join(" · ").toUpperCase())}</span>
+      <h3>SYNOPSIS</h3><p>${esc(ov||"Pas de synopsis.")}</p><h3>INFOS</h3><ul>
+      ${li("Note des spectateurs TMDB",d.vote_count?d.vote_average.toFixed(1)+" / 10 ("+d.vote_count+" votes)":"")}${li(tv?"Création":"Réalisation",tv?(d.created_by||[]).map(c=>c.name).join(", "):dir.join(", "))}
+      ${li("Durée",d.runtime?d.runtime+" min":"")}${li("Saisons",d.number_of_seasons)}${li("Épisodes",d.number_of_episodes)}${li("Chaîne / plateforme",(d.networks||[]).map(n=>n.name).join(", "))}${li("Titre original",d.original_title||d.original_name)}</ul>
+      ${cast.length?`<h3>DISTRIBUTION</h3><div class="chips">${cast.map(c=>searchChip(c.name,"person")).join("")}</div>`:""}
+      <h3>OÙ REGARDER EN FRANCE ?</h3>${wp?`<ul>${li("Abonnement",prov("flatrate"))}${li("Gratuit",[prov("free"),prov("ads")].filter(Boolean).join(", "))}${li("Location",prov("rent"))}${li("Achat",prov("buy"))}</ul><small class="note">Disponibilités : JustWatch via TMDB.</small>`:"<p>Aucune offre connue en France.</p>"}
+      ${wp&&wp.link?`<button class="pbtn act" ${act(()=>openExt(wp.link))}>↗ Voir les offres</button>`:""}
+      <button class="pbtn" ${act(()=>openFilms(lastQ))}>◂ Retour à la recherche</button>
+      <div class="src">Source : TMDB (et JustWatch pour les plateformes). Ce produit utilise l'API TMDB mais n'est ni approuvé ni certifié par TMDB.</div>`,{work:title,src:"tmdb"});
+  }catch(e){page(`<h2>Fiche indisponible</h2><p>TMDB : ${esc(e.status===401?"clé refusée":e.message)}.</p><button class="pbtn" ${act(()=>openFilms(lastQ))}>◂ Retour</button>`);}
+}
+function openKey(msg){
+  page(`<div class="id"><span>RÉGLAGES · TMDB</span><span>${tmdbKey?"CLÉ ENREGISTRÉE":"AUCUNE CLÉ"}</span></div><h2>Clé TMDB (facultative)</h2>
+  <p>Sans clé, les fiches viennent de Wikipédia et Wikidata. Avec votre propre clé TMDB gratuite, vous obtenez en plus : affiches, synopsis, note des spectateurs, distribution complète et « où regarder » en France.</p>
+  <h3>OBTENIR UNE CLÉ (GRATUIT)</h3><ul><li>Créez un compte sur themoviedb.org.</li><li>Paramètres → API → demandez une clé (usage personnel).</li><li>Copiez la « clé d'API » (v3) ou le « jeton d'accès en lecture », puis collez-la ici.</li></ul>
+  <div class="lf"><label for="kk">VOTRE CLÉ</label><input id="kk" type="password" autocomplete="off" placeholder="${tmdbKey?"•••••••• (enregistrée)":"collez la clé ici"}"></div>
+  ${msg?`<div class="warnbox">${esc(msg)}</div>`:""}
+  <div class="row"><button class="pbtn" ${act(saveKey)}>✓ Vérifier et enregistrer</button>${tmdbKey?`<button class="pbtn" ${act(()=>{tmdbKey="";lsSet("tableLecture.tmdb.key","");openKey("Clé supprimée de cet appareil.");})}>✖ Supprimer</button>`:""}</div>
+  <button class="pbtn" ${act(()=>openFilms(lastQ))}>◂ Films & Séries</button>
+  <div class="src">La clé reste uniquement sur cet appareil (stockage local du navigateur) et n'est envoyée qu'à api.themoviedb.org. Aucune clé n'est intégrée au site.</div>`,{key:true});
+}
+async function saveKey(){const v=($("kk").value||"").trim();if(!v)return;const old=tmdbKey;tmdbKey=v;
+  try{await tmdb("/configuration");lsSet("tableLecture.tmdb.key",v);openKey("Clé valide et enregistrée sur cet appareil.");}
+  catch(e){tmdbKey=old;openKey(e.status===401?"Clé refusée par TMDB : vérifiez-la.":"Vérification impossible ("+e.message+").");}}
+
+/* ---------- PROGRAMME TV (XML TV Fr, CORS ouvert) ---------- */
+const GUIDE_URL="https://xmltvfr.fr/xmltv/xmltv_tnt.xml";
+const CH_ORDER=["TF1.fr","France2.fr","France3.fr","CanalPlus.fr","France5.fr","M6.fr","Arte.fr","LaChaineParlementaire.fr","W9.fr","TMC.fr","NT1.fr","Gulli.fr","BFMTV.fr","CNews.fr","LCI.fr","FranceInfo.fr","France4.fr","CStar.fr","T18.fr","NOVO19.fr","TF1SeriesFilms.fr","LEquipe21.fr","6ter.fr","Numero23.fr","RMCDecouverte.fr","Cherie25.fr","ParisPremiere.fr","CanalPlusCinema.fr","CanalPlusSport.fr","PlanetePlus.fr"];
+function xd(s){const m=String(s||"").match(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)\s*([+-])(\d\d)(\d\d)/);if(!m)return NaN;
+  return Date.UTC(+m[1],m[2]-1,+m[3],+m[4],+m[5],+m[6])-(m[7]==="+"?1:-1)*(m[8]*60+ +m[9])*60000;}
+let G=null,gP=null;
+function loadGuide(){
+  if(G&&Date.now()-G.t<3*3600e3)return Promise.resolve(G);if(gP)return gP;
+  gP=(async()=>{const ac=new AbortController(),to=setTimeout(()=>ac.abort(),45000);let txt;
+    try{const r=await fetch(GUIDE_URL,{signal:ac.signal});if(!r.ok)throw new Error("HTTP "+r.status);txt=await r.text();}finally{clearTimeout(to);}
+    const doc=new DOMParser().parseFromString(txt,"text/xml");txt=null;if(doc.getElementsByTagName("parsererror").length)throw new Error("programme illisible");
+    const ch={};for(const c of doc.getElementsByTagName("channel")){const ic=c.getElementsByTagName("icon")[0],dn=c.getElementsByTagName("display-name")[0];ch[c.getAttribute("id")]={id:c.getAttribute("id"),name:dn?dn.textContent.trim():c.getAttribute("id"),icon:ic?ic.getAttribute("src").replace(/^http:/,"https:"):""};}
+    const now=Date.now(),lo=now-4*3600e3,hi=now+36*3600e3,byCh={};
+    for(const p of doc.getElementsByTagName("programme")){const s=xd(p.getAttribute("start")),e=xd(p.getAttribute("stop"));if(!(e>lo&&s<hi))continue;
+      const g=t=>{const x=p.getElementsByTagName(t)[0];return x?x.textContent.trim():"";},ic=p.getElementsByTagName("icon")[0],c=p.getAttribute("channel");
+      (byCh[c]=byCh[c]||[]).push({c,s,e,t:g("title"),st:g("sub-title"),d:g("desc").slice(0,700),cat:g("category"),img:ic?ic.getAttribute("src").replace(/^http:/,"https:"):"",r:g("value")});}
+    Object.values(byCh).forEach(a=>a.sort((x,y)=>x.s-y.s));
+    const order=CH_ORDER.filter(id=>ch[id]&&byCh[id]).concat(Object.keys(ch).filter(id=>!CH_ORDER.includes(id)&&byCh[id]));
+    G={t:Date.now(),ch,byCh,order};T.guide={channels:order.length,progs:Object.values(byCh).reduce((a,b)=>a+b.length,0)};return G;})();
+  gP.then(()=>{gP=null},()=>{gP=null});return gP;
+}
+const nowProg=(id,t)=>{t=t||Date.now();return (G.byCh[id]||[]).find(p=>p.s<=t&&p.e>t);};
+function tonight(id){const d=new Date();d.setHours(20,40,0,0);const a=d.getTime(),b=a+110*60000,ps=G.byCh[id]||[];
+  return ps.find(p=>p.s>=a&&p.s<b&&p.e-p.s>=40*60000)||ps.find(p=>p.s>=a&&p.s<b)||ps.find(p=>p.s<=a+30*60000&&p.e>a+30*60000);}
+let guideMode="now";
+const FILMISH=/film|téléfilm|série|feuilleton|animation|dessin animé|sitcom/i;
+async function openGuide(mode){
+  if(mode)guideMode=mode;loading("PROGRAMME TV","Grille des programmes");
+  try{await loadGuide();}catch(e){page(`<h2>Programme indisponible</h2><p>La grille (xmltvfr.fr) n'a pas pu être chargée : ${esc(e.message)}.</p><button class="pbtn" ${act(()=>openGuide())}>⟲ Réessayer</button>`);T.guide={error:e.message};return;}
+  const now=Date.now();
+  const rows=G.order.map(id=>{const c=G.ch[id],p=guideMode==="now"?nowProg(id):tonight(id);
+    const pr=p&&guideMode==="now"?Math.round(100*(now-p.s)/(p.e-p.s)):0;
+    return `<div class="tvrow" ${act(()=>openChannel(id))}>${c.icon?`<img alt="" loading="lazy" src="${esc(c.icon)}">`:`<span class="ph">${esc(c.name.slice(0,3))}</span>`}<div><b>${esc(c.name)}</b>
+      ${p?`<small>${hhmm(p.s)}–${hhmm(p.e)} · <em>${esc(p.t)}</em></small><small class="dim">${esc(p.cat||"")}${p.st?" · "+esc(p.st):""}</small>${guideMode==="now"?`<i class="prog"><u style="width:${pr}%"></u></i>`:""}`:"<small>Pas d'information</small>"}</div></div>`;}).join("");
+  page(`<div class="id"><span>PROGRAMME TV · TNT</span><span>${new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"}).toUpperCase()}</span></div><h2>${guideMode==="now"?"En ce moment":"Ce soir"}</h2>
+   <div class="chips tabs"><button class="${guideMode==="now"?"on":""}" ${act(()=>openGuide("now"))}>En ce moment</button><button class="${guideMode==="soir"?"on":""}" ${act(()=>openGuide("soir"))}>Ce soir</button><button ${act(()=>startReco())}>🔍 C'est quoi ?</button><button ${act(()=>openFilms())}>🎬 Films</button></div>
+   ${rows}<div class="src">Grille : XML TV Fr (xmltvfr.fr, projet open source racacax/XML-TV-Fr), compilée depuis des guides TV publics ; mise à jour quotidienne, sans garantie (horaires indicatifs). C8 et NRJ 12 ont cessé d'émettre en 2025.</div>`,{guide:guideMode});
+}
+function openChannel(id){const c=G.ch[id],now=Date.now(),end=new Date();end.setDate(end.getDate()+1);end.setHours(2,0,0,0);
+  const ps=(G.byCh[id]||[]).filter(p=>p.e>now&&p.s<end.getTime());
+  page(`<div class="id"><span>PROGRAMME TV · ${esc(c.name.toUpperCase())}</span><span>${ps.length} PROGRAMMES</span></div><h2>${esc(c.name)}</h2>
+   ${ps.map(p=>`<div class="memi prow" ${act(()=>openProg(p))}><div><b class="t">${hhmm(p.s)}</b> ${esc(p.t)}${p.s<=now?" <span class='live'>● EN DIRECT</span>":""}<small>${esc(p.cat||"")}${p.st?" · "+esc(p.st):""}</small></div><button>Voir</button></div>`).join("")}
+   <button class="pbtn" ${act(()=>openGuide())}>◂ Toutes les chaînes</button><div class="src">Grille : XML TV Fr (xmltvfr.fr).</div>`,{channel:id});}
+function openProg(p,extra){const c=G.ch[p.c]||{name:p.c},now=Date.now(),day=new Date(p.s).toDateString()===new Date().toDateString()?"aujourd'hui":new Date(p.s).toLocaleDateString("fr-FR",{weekday:"long"});
+  page(`<div class="id"><span>PROGRAMME TV · ${esc(c.name.toUpperCase())}</span><span>${hhmm(p.s)}–${hhmm(p.e)}</span></div>${extra||""}
+   ${p.img?`<img class="poster" alt="" src="${esc(p.img)}">`:""}<h2>${esc(p.t)}</h2><span class="cat">${esc((p.cat||"programme").toUpperCase())}</span>${p.st?`<p><b>${esc(p.st)}</b></p>`:""}
+   <p>${esc(p.d||"Pas de description.")}</p><h3>INFOS</h3><ul>${li("Chaîne",c.name)}${li("Horaire",day+", "+hhmm(p.s)+" – "+hhmm(p.e)+" ("+Math.round((p.e-p.s)/60000)+" min)"+(p.s<=now&&p.e>now?" · en cours":""))}${li("Public",p.r)}</ul>
+   <button class="pbtn" ${act(()=>{filmFilter="all";openFilms(p.t,true);})}>🔎 ${FILMISH.test(p.cat)?"Fiche du film / de la série":"Chercher ce titre"} (Wikipédia${tmdbKey?" / TMDB":""})</button>
+   <button class="pbtn" ${act(()=>openChannel(p.c))}>◂ Programme de ${esc(c.name)}</button><div class="src">Grille : XML TV Fr (xmltvfr.fr) · image : fournisseur du guide TV.</div>`,{prog:p.t,channel:p.c});}
+
+/* ---------- « C'EST QUOI CE FILM ? » : reconnaissance d'une TV ---------- */
+const CH_ALIAS={"TF1.fr":["tf1","tf 1"],"France2.fr":["france 2","france2","fr2"],"France3.fr":["france 3","france3"],"CanalPlus.fr":["canal+","canal +","canal plus","canalplus"],"France5.fr":["france 5","france5"],"M6.fr":["m6"],"Arte.fr":["arte"],"LaChaineParlementaire.fr":["lcp"],"W9.fr":["w9"],"TMC.fr":["tmc"],"NT1.fr":["tfx"],"Gulli.fr":["gulli"],"BFMTV.fr":["bfmtv","bfm tv"],"CNews.fr":["cnews"],"LCI.fr":["lci"],"FranceInfo.fr":["franceinfo","france info"],"France4.fr":["france 4","france4"],"CStar.fr":["cstar"],"T18.fr":["t18"],"NOVO19.fr":["novo19","novo 19"],"TF1SeriesFilms.fr":["tf1 series films","tf1 series"],"LEquipe21.fr":["l equipe","lequipe"],"6ter.fr":["6ter"],"Numero23.fr":["rmc story"],"RMCDecouverte.fr":["rmc decouverte"],"Cherie25.fr":["rmc life"],"ParisPremiere.fr":["paris premiere"],"CanalPlusCinema.fr":["canal+ cinema","canal cinema"],"CanalPlusSport.fr":["canal+ sport"],"PlanetePlus.fr":["planete+"]};
+let tessP=null,tessLog=null;
+function loadTess(){if(!tessP){tessP=(async()=>{
+    if(!window.Tesseract)await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";s.onload=res;s.onerror=()=>rej(new Error("tesseract.js injoignable"));document.head.appendChild(s);});
+    return await Tesseract.createWorker(["fra","eng"],1,{logger:m=>{if(tessLog)tessLog(m);}});})();
+  tessP.catch(()=>{tessP=null;});}return tessP;}
+function grabFrame(){let src,w,h;
+  if(frozenMode&&frozen.width&&frozen.style.display!=="none"){src=frozen;w=frozen.width;h=frozen.height;}
+  else if(stream&&video.videoWidth){src=video;w=video.videoWidth;h=video.videoHeight;}else return null;
+  const k=Math.min(1,1600/Math.max(w,h)),c=document.createElement("canvas");c.width=Math.round(w*k);c.height=Math.round(h*k);c.getContext("2d").drawImage(src,0,0,c.width,c.height);return c;}
+function crop(c,b){const o=document.createElement("canvas");o.width=Math.max(1,Math.round(b[2]));o.height=Math.max(1,Math.round(b[3]));o.getContext("2d").drawImage(c,b[0],b[1],b[2],b[3],0,0,o.width,o.height);return o;}
+function prep(c,invert){const s=clamp(1400/c.width,1,2.5),o=document.createElement("canvas");o.width=Math.round(c.width*s);o.height=Math.round(c.height*s);
+  const x=o.getContext("2d",{willReadFrequently:true});x.drawImage(c,0,0,o.width,o.height);const im=x.getImageData(0,0,o.width,o.height),d=im.data;
+  for(let i=0;i<d.length;i+=4){let g=.3*d[i]+.59*d[i+1]+.11*d[i+2];g=clamp((g-128)*1.4+128,0,255);if(invert)g=255-g;d[i]=d[i+1]=d[i+2]=g;}x.putImageData(im,0,0);return o;}
+const embCache=new Map();
+function loadImg(u){return new Promise((res,rej)=>{const i=new Image();i.crossOrigin="anonymous";i.onload=()=>res(i);i.onerror=()=>rej(new Error("img"));i.src=u;setTimeout(()=>rej(new Error("timeout")),8000);});}
+async function embedURL(u){if(embCache.has(u))return embCache.get(u);const p=(async()=>{const i=await loadImg(u),c=document.createElement("canvas");c.width=c.height=256;
+  const s=Math.min(i.naturalWidth,i.naturalHeight);c.getContext("2d").drawImage(i,(i.naturalWidth-s)/2,(i.naturalHeight-s)/2,s,s,0,0,256,256);return await window.CLIPX.embed(c);})();
+  embCache.set(u,p);p.catch(()=>embCache.delete(u));return p;}
+function sq(c){const s=Math.min(c.width,c.height),o=document.createElement("canvas");o.width=o.height=256;o.getContext("2d").drawImage(c,(c.width-s)/2,(c.height-s)/2,s,s,0,0,256,256);return o;}
+function titleScore(title,txt){const tn=norm(title);if(tn.length<3)return 0;const T2=" "+txt+" ";if(T2.includes(" "+tn+" "))return tn.length>=5||tn.includes(" ")?1:0.6;
+  const tw=tn.split(" ").filter(w=>w.length>=4);if(!tw.length)return 0;const hit=tw.filter(w=>T2.includes(" "+w+" ")).length;return hit/tw.length*(tw.length>=2?0.85:0.5);}
+function startReco(){const c=grabFrame();if(c)return runReco(c,"caméra");
+  page(`<div class="id"><span>C'EST QUOI CE FILM ?</span><span>TV</span></div><h2>Pointez la caméra vers la TV</h2>
+   <p>Démarrez la caméra et cadrez l'écran (titre, logo de la chaîne ou sous-titres visibles), puis touchez à nouveau « C'est quoi ? ». Vous pouvez aussi choisir une photo de l'écran.</p>
+   <label class="btn pbtn" for="tvfile">▣ Choisir une photo de l'écran</label><input type="file" id="tvfile" accept="image/*" style="display:none">
+   <h3>OU CHERCHEZ VOUS-MÊME</h3><div class="lf"><input id="rq" type="search" enterkeyhint="search" placeholder="titre, acteur…"></div><button class="pbtn" ${act(()=>openFilms($("rq").value,true))}>🔎 Chercher</button>`,{reco:"idle"});
+  onEnter("rq",()=>openFilms($("rq").value,true));wireTvFile();}
+function wireTvFile(){const f=$("tvfile");if(f)f.onchange=e=>{const file=e.target.files[0];if(!file)return;const img=new Image();img.onload=()=>{const k=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);runReco(c,"photo");};img.src=URL.createObjectURL(file);};}
+let recoBusy=false;
+async function runReco(frame,from){
+  if(recoBusy)return;recoBusy=true;const t0=performance.now();
+  const st={cap:"✓ Image capturée ("+from+")",tv:"… Recherche de l'écran",ocr:"… Lecture du texte (OCR)",guide:"… Programme TV",vis:"… Comparaison visuelle"};
+  const draw=()=>{if(T.panel&&T.panel.reco==="run")$("rsteps").innerHTML=Object.values(st).map(s=>`<li>${esc(s)}</li>`).join("");};
+  page(`<div class="id"><span>C'EST QUOI CE FILM ?</span><span>ANALYSE</span></div><h2 class="blink">Analyse de l'écran…</h2><ul id="rsteps"></ul><p class="note">Première utilisation : téléchargement du module de lecture de texte (≈ 6 Mo).</p>`,{reco:"run"});draw();
+  T.tvreco={state:"run"};
+  try{
+    const guideP=loadGuide().then(()=>{st.guide="✓ Programme TV chargé";draw();return G;}).catch(e=>{st.guide="✗ Programme TV indisponible";draw();return null;});
+    // 1. écran TV
+    let box=null;
+    try{if(coco){const ps=await coco.detect(frame,10,0.3);const tvs=ps.filter(p=>p.class==="tv"||p.class==="laptop").sort((a,b)=>b.bbox[2]*b.bbox[3]-a.bbox[2]*a.bbox[3]);if(tvs.length&&tvs[0].score>=0.35)box=tvs[0].bbox;}}catch(e){}
+    const scr=box?crop(frame,[box[0]+box[2]*.02,box[1]+box[3]*.02,box[2]*.96,box[3]*.96]):frame;
+    st.tv=box?"✓ Écran repéré dans l'image":"• Écran non isolé : toute l'image est analysée";draw();
+    // 2. OCR
+    let lines=[],ocrText="",ocrErr="",rawOcr="";
+    try{tessLog=m=>{if(m.status==="recognizing text"){st.ocr="… Lecture du texte "+Math.round(m.progress*100)+" %";draw();}else if(/load|init/i.test(m.status)){st.ocr="… Chargement OCR : "+m.status;draw();}};
+      const w=await loadTess();
+      const pass=async inv=>{const r=await w.recognize(prep(scr,inv));const d=r.data||{};rawOcr+=" "+(d.words||[]).filter(x=>x.confidence>=45).map(x=>x.text).join(" ");const ls=(d.lines&&d.lines.length?d.lines.map(l=>({t:l.text.trim(),c:l.confidence})):String(d.text||"").split("\n").map(t=>({t:t.trim(),c:d.confidence||0})));return ls;};
+      lines=await pass(false);
+      const good=ls=>ls.filter(l=>l.c>=55&&(l.t.match(/[A-Za-zÀ-ÿ]/g)||[]).length>=3);
+      if(good(lines).length<1){lines=lines.concat(await pass(true));}
+      const anyCh=()=>{const t=" "+norm(rawOcr)+" ";return Object.values(CH_ALIAS).some(al=>al.some(a=>t.includes(" "+a+" ")));};
+      if(!anyCh()){st.ocr="… Recherche d'un logo de chaîne";draw();
+        try{// coins de l'écran (là où sont les logos), puis texte épars sur toute l'image
+          await w.setParameters({tessedit_pageseg_mode:"6"});const W=scr.width,H=scr.height;
+          for(const r of [[W*.74,0,W*.26,H*.2],[0,0,W*.26,H*.2],[W*.74,H*.8,W*.26,H*.2]]){if(anyCh())break;
+            for(const inv of [false,true]){const x=await w.recognize(prep(crop(scr,r),inv));rawOcr+=" "+((x.data&&x.data.words)||[]).filter(q=>q.confidence>=55).map(q=>q.text).join(" ");if(anyCh())break;}}
+          if(!anyCh()){await w.setParameters({tessedit_pageseg_mode:"11"});lines=lines.concat(await pass(false));if(!anyCh())lines=lines.concat(await pass(true));}
+        }finally{await w.setParameters({tessedit_pageseg_mode:"3"});}}
+      lines=good(lines).filter((l,i,A)=>A.findIndex(o=>o.t.trim()===l.t.trim())===i).map(l=>({t:l.t.replace(/[|_~=<>{}\[\]\\]+/g," ").replace(/\s+/g," ").trim(),c:Math.round(l.c)})).filter(l=>(l.t.match(/[A-Za-zÀ-ÿ]/g)||[]).length>=3&&(l.t.match(/[A-Za-zÀ-ÿ0-9 ]/g)||[]).length/l.t.length>0.7);
+      ocrText=norm(lines.map(l=>l.t).join(" "));st.ocr=lines.length?"✓ Texte lu : "+lines.length+" ligne(s)":"• Aucun texte lisible";
+    }catch(e){ocrErr=e.message;st.ocr="✗ OCR indisponible ("+e.message+")";}
+    finally{tessLog=null;}
+    draw();
+    const g=await guideP;
+    // 3. chaîne lue + titre en cours
+    const now=Date.now(),cand={};
+    const add=(id,k,v,why)=>{const c=cand[id]=cand[id]||{id,score:0,why:[],ch:0,ti:0,vis:0};c[k]=Math.max(c[k],v);if(why&&!c.why.includes(why))c.why.push(why);};
+    const T2=" "+ocrText+" "+norm(rawOcr)+" ";let chHits=[];
+    for(const [id,al] of Object.entries(CH_ALIAS))for(const a of al)if(T2.includes(" "+a+" "))chHits.push({id,len:a.length,a});
+    chHits=chHits.filter(h=>!chHits.some(o=>o!==h&&o.len>h.len&&o.a.includes(h.a)));
+    chHits.forEach(h=>add(h.id,"ch",1,"nom de chaîne lu à l'écran (« "+h.a.toUpperCase()+" »)"));
+    if(g){for(const id of g.order){for(const p of (g.byCh[id]||[]).filter(p=>p.s<=now+20*60000&&p.e>=now-20*60000)){
+        const sc=Math.max(titleScore(p.t,ocrText),p.st?titleScore(p.st,ocrText)*0.9:0);
+        const live=p.s<=now&&p.e>now;if(sc>=0.5)add(id,"ti",sc*(live?1:0.85),"titre lu à l'écran = programme "+(live?"en cours":"proche")+" (« "+p.t+" »)");}}}
+    // 4. comparaison visuelle CLIP avec les vignettes des programmes en cours
+    let visTop=null;
+    if(g&&window.CLIPX&&window.CLIPX.ready){
+      try{st.vis="… Comparaison visuelle avec les programmes en cours";draw();
+        const fe=await window.CLIPX.embed(sq(scr)),items=g.order.map(id=>({id,p:nowProg(id)})).filter(x=>x.p&&x.p.img).slice(0,30);
+        const sims=[];for(const it of items){try{const e=await embedURL(it.p.img);let s=0;for(let i=0;i<fe.length;i++)s+=fe[i]*e[i];sims.push({id:it.id,s});}catch(e){}}
+        if(sims.length>=5){sims.sort((a,b)=>b.s-a.s);const m=sims.reduce((a,b)=>a+b.s,0)/sims.length,sd=Math.sqrt(sims.reduce((a,b)=>a+(b.s-m)**2,0)/sims.length)||1,z=(sims[0].s-m)/sd;
+          visTop={id:sims[0].id,s:+sims[0].s.toFixed(3),z:+z.toFixed(2),gap:+(sims[0].s-sims[1].s).toFixed(3)};
+          // indice visuel seul = trop peu fiable (faux positifs constatés) : il ne fait que confirmer une chaîne déjà trouvée
+          if(z>=2.2&&visTop.gap>=0.02&&cand[sims[0].id])add(sims[0].id,"vis",Math.min(1,(z-2)/1.5+0.3),"image proche de la vignette du programme en cours");}
+        st.vis=sims.length?"✓ Comparaison visuelle ("+sims.length+" vignettes)":"• Vignettes indisponibles";
+      }catch(e){st.vis="• Comparaison visuelle indisponible";}
+    }else st.vis=window.CLIPX&&window.CLIPX.ready?"• Pas de programme à comparer":"• Comparaison visuelle : mémoire étendue pas encore chargée";
+    draw();
+    for(const c of Object.values(cand))c.score=2*c.ch+2.5*c.ti+1.2*c.vis;
+    const ranked=Object.values(cand).sort((a,b)=>b.score-a.score);
+    const best=ranked[0];let level="aucune",prog=null;
+    if(best){prog=g&&nowProg(best.id);
+      if(best.ti>=0.8||(best.ch&&best.ti>=0.5))level="élevée";else if(best.ch||best.ti>=0.5)level="moyenne";else level="faible";}
+    // 5. pistes Wikipédia sur le texte lu (titre de film, générique…)
+    const textCands=[...new Set(lines.filter(l=>l.c>=65).map(l=>l.t).filter(t=>t.length>=4&&t.length<=60&&!CH_ALIAS[t]).sort((a,b)=>b.length-a.length))].slice(0,3);
+    let wikiHits=[];
+    if(level!=="élevée"&&textCands.length){try{const r=await wikiSearch(textCands[0]);wikiHits=r.filter(x=>x.kind==="film"||x.kind==="serie").slice(0,3);}catch(e){}}
+    const ms=Math.round(performance.now()-t0);
+    T.tvreco={state:"done",ms,level,channel:best?best.id:null,title:prog?prog.t:null,why:best?best.why:[],ocr:lines.map(l=>l.t),ocrErr,visual:visTop,wiki:wikiHits.map(w=>w.title),screen:!!box,ranked:ranked.slice(0,4).map(c=>({id:c.id,score:+c.score.toFixed(2)}))};
+    if((T.panel&&T.panel.reco==="run")||!panel.classList.contains("open"))renderReco(frame,scr,box,best,prog,level,ranked,lines,textCands,wikiHits,g);
+  }catch(e){T.tvreco={state:"error",error:e.message};page(`<h2>Analyse impossible</h2><p>${esc(e.message)}</p><button class="pbtn" ${act(()=>startReco())}>⟲ Réessayer</button>`);}
+  finally{recoBusy=false;}
+}
+function renderReco(frame,scr,box,best,prog,level,ranked,lines,textCands,wikiHits,g){
+  const LV={"élevée":["conf-h","Le texte lu à l'écran correspond à la grille TV."],"moyenne":["conf-m","Indice partiel : vérifiez que vous regardez bien la chaîne en direct."],"faible":["conf-l","Simple ressemblance visuelle : à confirmer."],"aucune":["conf-l","Rien d'identifiable avec certitude sur cette image."]};
+  const thumb=document.createElement("canvas");const k=Math.min(1,320/scr.width);thumb.width=Math.round(scr.width*k);thumb.height=Math.round(scr.height*k);thumb.getContext("2d").drawImage(scr,0,0,thumb.width,thumb.height);
+  const chName=id=>g&&g.ch[id]?g.ch[id].name:id.replace(/\.fr$/,"");
+  let h=`<div class="id"><span>C'EST QUOI CE FILM ?</span><span>${hhmm(Date.now())}</span></div>
+   <h2>${prog?esc(prog.t):best?esc(chName(best.id)):"Pas de certitude"}</h2><span class="cat ${LV[level][0]}">CONFIANCE : ${level.toUpperCase()}</span><p>${esc(LV[level][1])}</p>
+   <img class="shot" alt="" src="${thumb.toDataURL("image/jpeg",.7)}"><ul>`;
+  if(best){h+=li("Chaîne probable",chName(best.id));best.why.forEach(w=>{h+=`<li>Indice : ${esc(w)}</li>`;});if(prog)h+=li("À l'antenne",hhmm(prog.s)+" – "+hhmm(prog.e)+" · "+(prog.cat||""));}
+  h+=li("Texte lu",lines.length?lines.slice(0,4).map(l=>"« "+l.t+" »").join(" "):"aucun")+"</ul>";
+  if(prog)h+=`<button class="pbtn" ${act(()=>openProg(prog))}>📺 Voir la fiche du programme</button><button class="pbtn" ${act(()=>{filmFilter="all";openFilms(prog.t,true);})}>🔎 Fiche film / série (« ${esc(prog.t)} »)</button>`;
+  if(ranked.length>1)h+=`<h3>AUTRES PISTES</h3><div class="chips">${ranked.slice(1,4).map(c=>{const p=g&&nowProg(c.id);return p?`<button ${act(()=>openProg(p))}>${esc(chName(c.id))} · ${esc(p.t)}</button>`:"";}).join("")}</div>`;
+  if(wikiHits.length)h+=`<h3>PISTES WIKIPÉDIA (TEXTE LU, À VÉRIFIER)</h3>`+wikiHits.map(r=>`<div class="memi film" ${act(()=>openWork(r))}>${r.thumb?`<img alt="" src="${esc(r.thumb)}">`:`<span class="ph">▶</span>`}<div>${esc(r.title)}<small>${esc([KIND_FR[r.kind],r.year].filter(Boolean).join(" · "))}</small></div><button>Fiche</button></div>`).join("");
+  if(textCands.length)h+=`<div class="chips">${textCands.map(t=>`<button ${act(()=>{filmFilter="all";openFilms(t,true);})}>🔎 « ${esc(t)} »</button>`).join("")}</div>`;
+  if(g)h+=`<h3>VOUS REGARDEZ QUELLE CHAÎNE ?</h3><p class="note">Touchez la chaîne : la grille dit ce qui passe en ce moment (valable en direct, pas en replay).</p><div class="chips">${g.order.slice(0,16).map(id=>{const p=nowProg(id);return p?`<button ${act(()=>openProg(p,`<div class="warnbox">D'après la grille TV pour ${esc(chName(id))} à ${hhmm(Date.now())} — exact seulement si vous regardez en direct.</div>`))}>${esc(chName(id))}</button>`:"";}).join("")}</div>`;
+  h+=`<h3>OU CHERCHEZ VOUS-MÊME</h3><div class="lf"><input id="rq" type="search" enterkeyhint="search" placeholder="titre, acteur…"></div><div class="row"><button class="pbtn" ${act(()=>openFilms($("rq").value,true))}>🔎 Chercher</button><button class="pbtn" ${act(()=>startReco())}>⟲ Nouvelle analyse</button></div>
+   <label class="btn pbtn" for="tvfile">▣ Analyser une photo de l'écran</label><input type="file" id="tvfile" accept="image/*" style="display:none">
+   <div class="warnbox">Limites : reconnaître n'importe quelle scène d'un film (comme Shazam pour l'image) demande un service payant. Ici, on lit le texte visible (titre, logo de chaîne, sous-titres), on le compare à la grille TV et aux vignettes des programmes en cours. Replay, streaming et logos purement graphiques sont souvent non reconnus.</div>
+   <div class="src">OCR : Tesseract.js (Apache 2.0) · grille : XML TV Fr · comparaison visuelle : MobileCLIP · fiches : Wikipédia/Wikidata.</div>`;
+  page(h,{reco:"done",level});onEnter("rq",()=>openFilms($("rq").value,true));wireTvFile();
+}
+
+/* ---------- interface ---------- */
+const bar=document.createElement("div");bar.id="xtra";
+bar.innerHTML=`<div id="wx" role="button" aria-label="Météo"><i>…</i><b>--°</b><span>${esc(place.name.toUpperCase())}</span><small>Météo…</small></div><div id="xbtns"><button id="bFilms">🎬 Films</button><button id="bTV">📺 Prog. TV</button><button id="bReco">🔍 C'est quoi ?</button></div>`;
+$("stage").insertBefore(bar,$("panel"));
+const tap=(id,fn)=>$(id).addEventListener("click",e=>{e.stopPropagation();fn();});
+tap("wx",()=>openWeather());tap("bFilms",()=>openFilms());tap("bTV",()=>openGuide("now"));tap("bReco",()=>startReco());
+loadWeather();setInterval(loadWeather,15*60000);
+$("bStart").addEventListener("click",()=>{if(place.mode==="manual")return;const t0=Date.now();
+  const w=setInterval(()=>{if(stream||Date.now()-t0>8000){clearInterval(w);locate();}},400);});
+window.TLX={openWeather,openFilms,openGuide,startReco,runReco,loadGuide,doSearch,locate,get G(){return G;}};
+})();
 </script>
 <script type="module">
 /* Mémoire étendue : MobileCLIP-S0 (vision) dans le navigateur + vocabulaire pré-calculé (vocab.json) */
