@@ -48,6 +48,20 @@ button.on{background:var(--c);color:#001218}
 .type{border-right:2px solid var(--c);animation:caret .7s steps(2) infinite}
 @keyframes caret{50%{border-color:transparent}}
 #minis{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#stage{touch-action:none}#panel,#card{touch-action:pan-y}
+#sel{position:absolute;display:none;z-index:3;border:2px dashed var(--c2);background:rgba(0,240,255,.07);box-shadow:0 0 14px rgba(127,252,255,.8),inset 0 0 16px rgba(0,240,255,.25);touch-action:none;cursor:move}
+#sel.on{display:block}#sel.draw{border-style:solid;cursor:crosshair}#sel.run{animation:blink 1s steps(2) infinite}
+body.off-wx #wx,body.off-mem #mem,body.off-fps #fps,body.off-status #status,body.off-bMode #bMode,body.off-bFreeze #bFreeze,body.off-bSwitch #bSwitch,
+body.off-bPhoto #bar label.btn,body.off-bLearn #bLearn,body.off-bFilms #bFilms,body.off-bTV #bTV,body.off-bReco #bReco,body.off-history #chist,
+body.off-anim .scan,body.off-details .mini small,body.off-details .mini .tap,body.off-pct .mini .p,body.off-pct .fc .conf,body.off-pct .fc .pctrow{display:none!important}
+body.off-anim #sel.run{animation:none}
+#gear{pointer-events:auto;cursor:pointer;font-size:15px;letter-spacing:0;margin-top:-4px;padding:2px 4px;text-shadow:0 0 8px var(--c)}
+.setg{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid rgba(0,240,255,.12);font-size:13px;cursor:pointer}
+.setg input{width:20px;height:20px;accent-color:#00f0ff;flex:none}.setg small{display:block;opacity:.65;font-size:10px}
+#sel.low{border-color:rgba(180,140,255,.7)}#sel .lbl.low{color:#c9b0ff;pointer-events:auto;cursor:pointer}form.lsrch{display:flex;gap:6px;margin-top:10px}form.lsrch input{flex:1;min-width:0;background:#0008;border:1px solid var(--c2);color:#e8fbff;padding:8px;font:inherit}#sel .lbl{position:absolute;left:0;top:-17px;font-size:10px;letter-spacing:2px;color:var(--c2);text-shadow:0 0 6px var(--c);white-space:nowrap;pointer-events:none}
+#sel .sx{position:absolute;right:-13px;top:-13px;width:28px;height:28px;padding:0;flex:none;max-width:none;font-size:12px;letter-spacing:0;border-radius:50%;z-index:2;background:rgba(0,20,26,.92)}
+#sel .rs{position:absolute;right:-10px;bottom:-10px;width:20px;height:20px;border:2px solid var(--c2);background:rgba(0,20,26,.92);cursor:nwse-resize;box-shadow:0 0 8px var(--c)}
+#sel .mini{animation:none;border-color:var(--c2)}
 .mini{position:absolute;left:0;top:0;width:min(158px,42vw);padding:6px 8px;background:rgba(0,24,32,.84);border:1px solid var(--c);box-shadow:0 0 10px rgba(0,240,255,.4),inset 0 0 12px rgba(0,240,255,.1);clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));pointer-events:auto;cursor:pointer;animation:pop .35s ease-out;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
 .mini.hl{background:rgba(0,70,85,.9);box-shadow:0 0 18px var(--c)}
 .mini b{display:flex;justify-content:space-between;gap:6px;font-size:13px;color:#e8feff;text-shadow:0 0 6px var(--c)}
@@ -141,9 +155,10 @@ button.on{background:var(--c);color:#001218}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v4</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div>
+  <div id="hud"><span>TABLE·LECTURE v4.2</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span><span id="gear" role="button" aria-label="Paramètres" title="Paramètres">⚙</span></div>
   <div id="status">INITIALISATION</div>
   <div id="minis"></div>
+  <div id="sel"></div>
   <div id="card" class="fc"></div>
   <div id="panel"><button id="px" class="x" aria-label="Fermer">✕</button><div id="pc" class="fc"></div></div>
   <div id="bar">
@@ -158,7 +173,7 @@ button.on{background:var(--c);color:#001218}
 <div id="start">
   <div class="ring"></div>
   <h1>TABLE DE LECTURE</h1>
-  <p>Pointez la caméra vers la table et posez un objet. Le système l'identifie et affiche sa fiche d'analyse. Touchez un objet pour ouvrir sa fiche complète, ou ailleurs pour figer l'image. « Multi » / « Un seul » change le mode d'affichage.</p>
+  <p>Pointez la caméra vers la table et posez un objet. Le système l'identifie et affiche sa fiche d'analyse. Touchez un objet pour ouvrir sa fiche complète, ou ailleurs pour figer l'image. « Multi » / « Un seul » change le mode d'affichage. Avec deux doigts (ou en glissant à la souris), encadrez un objet pour analyser seulement cette zone.</p>
   <p>Aussi : météo locale, films & séries, programme TV et « C'est quoi ce film ? » en haut de l'écran.</p>
   <button id="bStart" disabled>Chargement…</button>
   <div id="load">CHARGEMENT DES MODÈLES IA…</div>
@@ -265,10 +280,24 @@ const video=$("v"), ov=$("ov"), ctx=ov.getContext("2d"), frozen=$("frozen"), fct
 const cardEl=$("card"), statusEl=$("status"), minis=$("minis"), panel=$("panel");
 let coco=null, mnet=null, mnetLoading=null, stream=null, facing="environment";
 let multi=true, frozenMode=false, analysing=false, running=false, busy=false;
-let tracks=[], nextId=1, lastHit=0, lastMnet=0, stillHits=[], cardTrackId=null, panelTrackId=null;
+let selId=null, tracks=[], nextId=1, lastHit=0, lastMnet=0, stillHits=[], cardTrackId=null, panelTrackId=null;
 let geo={w:0,h:0,mirror:false};
 const STABLE_MS=1000, LOST_MS=1500, PENDING_LOST_MS=900, MIN_SCORE=0.5, MNET_MIN=0.25, MAX_OBJ=6;
 window.__TL={ready:false,errors:[],last:null,objects:[]};
+/* ================= PARAMÈTRES (locaux) ================= */
+const PREF_DEF={wx:true,mem:true,fps:true,status:true,bMode:true,bFreeze:true,bSwitch:true,bPhoto:true,bLearn:true,bFilms:true,bTV:true,bReco:true,
+  codes:true,history:true,framing:true,pct:true,details:true,low:true,anim:true};
+let PREF=(()=>{let o={};try{o=JSON.parse(localStorage.getItem("tableLecture.prefs"))||{};}catch(e){}return {...PREF_DEF,...o};})();
+const pref=k=>PREF[k]!==false;
+function applyPrefs(){
+  const B=document.body;if(!B)return;
+  for(const k of Object.keys(PREF_DEF)) B.classList.toggle("off-"+k,!pref(k));
+  window.__TL.prefs={...PREF};
+}
+function setPref(k,v){PREF[k]=!!v;try{localStorage.setItem("tableLecture.prefs",JSON.stringify(PREF));}catch(e){}applyPrefs();dispatchEvent(new CustomEvent("tl-pref",{detail:{k,v:!!v}}));}
+function resetPrefs(){PREF={...PREF_DEF};try{localStorage.removeItem("tableLecture.prefs");localStorage.removeItem("tableLecture.seuil");}catch(e){}applyPrefs();dispatchEvent(new CustomEvent("tl-pref",{detail:{k:"*"}}));}
+window.TLP={pref,setPref,resetPrefs,get PREF(){return PREF;}};
+document.addEventListener("DOMContentLoaded",applyPrefs);
 
 function setStatus(t,blink){if(statusEl.textContent!==t)statusEl.textContent=t;statusEl.classList.toggle("blink",!!blink);}
 function iou(a,b){if(!a||!b)return 0;const x1=Math.max(a[0],b[0]),y1=Math.max(a[1],b[1]),x2=Math.min(a[0]+a[2],b[0]+b[2]),y2=Math.min(a[1]+a[3],b[1]+b[3]);const i=Math.max(0,x2-x1)*Math.max(0,y2-y1);return i/(a[2]*a[3]+b[2]*b[3]-i||1);}
@@ -286,7 +315,7 @@ async function loadModels(){
     L.textContent="MOTEUR : "+tf.getBackend().toUpperCase()+" · CHARGEMENT COCO-SSD…";
     coco=await cocoSsd.load({base:"lite_mobilenet_v2"});
     L.textContent="COCO-SSD PRÊT (détection rapide)";
-    initScanner();
+    if(pref("codes"))initScanner();
     window.__TL.coco=true;
     $("bStart").disabled=false;$("bStart").textContent="▶ Activer la table";
     window.__TL.ready=true;
@@ -311,6 +340,16 @@ addEventListener("clip-failed",e=>{$("mem").textContent="MÉMOIRE ÉTENDUE INDIS
 /* ================= MÉMOIRE ÉTENDUE (MobileCLIP) & OBJETS APPRIS ================= */
 const CLIP_T=0.30, CLIP_WEAK=0.60, CLIP_CENTER=0.45, LEARN_T=0.86, COCO_WEAK=0.25;
 const clipOK=()=>window.CLIPX&&window.CLIPX.ready;
+/* seuil de confiance pour afficher une fiche (réglable, mémorisé localement) */
+let CONF_T=(()=>{const v=parseFloat(localStorage.getItem("tableLecture.seuil"));return v>=0.4&&v<=0.9?v:0.65;})();window.__TL.seuil=CONF_T;
+function setConfT(v){CONF_T=clamp(+v,0.4,0.9);try{localStorage.setItem("tableLecture.seuil",String(CONF_T));}catch(e){}window.__TL.seuil=CONF_T;}
+/* codes (lecture exacte) et objets appris (seuil propre LEARN_T) ne sont pas concernés */
+function isLow(t){return !!t&&!t.code&&!(t.card&&t.card.code)&&t.src!=="learned"&&!(t.card&&t.card.src==="learned")&&((t.card&&t.card.key==="cadre")||!(t.score>=CONF_T));}
+function lowCard(t){
+  if(t.card.key==="cadre") return {...t.card,lowSearch:true};
+  return {n:"Objet non identifié",cat:"Confiance trop faible",key:"bas",src:t.card.src,srcLabel:"SEUIL D'AFFICHAGE "+Math.round(CONF_T*100)+" %",lowSearch:true,
+    d:"La table n'est pas assez sûre d'elle pour afficher une fiche (seuil réglé à "+Math.round(CONF_T*100)+" %).",fh:"QUE FAIRE ?",
+    f:["Meilleure piste, peu sûre : "+t.card.n+" ("+pct(t.score)+").","Recherchez l'objet vous-même ci-dessous, ou touchez « Pas ça ? Apprendre cet objet » pour l'enseigner.","Le seuil se règle dans MÉMOIRE › Réglages."]};}
 function cropSquare(src,sw,sh,box,scale,flip){
   const cx=box[0]+box[2]/2, cy=box[1]+box[3]/2; const s=Math.min(Math.max(box[2],box[3])*(scale||1.15),Math.max(sw,sh));
   const c=document.createElement("canvas");c.width=c.height=256;const g=c.getContext("2d");
@@ -387,16 +426,22 @@ function drawBox(r,label,progress,locked,hl,code){
   ctx.beginPath();
   [[x,y,1,1],[x+w,y,-1,1],[x,y+h,1,-1],[x+w,y+h,-1,-1]].forEach(([px,py,sx,sy])=>{ctx.moveTo(px+sx*L,py);ctx.lineTo(px,py);ctx.lineTo(px,py+sy*L);});
   ctx.stroke();
-  const t=(performance.now()%1400)/1400, sy=y+h*t;
+  if(pref("anim")){const t=(performance.now()%1400)/1400, sy=y+h*t;
   const g=ctx.createLinearGradient(0,sy-14,0,sy+2);g.addColorStop(0,"rgba("+rgb+",0)");g.addColorStop(1,"rgba("+rgb+",.55)");
-  ctx.fillStyle=g;ctx.fillRect(x,sy-14,w,16);
+  ctx.fillStyle=g;ctx.fillRect(x,sy-14,w,16);}
   ctx.fillStyle=hl?"rgba("+rgb+",.14)":"rgba("+rgb+",.06)";ctx.fillRect(x,y,w,h);
   ctx.shadowBlur=8;ctx.font="12px monospace";ctx.fillStyle=c;
   ctx.fillText((locked?"◉ ":"◌ ")+label,x+4,Math.max(14,y-8));
-  if(!locked&&progress!=null){ctx.fillStyle="rgba("+rgb+",.2)";ctx.fillRect(x,y+h+6,w,4);ctx.fillStyle=c;ctx.fillRect(x,y+h+6,w*Math.min(1,progress),4);}
+  if(!locked&&progress!=null&&pref("anim")){ctx.fillStyle="rgba("+rgb+",.2)";ctx.fillRect(x,y+h+6,w,4);ctx.fillStyle=c;ctx.fillRect(x,y+h+6,w*Math.min(1,progress),4);}
   ctx.restore();
 }
+function drawLow(r,hl){
+  const [x,y,w,h]=r;ctx.save();ctx.strokeStyle="rgba(180,140,255,"+(hl?.9:.55)+")";ctx.shadowColor="#a07cff";ctx.shadowBlur=hl?14:6;
+  ctx.lineWidth=hl?2:1.2;ctx.setLineDash([5,5]);ctx.strokeRect(x,y,w,h);ctx.setLineDash([]);
+  ctx.font="11px monospace";ctx.fillStyle="rgba(200,170,255,.9)";ctx.fillText("? OBJET NON IDENTIFIÉ",x+4,Math.max(14,y-6));ctx.restore();
+}
 function drawReticle(){
+  if(!pref("anim"))return;
   const W=ov.clientWidth,H=ov.clientHeight,r=Math.min(W,H)*.22,t=performance.now()/1000;
   ctx.save();ctx.translate(W/2,H/2);ctx.strokeStyle="rgba(0,240,255,.5)";ctx.shadowColor="#00f0ff";ctx.shadowBlur=8;ctx.lineWidth=1.5;
   ctx.rotate(t*.6);ctx.setLineDash([12,10]);ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke();
@@ -415,7 +460,7 @@ function cardHTML(info,score){
   return `<div class="id"><span>${id}</span><span>${new Date().toLocaleTimeString("fr-FR")}</span></div>
    <h2 class="nm type"></h2><span class="cat${info.code?" codecat":""}">${esc(info.cat.toUpperCase())}</span>
    ${info.code?`<div class="id"><span>${esc(info.fmt||"CODE")}</span><span>${esc(info.key.length>28?info.key.slice(0,28)+"…":info.key)}</span></div>`
-     :`<div class="id"><span>CORRESPONDANCE</span><span>${pct(score)}</span></div><div class="conf"><i></i></div>`}
+     :`<div class="id pctrow"><span>CORRESPONDANCE</span><span>${pct(score)}</span></div><div class="conf"><i></i></div>`}
    ${info.img?`<img class="pimg" alt="" referrerpolicy="no-referrer" src="${info.img}">`:""}
    <p>${esc(info.d)}</p>${info.extra||""}<h3>${esc(info.fh||"LE SAVIEZ-VOUS ?")}</h3><ul>${info.f.map(x=>"<li>"+esc(x)+"</li>").join("")}</ul>${info.acts||""}
    <div class="src">SOURCE : ${esc(info.srcLabel||({coco:"COCO-SSD (détection)",mobilenet:"MOBILENET (classification)",clip:"MOBILECLIP (mémoire étendue)",learned:"MÉMOIRE PERSONNELLE (objet appris)"})[info.src]||info.src)}${info.code?"":" · "+esc(info.key)}</div>`;
@@ -441,13 +486,20 @@ function placeCard(r){
 }
 function openPanel(t){
   panelTrackId=t.id;
-  fillCard($("pc"),t.card,t.score);
+  const low=isLow(t),info=low?lowCard(t):t.card;
+  fillCard($("pc"),info,t.score);
+  if(low){const f=document.createElement("form");f.className="lsrch";
+    f.innerHTML=`<input type="search" placeholder="Nom de l'objet…" aria-label="Rechercher l'objet"><button class="pbtn" type="submit">🔍 Rechercher</button>`;
+    f.onclick=ev=>ev.stopPropagation();
+    f.onsubmit=ev=>{ev.preventDefault();const q=f.querySelector("input").value.trim();if(!q)return;window.__TL.lowSearch=q;
+      window.open("https://fr.wikipedia.org/w/index.php?search="+encodeURIComponent(q),"_blank","noopener");};
+    $("pc").appendChild(f);}
   if(!t.card.code){
     const b=document.createElement("button");b.className="pbtn";b.textContent="✎ Pas ça ? Apprendre cet objet";
     b.onclick=ev=>{ev.stopPropagation();openLearn(t);};$("pc").appendChild(b);
   }
-  panel.classList.add("open");
-  window.__TL.panel={name:t.card.n,label:t.label};
+  panel.classList.add("open");selId=t.id;
+  window.__TL.panel={name:info.n,label:t.label,sel:!!t.sel,low};window.__TL.last={name:t.card.n,label:t.card.key,src:t.card.src,score:t.score};
 }
 function closePanel(){panel.classList.remove("open");panelTrackId=null;window.__TL.panel=null;}
 $("px").onclick=e=>{e.stopPropagation();closePanel();};
@@ -484,7 +536,7 @@ function layoutMinis(list,W,H){
     placed.push(r);
     t.cp=t.cp?t.cp.map((v,i)=>v+(r[i]-v)*.25):r.slice();
     t.el.style.left=t.cp[0]+"px";t.el.style.top=t.cp[1]+"px";
-    t.el.classList.toggle("hl",t.id===panelTrackId);
+    t.el.classList.toggle("hl",t.id===panelTrackId||t.id===selId);
     drawLink(t.r,[t.cp[0],t.cp[1],cw,ch]);
   });
 }
@@ -552,7 +604,7 @@ async function detectStep(vw,vh){
       clipBusy=false;
     }else if(mnet){lastMnet=now;const h=await classify(video,vw,vh);if(h){hits=[h];lastHit=now;}}
   }
-  if(SCAN.ready&&now-lastScan>SCAN_MS){
+  if(SCAN.ready&&pref("codes")&&now-lastScan>SCAN_MS){
     lastScan=now;
     try{const ch=await scanCodes(video,1);if(ch.length){hits=ch.concat(hits);lastHit=now;lastCodeAt=now;}}catch(e){window.__TL.errors.push("scan: "+e.message);}
   }
@@ -573,7 +625,7 @@ function loop(){
   if(!running) return;
   requestAnimationFrame(loop);
   const W=ov.clientWidth,H=ov.clientHeight,now=performance.now();
-  ctx.clearRect(0,0,W,H);
+  ctx.clearRect(0,0,W,H);if(SEL)drawSel();
   if(!frozenMode){
     const vw=video.videoWidth,vh=video.videoHeight;
     if(vw){geo={w:vw,h:vh,mirror:facing==="user"};
@@ -581,7 +633,7 @@ function loop(){
   }
   if(now-fpsT>1000){$("fps").textContent=(frozenMode?"FIGÉ":fpsN+" FPS")+" · "+(window.tf?tf.getBackend().toUpperCase():"");fpsN=0;fpsT=now;}
   if(analysing){
-    drawReticle();const y=(now%1200)/1200*H;ctx.fillStyle="rgba(0,240,255,.35)";ctx.fillRect(0,y,W,3);
+    drawReticle();if(pref("anim")){const y=(now%1200)/1200*H;ctx.fillStyle="rgba(0,240,255,.35)";ctx.fillRect(0,y,W,3);}
     setStatus("ANALYSE"+".".repeat(1+Math.floor(now/300)%3),true);return;
   }
   if(!geo.w){if(!frozenMode)drawReticle();return;}
@@ -589,14 +641,12 @@ function loop(){
   for(const t of tracks){t.sm=t.sm?t.sm.map((v,i)=>v+(t.box[i]-v)*.3):t.box.slice();t.r=toScreen(t.sm,f,geo.mirror);}
   for(const t of tracks) if(!t.stable&&t.confirmed&&!t.rejected&&now-t.since>=STABLE_MS) t.stable=true;
   const stable=tracks.filter(t=>t.stable&&!t.rejected), pending=tracks.filter(t=>!t.stable&&!t.rejected&&(!t.weak||t.confirmed));
-  pending.forEach(t=>drawBox(t.r,t.card.n.toUpperCase()+" "+pct(t.score),(now-t.since)/STABLE_MS,false));
-  stable.forEach(t=>drawBox(t.r,t.code?(t.code.kind==="qr"?"QR · ":"CODE-BARRES · ")+t.card.n.toUpperCase():t.card.n.toUpperCase(),null,true,t.id===panelTrackId,!!t.code));
-  if(multi){ layoutMinis(stable,W,H); }
-  else{
-    const s=stable[0];
-    if(s){ if(cardTrackId!==s.id){showCard(s.card,s.score);cardTrackId=s.id;} placeCard(s.r); }
-    else if(cardTrackId!==null) hideCard();
-  }
+  pending.forEach(t=>drawBox(t.r,isLow(t)?"ANALYSE…":t.card.n.toUpperCase()+" "+pct(t.score),(now-t.since)/STABLE_MS,false));
+  const lows=stable.filter(isLow),shown=stable.filter(t=>!isLow(t));
+  lows.forEach(t=>{if(t.el){t.el.remove();t.el=null;}if(pref("low"))drawLow(t.r,t.id===panelTrackId||t.id===selId);});
+  shown.forEach(t=>drawBox(t.r,t.code?(t.code.kind==="qr"?"QR · ":"CODE-BARRES · ")+t.card.n.toUpperCase():t.card.n.toUpperCase(),null,true,t.id===panelTrackId||t.id===selId,!!t.code));
+  layoutMinis(shown,W,H); // Multi et « Un seul » : même affichage compact, fiche complète au toucher
+  if(cardTrackId!==null) hideCard();
   window.__TL.objects=stable.map(t=>t.card.n);
   if(pending.length&&!frozenMode) setStatus("ANALYSE"+".".repeat(1+Math.floor(now/300)%3)+(stable.length?" ("+stable.length+" IDENTIFIÉ"+(stable.length>1?"S":"")+")":""),true);
   else if(stable.length) setStatus("◉ "+(stable.length>1?stable.length+" OBJETS IDENTIFIÉS":"OBJET IDENTIFIÉ")+(frozenMode?" · FIGÉ":""));
@@ -607,15 +657,15 @@ function loop(){
 /* ================= FIGER / PHOTO ================= */
 async function analyseStill(src,sw,sh,mirror){
   frozenMode=true;$("bFreeze").classList.add("on");$("bFreeze").textContent="▶ Reprendre";
-  closePanel();clearTracks();hideCard();
+  closePanel();clearTracks();hideCard();if(SEL)dismissSel();
   const k=Math.min(1,1280/Math.max(sw,sh)),iw=sw,ih=sh;sw=Math.round(sw*k);sh=Math.round(sh*k);
   frozen.width=sw;frozen.height=sh;fctx.save();if(mirror){fctx.translate(sw,0);fctx.scale(-1,1);}fctx.drawImage(src,0,0,iw,ih,0,0,sw,sh);fctx.restore();
   frozen.style.display="block";geo={w:sw,h:sh,mirror:false};
   const t0=performance.now();analysing=true;
   let hits=[],codeHits=[];
   try{
-    if(SCAN.loading&&!SCAN.ready) await SCAN.loading;
-    if(SCAN.ready){
+    if(pref("codes")&&SCAN.loading&&!SCAN.ready) await SCAN.loading;
+    if(SCAN.ready&&pref("codes")){
       codeHits=await scanCodes(frozen,1);
       if(!codeHits.length&&k<1&&!(src instanceof HTMLVideoElement)) codeHits=await scanCodes(src,k); // image importée : résolution d'origine
     }
@@ -643,10 +693,10 @@ async function analyseStill(src,sw,sh,mirror){
 function buildStill(){
   clearTracks();const now=performance.now();
   (multi?stillHits:stillHits.slice(0,1)).forEach(h=>tracks.push(mkTrack(h,now,true)));
-  window.__TL.still=tracks.map(t=>({name:t.card.n,key:t.card.key,src:t.card.src,score:+(+t.score).toFixed(2),code:t.code?t.code.kind+":"+t.code.format:undefined}));
+  window.__TL.still=tracks.map(t=>({name:t.card.n,key:t.card.key,src:t.card.src,score:+(+t.score).toFixed(2),low:isLow(t),code:t.code?t.code.kind+":"+t.code.format:undefined}));
 }
 function resume(){
-  frozenMode=false;analysing=false;frozen.style.display="none";clearTracks();hideCard();closePanel();
+  frozenMode=false;analysing=false;frozen.style.display="none";clearTracks();hideCard();closePanel();if(SEL)dismissSel();
   $("bFreeze").classList.remove("on");$("bFreeze").textContent="⏸ Figer";
   if(!stream){geo={w:0,h:0,mirror:false};setStatus("CAMÉRA INACTIVE — UTILISEZ « PHOTO »");}
 }
@@ -716,6 +766,7 @@ const lsGet=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d;}catch(e){
 const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
 let codeHist=lsGet("tableLecture.codes.history",[]), codeNotes=lsGet("tableLecture.codes.learned",{});
 function addCodeHistory(code,title){
+  if(!pref("history")) return;
   const old=codeHist.find(h=>h.raw===code.raw);
   if(old&&!title&&Date.now()-old.date<5000) return;
   codeHist=codeHist.filter(h=>h.raw!==code.raw);
@@ -723,7 +774,7 @@ function addCodeHistory(code,title){
   codeHist=codeHist.slice(0,30);lsSet("tableLecture.codes.history",codeHist);
 }
 function renderCodeMemory(pc){
-  const box=document.createElement("div");box.className="lf";
+  const box=document.createElement("div");box.className="lf";box.id="chist";
   const nl=Object.keys(codeNotes);
   box.innerHTML=`<h2 style="margin-top:18px">Codes scannés</h2>${codeHist.length?"":"<p>Aucun code scanné pour l'instant.</p>"}<div id="clist"></div>
    ${codeHist.length?'<button class="pbtn" id="cclear">✖ Effacer l\'historique des codes</button>':""}
@@ -822,8 +873,8 @@ function productCard(code,{p,base,name,cat}){
 }
 function refreshCodeTracks(raw){
   const card=codeCache.get(raw);
-  for(const t of tracks) if(t.code&&t.code.raw===raw){t.card=card;if(t.el){t.el.remove();t.el=null;}if(cardTrackId===t.id)cardTrackId=null;if(panelTrackId===t.id)openPanel(t);}
-  if(window.__TL.still) window.__TL.still=tracks.map(t=>({name:t.card.n,key:t.card.key,src:t.card.src,score:+(+t.score).toFixed(2),code:t.code?t.code.kind+":"+t.code.format:undefined}));
+  for(const t of tracks.concat(selT?[selT]:[])) if(t.code&&t.code.raw===raw){t.card=card;if(t.el){t.el.remove();t.el=null;}if(cardTrackId===t.id)cardTrackId=null;if(panelTrackId===t.id)openPanel(t);}
+  if(window.__TL.still) window.__TL.still=tracks.map(t=>({name:t.card.n,key:t.card.key,src:t.card.src,score:+(+t.score).toFixed(2),low:isLow(t),code:t.code?t.code.kind+":"+t.code.format:undefined}));
 }
 /* --- QR codes : décodage et affichage, jamais d'action automatique --- */
 const SHORT=/^(bit\.ly|tinyurl\.com|t\.co|goo\.gl|ow\.ly|is\.gd|buff\.ly|rebrand\.ly|cutt\.ly|shorturl\.at|rb\.gy|t\.ly|tiny\.cc|s\.id|qrco\.de|lnkd\.in|v\.gd|bl\.ink|short\.io|tiny\.one|urlz\.fr|qr\.net|u\.to)$/i;
@@ -959,15 +1010,44 @@ function openMemory(){
     ml.appendChild(d);});
   if($("mclear"))$("mclear").onclick=e=>{e.stopPropagation();if(confirm("Effacer tous les objets appris ?")){learned=[];saveLearned();openMemory();}};
   renderCodeMemory(pc);
+  const rg=document.createElement("div");rg.className="lf";
+  rg.innerHTML=`<button class="pbtn" id="toset">⚙ Paramètres (affichage, seuil des fiches…)</button>`;pc.appendChild(rg);
+  rg.querySelector("#toset").onclick=e=>{e.stopPropagation();openSettings();};
   panel.classList.add("open");window.__TL.panel={memory:true};
 }
 $("bLearn").onclick=e=>{e.stopPropagation();if(analysing)return;startLearn();};
 $("mem").addEventListener("click",e=>{e.stopPropagation();openMemory();});
+const SETTINGS=[["AFFICHAGE",[["wx","Pastille météo","Masquée : la météo n'est plus téléchargée"],["mem","Compteur MÉMOIRE","La mémoire reste accessible via ⚙"],["fps","Images/s et moteur (en haut à droite)"],["status","Bandeau d'état"],
+   ["pct","Pourcentage de confiance","Dans les mini-fiches et les fiches"],["details","Détails des mini-fiches","Catégorie, ligne courte, « toucher pour la fiche »"],["low","Cadres « Objet non identifié »","Masqués : les objets sous le seuil n'apparaissent plus"],["anim","Animations de balayage et barres de progression"]]],
+ ["BOUTONS",[["bMode","Multi / Un seul"],["bFreeze","⏸ Figer","Toucher une zone vide fige toujours l'image"],["bSwitch","⟲ Caméra (avant/arrière)"],["bPhoto","▣ Photo"],["bLearn","✚ Apprendre","Reste possible depuis une fiche (« Pas ça ? »)"],["bFilms","🎬 Films & Séries"],["bTV","📺 Prog. TV"],["bReco","🔍 C'est quoi ?"]]],
+ ["FONCTIONS",[["codes","Lecture codes-barres / QR","Désactivée : le lecteur n'est ni chargé ni lancé"],["history","Historique des codes scannés","Désactivé : plus rien n'est enregistré"],["framing","Cadre à deux doigts / glisser à la souris"]]]];
+function openSettings(){
+  const pc=$("pc");
+  pc.innerHTML=`<div class="lf"><div class="id"><span>PARAMÈTRES</span><span>STOCKÉS SUR CET APPAREIL</span></div><h2>Paramètres</h2>
+   <div class="id" style="margin-top:12px"><span>SEUIL DES FICHES</span><span id="seuilv">${Math.round(CONF_T*100)} %</span></div>
+   <input type="range" id="seuil" min="40" max="90" step="5" value="${Math.round(CONF_T*100)}" aria-label="Seuil de confiance" style="width:100%;accent-color:#00f0ff">
+   <p style="font-size:12px;opacity:.8">En dessous de ce niveau, pas de fiche : seulement un cadre discret « Objet non identifié » (touchez-le pour chercher ou apprendre). Codes-barres/QR (lecture exacte) et objets appris (ressemblance ≥ ${Math.round(LEARN_T*100)} %) ne sont pas concernés.</p>
+   <div id="setl"></div><button class="pbtn" id="sreset">↺ Réinitialiser les paramètres</button></div>`;
+  const L=$("setl");
+  SETTINGS.forEach(([g,items])=>{const h=document.createElement("h3");h.textContent=g;L.appendChild(h);
+    items.forEach(([k,lab,sub])=>{const r=document.createElement("label");r.className="setg";
+      r.innerHTML=`<input type="checkbox" data-k="${k}"${pref(k)?" checked":""}><span>${esc(lab)}${sub?`<small>${esc(sub)}</small>`:""}</span>`;
+      r.onclick=e=>e.stopPropagation();r.querySelector("input").onchange=e=>setPref(k,e.target.checked);L.appendChild(r);});});
+  const sl=$("seuil");sl.onclick=e=>e.stopPropagation();
+  sl.oninput=()=>{setConfT(sl.value/100);$("seuilv").textContent=Math.round(CONF_T*100)+" %";if(typeof drawSel==="function"&&window.TLSEL&&TLSEL.SEL)drawSel(true);};
+  $("sreset").onclick=e=>{e.stopPropagation();if(confirm("Remettre tous les paramètres par défaut ?")){resetPrefs();CONF_T=0.65;window.__TL.seuil=CONF_T;openSettings();}};
+  panel.classList.add("open");window.__TL.panel={settings:true};
+}
+$("gear").addEventListener("click",e=>{e.stopPropagation();openSettings();});
+addEventListener("tl-pref",e=>{const k=e.detail.k;
+  if((k==="codes"||k==="*")&&pref("codes")&&coco)initScanner();
+  if((k==="framing"||k==="*")&&!pref("framing")&&window.TLSEL&&TLSEL.SEL)TLSEL.dismissSel();});
+applyPrefs();
 
 function trackAt(x,y){
-  const pad=8;
-  return tracks.filter(t=>t.stable&&!t.rejected&&t.r&&x>=t.r[0]-pad&&x<=t.r[0]+t.r[2]+pad&&y>=t.r[1]-pad&&y<=t.r[1]+t.r[3]+pad)
-               .sort((a,b)=>a.r[2]*a.r[3]-b.r[2]*b.r[3])[0];
+  const pad=18;
+  return tracks.filter(t=>!t.rejected&&t.r&&(t.stable||t.confirmed)&&(pref("low")||!isLow(t))&&x>=t.r[0]-pad&&x<=t.r[0]+t.r[2]+pad&&y>=t.r[1]-pad&&y<=t.r[1]+t.r[3]+pad)
+               .sort((a,b)=>(b.stable-a.stable)||(a.r[2]*a.r[3]-b.r[2]*b.r[3]))[0];
 }
 $("bFreeze").onclick=e=>{e.stopPropagation();toggleFreeze();};
 $("bMode").onclick=e=>{e.stopPropagation();multi=!multi;
@@ -975,13 +1055,14 @@ $("bMode").onclick=e=>{e.stopPropagation();multi=!multi;
   closePanel();hideCard();if(frozenMode&&!analysing)buildStill();else clearTracks();};
 $("stage").addEventListener("click",e=>{
   if(e.target.closest("#bar"))return;
+  if(selClick(e))return;
   if(panel.classList.contains("open")){ if(!e.target.closest("#panel")) closePanel(); return; }
   const mini=e.target.closest(".mini");
   if(mini){const t=tracks.find(t=>t.id===+mini.dataset.id);if(t)openPanel(t);return;}
   if(e.target.closest("#card")){const t=tracks.find(t=>t.id===cardTrackId);if(t)openPanel(t);return;}
   const rc=ov.getBoundingClientRect(),t=trackAt(e.clientX-rc.left,e.clientY-rc.top);
   if(t){openPanel(t);return;}
-  toggleFreeze();
+  selId=null;toggleFreeze();
 });
 $("bSwitch").onclick=async e=>{e.stopPropagation();facing=facing==="environment"?"user":"environment";
   try{await startCam();resume();}catch(err){setStatus("CAMÉRA : "+err.message);}};
@@ -995,6 +1076,130 @@ $("bStart").onclick=async()=>{
     alert("Impossible d'accéder à la caméra ("+err.message+").\nVérifiez l'autorisation et que la page est en HTTPS. Vous pouvez utiliser le bouton « Photo ».");}
   loop();
 };
+/* ================= SÉLECTION AU DOIGT : cadre à deux doigts, glisser à la souris ================= */
+const selEl=$("sel");
+let SEL=null,selT=null,selSerial=0,noClickUntil=0,gestureLatch=false,G2=null,dragM=null,selDrag=null,selSig="";
+const PTR=new Map();
+function stageXY(e){const r=ov.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];}
+function rectOf(a,b){const W=ov.clientWidth,H=ov.clientHeight;
+  const x0=clamp(Math.min(a[0],b[0]),0,W),y0=clamp(Math.min(a[1],b[1]),0,H),x1=clamp(Math.max(a[0],b[0]),0,W),y1=clamp(Math.max(a[1],b[1]),0,H);return [x0,y0,x1-x0,y1-y0];}
+function selSource(){
+  if(frozenMode&&frozen.width&&frozen.style.display!=="none") return {src:frozen,w:frozen.width,h:frozen.height,mirror:false};
+  if(video.videoWidth) return {src:video,w:video.videoWidth,h:video.videoHeight,mirror:facing==="user"};
+  return null;}
+function toSource(r,S){const f=fit(S.w,S.h);const xs=S.mirror?f.W-r[0]-r[2]:r[0];
+  const x0=clamp((xs-f.ox)/f.s,0,S.w),y0=clamp((r[1]-f.oy)/f.s,0,S.h),x1=clamp((xs+r[2]-f.ox)/f.s,0,S.w),y1=clamp((r[1]+r[3]-f.oy)/f.s,0,S.h);
+  return [x0,y0,x1-x0,y1-y0];}
+function selInfo(){window.__TL.sel=SEL?{low:SEL.state==="done"&&isLow(selT),state:SEL.state,r:SEL.r.map(Math.round),name:selT?selT.card.n:null,key:selT?selT.card.key:null,src:selT?selT.card.src:null,
+  score:selT?+(+selT.score).toFixed(2):null,code:selT&&selT.code?selT.code.kind+":"+selT.code.raw:null}:null;}
+function drawSel(force){
+  if(!SEL){if(selEl.classList.contains("on")){selEl.className="";selEl.innerHTML="";selSig="";}return;}
+  const [x,y,w,h]=SEL.r,lowSel=SEL.state==="done"&&!SEL.moved&&isLow(selT);selEl.className="on "+SEL.state+(lowSel?" low":"");
+  Object.assign(selEl.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px"});
+  const t=selT,sig=SEL.state+"|"+(t?t.card.n+"|"+t.score+"|"+(t.card.short||""):"")+"|"+(SEL.moved?1:0)+"|"+CONF_T;
+  if(force||sig!==selSig){selSig=sig;
+    let m;
+    if(SEL.state==="draw"||SEL.moved) m=`<b><em>CADRE</em><span class="p">▣</span></b><small>Relâchez pour analyser la zone</small>`;
+    else if(SEL.state==="run") m=`<b><em class="blink">ANALYSE…</em><span class="p">▣</span></b><small>Codes · objets · mémoire</small>`;
+    else if(isLow(t)) m=null;
+    else{const line=t.card.short||(t.card.d.startsWith("Objet identifié")?"Fiche simplifiée":t.card.d.split(/[.:;]/)[0]);
+      m=`<b><em>${esc(t.card.n)}</em><span class="p">${t.code?(t.code.kind==="qr"?"QR":"EAN"):(t.card.key==="cadre"?"?":pct(t.score))}</span></b><small>${esc(t.card.cat)} · ${esc(line)}</small><i class="tap">TOUCHER POUR LA FICHE ▸</i>`;}
+    selEl.innerHTML=m===null?`<span class="lbl low">? OBJET NON IDENTIFIÉ · toucher</span><button class="sx" aria-label="Fermer le cadre">✕</button><span class="rs" title="Redimensionner"></span>`
+      :`<span class="lbl">▣ SÉLECTION</span><button class="sx" aria-label="Fermer le cadre">✕</button><span class="rs" title="Redimensionner"></span><div class="mini selmini${t&&t.code?" code":""}${t&&t.id===panelTrackId?" hl":""}">${m}</div>`;
+  }
+  const mi=selEl.querySelector(".selmini");if(mi){const W=ov.clientWidth,H=ov.clientHeight,mw=mi.offsetWidth,mh=mi.offsetHeight;
+    const top=(H-84-(y+h)>mh+8)?h+8:(y-74>mh+8?-mh-8:6);mi.style.top=top+"px";mi.style.left=clamp(0,6-x,W-x-mw-6)+"px";}
+  selInfo();
+}
+function startDraw(r){closePanel();selSerial++;SEL={r,state:"draw"};selT=null;drawSel(true);}
+function dismissSel(){selSerial++;if(selT&&panelTrackId===selT.id)closePanel();SEL=null;selT=null;drawSel();selInfo();}
+function finishDraw(){if(!SEL)return;if(SEL.r[2]<28||SEL.r[3]<28){dismissSel();return;}analyzeSel();}
+function unknownCard(r){
+  const g=r?r.top.map(x=>{let c=null;try{c=cardFor(x.key,"clip");}catch(e){}return (c?c.n:x.key)+" ("+Math.round(x.p*100)+" %)";}):[];
+  return {n:"Objet non identifié",cat:"Sélection",key:"cadre",src:"selection",srcLabel:"CADRE MANUEL · COCO-SSD + MOBILECLIP",
+    d:"Rien n'a été reconnu avec assez de certitude dans ce cadre.",fh:"PISTES",
+    f:(g.length?["Pistes peu sûres : "+g.join(", ")+"."]:[]).concat(["Resserrez le cadre autour de l'objet, ou utilisez « Pas ça ? Apprendre cet objet » pour l'enseigner."])};}
+async function analyzeRegion(S,box){
+  const k=Math.min(2,800/Math.max(box[2],box[3])),c=document.createElement("canvas");
+  c.width=Math.max(8,Math.round(box[2]*k));c.height=Math.max(8,Math.round(box[3]*k));
+  c.getContext("2d").drawImage(S.src,box[0],box[1],box[2],box[3],0,0,c.width,c.height);
+  const now=performance.now();
+  // 1. code-barres / QR dans le cadre
+  try{if(pref("codes")&&SCAN.loading&&!SCAN.ready)await SCAN.loading;
+    if(SCAN.ready&&pref("codes")){const ch=await scanCodes(c,1);if(ch.length){const h=ch[0];h.box=box.slice();return mkTrack(h,now,true);}}}catch(e){window.__TL.errors.push("scan: "+e.message);}
+  // 2. détection COCO dans le cadre
+  let h=null;
+  try{const ps=filterPreds(await coco.detect(c,10,COCO_WEAK)),A=c.width*c.height;
+    const b=ps.filter(p=>p.box[2]*p.box[3]>=A*0.15).sort((p,q)=>((q.weak?0:1)-(p.weak?0:1))||(q.score-p.score))[0];
+    if(b)h={label:b.label,score:b.score,weak:!!b.weak,src:"coco",box:box.slice()};}catch(e){window.__TL.errors.push(e.message);}
+  // 3. mémoire étendue (objets appris + 358 objets) sur la zone choisie
+  if(clipOK()){
+    const r=await clipRecognize(cropSquare(S.src,S.w,S.h,box,1));
+    if(h){if(applyClip(h,r,h.weak)){h.refined=true;return mkTrack(h,now,true);}h=null;}
+    if(r.learned||r.p>=CLIP_T){h={label:"clip:"+(r.learned?r.card.n:r.key),box:box.slice(),src:"clip",refined:true,score:0};applyClip(h,r,false);return mkTrack(h,now,true);}
+    return mkTrack({label:"sel:inconnu",box:box.slice(),src:"selection",score:r.p,card:unknownCard(r),refined:true},now,true);
+  }
+  if(h&&!h.weak)return mkTrack(h,now,true);
+  if(mnet){const m=await classify(c,c.width,c.height);if(m){m.box=box.slice();return mkTrack(m,now,true);}}
+  return mkTrack({label:"sel:inconnu",box:box.slice(),src:"selection",score:0,card:unknownCard(null),refined:true},now,true);
+}
+async function analyzeSel(){
+  if(!SEL)return;const S=selSource(),my=++selSerial;SEL.moved=false;
+  if(!S||!coco){SEL.state="done";selT=mkTrack({label:"sel:inconnu",box:[0,0,1,1],src:"selection",score:0,card:unknownCard(null),refined:true},performance.now(),true);drawSel();return;}
+  SEL.state="run";selT=null;drawSel();
+  const box=toSource(SEL.r,S);let t;
+  try{t=await analyzeRegion(S,box);}catch(e){window.__TL.errors.push("cadre: "+e.message);t=mkTrack({label:"sel:inconnu",box,src:"selection",score:0,card:unknownCard(null),refined:true},performance.now(),true);}
+  if(my!==selSerial||!SEL)return;
+  selT=t;t.sel=true;SEL.state="done";drawSel();
+}
+const uiHit=e=>e.target.closest("#bar,#panel,#xtra,#hud,#mem,#start,#card,button,input,label,a,select,textarea");
+$("stage").addEventListener("pointerdown",e=>{
+  if(e.isPrimary&&PTR.size){PTR.clear();G2=null;dragM=null;selDrag=null;gestureLatch=false;} // nouveau geste : on oublie d'éventuels pointeurs perdus
+  if(!running||analysing)return;
+  const onSel=e.target.closest("#sel");
+  if(!onSel&&uiHit(e))return;
+  if(onSel&&e.target.closest(".sx"))return;
+  PTR.set(e.pointerId,stageXY(e));
+  if(PTR.size===2&&e.pointerType!=="mouse"&&pref("framing")){ // deux doigts : nouveau cadre entre les deux points
+    selDrag=null;dragM=null;G2={ids:[...PTR.keys()]};gestureLatch=true;const [a,b]=[...PTR.values()];startDraw(rectOf(a,b));return;}
+  if(PTR.size>2)return;
+  if(onSel){if(e.target.closest(".selmini"))return;
+    selDrag={id:e.pointerId,mode:e.target.closest(".rs")?"rs":"mv",p0:stageXY(e),r0:SEL.r.slice(),moved:false};
+    try{selEl.setPointerCapture(e.pointerId);}catch(err){}return;}
+  if(e.pointerType==="mouse"&&e.button===0&&pref("framing")&&!e.target.closest(".mini"))dragM={id:e.pointerId,p0:stageXY(e),on:false};
+});
+addEventListener("pointermove",e=>{
+  if(!PTR.has(e.pointerId))return;
+  const p=stageXY(e);PTR.set(e.pointerId,p);
+  if(G2&&SEL&&SEL.state==="draw"){const q=G2.ids.map(i=>PTR.get(i));if(q[0]&&q[1]){SEL.r=rectOf(q[0],q[1]);drawSel();}}
+  else if(dragM&&e.pointerId===dragM.id){
+    if(!dragM.on&&Math.hypot(p[0]-dragM.p0[0],p[1]-dragM.p0[1])>10){dragM.on=true;gestureLatch=true;startDraw(rectOf(dragM.p0,p));}
+    if(dragM.on){SEL.r=rectOf(dragM.p0,p);drawSel();}}
+  else if(selDrag&&e.pointerId===selDrag.id&&SEL){
+    const dx=p[0]-selDrag.p0[0],dy=p[1]-selDrag.p0[1],r0=selDrag.r0,W=ov.clientWidth,H=ov.clientHeight;
+    if(!selDrag.moved&&Math.hypot(dx,dy)>6){selDrag.moved=true;gestureLatch=true;SEL.moved=true;selSerial++;}
+    if(!selDrag.moved)return;
+    SEL.r=selDrag.mode==="mv"?[clamp(r0[0]+dx,0,W-r0[2]),clamp(r0[1]+dy,0,H-r0[3]),r0[2],r0[3]]
+                           :[r0[0],r0[1],clamp(r0[2]+dx,30,W-r0[0]),clamp(r0[3]+dy,30,H-r0[1])];
+    drawSel();}
+});
+function ptrEnd(e){
+  if(!PTR.has(e.pointerId))return;PTR.delete(e.pointerId);
+  if(G2&&G2.ids.includes(e.pointerId)){G2=null;finishDraw();}
+  else if(dragM&&e.pointerId===dragM.id){if(dragM.on)finishDraw();dragM=null;}
+  else if(selDrag&&e.pointerId===selDrag.id){const m=selDrag.moved;selDrag=null;if(m)analyzeSel();}
+  if(PTR.size===0&&gestureLatch){gestureLatch=false;noClickUntil=performance.now()+450;}
+}
+addEventListener("pointerup",ptrEnd);addEventListener("pointercancel",ptrEnd);
+document.addEventListener("gesturestart",e=>e.preventDefault());
+function selClick(e){ // renvoie true si le clic concerne le cadre
+  if(gestureLatch||performance.now()<noClickUntil)return true;
+  if(!e.target.closest("#sel"))return false;
+  if(e.target.closest(".sx")){dismissSel();return true;}
+  if(selT&&SEL&&SEL.state==="done"){selId=selT.id;openPanel(selT);drawSel(true);}
+  return true;
+}
+window.TLSEL={get SEL(){return SEL;},get selT(){return selT;},dismissSel,analyzeSel};
 addEventListener("error",e=>window.__TL.errors.push(String(e.message)));
 loadModels();
 </script>
@@ -1025,6 +1230,7 @@ const wmo=(c,day)=>{const w=WMO[c]||["Temps indéterminé","?"];return (c<=1&&da
 const DEF_PLACE={name:"Bordeaux",lat:44.8412,lon:-0.5805,mode:"default"};
 let place=lsGet("tableLecture.weather.place",null)||DEF_PLACE,wx=null,wxErr=null,geoState="";
 async function loadWeather(){
+  if(!window.TLP||!TLP.pref("wx")) return;
   try{
     wx=await getJ(`https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&current=temperature_2m,apparent_temperature,weather_code,is_day,relative_humidity_2m,wind_speed_10m&hourly=temperature_2m,weather_code,precipitation_probability,is_day&daily=temperature_2m_max,temperature_2m_min,weather_code&forecast_days=2&timezone=auto`);wxErr=null;
   }catch(e){wxErr=e.message;}
@@ -1406,6 +1612,7 @@ tap("wx",()=>openWeather());tap("bFilms",()=>openFilms());tap("bTV",()=>openGuid
 loadWeather();setInterval(loadWeather,15*60000);
 $("bStart").addEventListener("click",()=>{if(place.mode==="manual")return;const t0=Date.now();
   const w=setInterval(()=>{if(stream||Date.now()-t0>8000){clearInterval(w);locate();}},400);});
+addEventListener("tl-pref",e=>{if(e.detail.k==="wx"||e.detail.k==="*"){if(TLP.pref("wx"))loadWeather();}});
 window.TLX={openWeather,openFilms,openGuide,startReco,runReco,loadGuide,doSearch,locate,get G(){return G;}};
 })();
 </script>
