@@ -64,6 +64,19 @@ button.on{background:var(--c);color:#001218}
 @media(min-width:700px){#panel{left:auto;top:0;width:380px;max-height:none;border-top:0;border-left:1px solid var(--c);transform:translateX(105%)}}
 #bar{gap:5px}
 #panel:not(.open){pointer-events:none}
+:root{--m:#ff3df0}
+.mini.code{border-color:var(--m);box-shadow:0 0 10px rgba(255,61,240,.45),inset 0 0 12px rgba(255,61,240,.12)}
+.mini.code b{text-shadow:0 0 6px var(--m)}.mini.code b span{color:var(--m)}
+.fc .pimg{float:right;width:72px;height:72px;object-fit:contain;background:#fff;border:1px solid var(--m);margin:0 0 6px 8px}
+.fc .badge{display:inline-block;font-weight:bold;padding:1px 7px;margin-left:4px;color:#00141a;border-radius:2px}
+.fc .kv{font-size:12px;word-break:break-all;color:#e8feff;margin:6px 0}.fc .kv b{color:var(--c2);font-weight:normal;letter-spacing:1px;font-size:10px;display:block}
+.fc .warnbox{border:1px solid var(--warn);color:var(--warn);padding:6px 8px;font-size:12px;margin:8px 0}
+.fc .act{font-size:11px;letter-spacing:1px}
+.fc .act.warn{border-color:var(--warn);color:var(--warn)}
+.fc .url{font-size:11px;word-break:break-all;opacity:.85}
+.fc .codecat{border-color:var(--m)!important}
+.fc a{color:var(--c2)}
+
 #bar button,#bar .btn{font-size:10px;letter-spacing:.5px;padding:12px 2px}
 #hud{z-index:4;gap:6px}#hud span{white-space:nowrap}#hud #mem{font-size:9px;letter-spacing:1px;padding:4px 2px;margin-top:-4px;opacity:.85;pointer-events:auto;cursor:pointer;text-decoration:underline dotted}
 #load2{font-size:11px;letter-spacing:2px;opacity:.8;min-height:1.4em}
@@ -100,7 +113,7 @@ button.on{background:var(--c);color:#001218}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v3.0</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div>
+  <div id="hud"><span>TABLE·LECTURE v3.1</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div>
   <div id="status">INITIALISATION</div>
   <div id="minis"></div>
   <div id="card" class="fc"></div>
@@ -244,6 +257,7 @@ async function loadModels(){
     L.textContent="MOTEUR : "+tf.getBackend().toUpperCase()+" · CHARGEMENT COCO-SSD…";
     coco=await cocoSsd.load({base:"lite_mobilenet_v2"});
     L.textContent="COCO-SSD PRÊT (détection rapide)";
+    initScanner();
     window.__TL.coco=true;
     $("bStart").disabled=false;$("bStart").textContent="▶ Activer la table";
     window.__TL.ready=true;
@@ -337,20 +351,20 @@ function resize(){const d=devicePixelRatio||1;ov.width=ov.clientWidth*d;ov.heigh
 addEventListener("resize",resize);
 
 /* ================= DESSIN ================= */
-function drawBox(r,label,progress,locked,hl){
-  const [x,y,w,h]=r, c="#00f0ff", L=Math.min(22,w/4,h/4);
+function drawBox(r,label,progress,locked,hl,code){
+  const [x,y,w,h]=r, c=code?"#ff3df0":"#00f0ff", rgb=code?"255,61,240":"0,240,255", L=Math.min(22,w/4,h/4);
   ctx.save();ctx.strokeStyle=c;ctx.shadowColor=c;ctx.shadowBlur=hl?22:12;ctx.lineWidth=2;
   ctx.globalAlpha=hl?.6:.25;ctx.strokeRect(x,y,w,h);ctx.globalAlpha=1;ctx.lineWidth=hl?4:3;
   ctx.beginPath();
   [[x,y,1,1],[x+w,y,-1,1],[x,y+h,1,-1],[x+w,y+h,-1,-1]].forEach(([px,py,sx,sy])=>{ctx.moveTo(px+sx*L,py);ctx.lineTo(px,py);ctx.lineTo(px,py+sy*L);});
   ctx.stroke();
   const t=(performance.now()%1400)/1400, sy=y+h*t;
-  const g=ctx.createLinearGradient(0,sy-14,0,sy+2);g.addColorStop(0,"rgba(0,240,255,0)");g.addColorStop(1,"rgba(0,240,255,.55)");
+  const g=ctx.createLinearGradient(0,sy-14,0,sy+2);g.addColorStop(0,"rgba("+rgb+",0)");g.addColorStop(1,"rgba("+rgb+",.55)");
   ctx.fillStyle=g;ctx.fillRect(x,sy-14,w,16);
-  ctx.fillStyle=hl?"rgba(0,240,255,.14)":"rgba(0,240,255,.06)";ctx.fillRect(x,y,w,h);
+  ctx.fillStyle=hl?"rgba("+rgb+",.14)":"rgba("+rgb+",.06)";ctx.fillRect(x,y,w,h);
   ctx.shadowBlur=8;ctx.font="12px monospace";ctx.fillStyle=c;
   ctx.fillText((locked?"◉ ":"◌ ")+label,x+4,Math.max(14,y-8));
-  if(!locked&&progress!=null){ctx.fillStyle="rgba(0,240,255,.2)";ctx.fillRect(x,y+h+6,w,4);ctx.fillStyle=c;ctx.fillRect(x,y+h+6,w*Math.min(1,progress),4);}
+  if(!locked&&progress!=null){ctx.fillStyle="rgba("+rgb+",.2)";ctx.fillRect(x,y+h+6,w,4);ctx.fillStyle=c;ctx.fillRect(x,y+h+6,w*Math.min(1,progress),4);}
   ctx.restore();
 }
 function drawReticle(){
@@ -370,14 +384,17 @@ function drawLink(r,m){
 function cardHTML(info,score){
   const id="OBJ-"+String(Math.floor(Math.random()*9000)+1000);
   return `<div class="id"><span>${id}</span><span>${new Date().toLocaleTimeString("fr-FR")}</span></div>
-   <h2 class="nm type"></h2><span class="cat">${esc(info.cat.toUpperCase())}</span>
-   <div class="id"><span>CORRESPONDANCE</span><span>${pct(score)}</span></div><div class="conf"><i></i></div>
-   <p>${esc(info.d)}</p><h3>LE SAVIEZ-VOUS ?</h3><ul>${info.f.map(x=>"<li>"+esc(x)+"</li>").join("")}</ul>
-   <div class="src">SOURCE : ${({coco:"COCO-SSD (détection)",mobilenet:"MOBILENET (classification)",clip:"MOBILECLIP (mémoire étendue)",learned:"MÉMOIRE PERSONNELLE (objet appris)"})[info.src]||info.src} · ${esc(info.key)}</div>`;
+   <h2 class="nm type"></h2><span class="cat${info.code?" codecat":""}">${esc(info.cat.toUpperCase())}</span>
+   ${info.code?`<div class="id"><span>${esc(info.fmt||"CODE")}</span><span>${esc(info.key.length>28?info.key.slice(0,28)+"…":info.key)}</span></div>`
+     :`<div class="id"><span>CORRESPONDANCE</span><span>${pct(score)}</span></div><div class="conf"><i></i></div>`}
+   ${info.img?`<img class="pimg" alt="" referrerpolicy="no-referrer" src="${info.img}">`:""}
+   <p>${esc(info.d)}</p>${info.extra||""}<h3>${esc(info.fh||"LE SAVIEZ-VOUS ?")}</h3><ul>${info.f.map(x=>"<li>"+esc(x)+"</li>").join("")}</ul>${info.acts||""}
+   <div class="src">SOURCE : ${esc(info.srcLabel||({coco:"COCO-SSD (détection)",mobilenet:"MOBILENET (classification)",clip:"MOBILECLIP (mémoire étendue)",learned:"MÉMOIRE PERSONNELLE (objet appris)"})[info.src]||info.src)}${info.code?"":" · "+esc(info.key)}</div>`;
 }
 let typeSerial=0;
 function fillCard(el,info,score){
   el.innerHTML=cardHTML(info,score);
+  el.querySelectorAll("[data-act]").forEach(b=>b.onclick=e=>{e.stopPropagation();const a=info.actions&&info.actions[+b.dataset.act];if(a)a.run(b);});
   requestAnimationFrame(()=>{const i=el.querySelector(".conf i");if(i)i.style.width=Math.round(score*100)+"%";});
   const s=++typeSerial,h=el.querySelector(".nm");let k=0;
   (function ty(){if(s!==typeSerial)return;h.textContent=info.n.slice(0,++k);if(k<info.n.length)setTimeout(ty,45);else h.classList.remove("type");})();
@@ -396,8 +413,10 @@ function placeCard(r){
 function openPanel(t){
   panelTrackId=t.id;
   fillCard($("pc"),t.card,t.score);
-  const b=document.createElement("button");b.className="pbtn";b.textContent="✎ Pas ça ? Apprendre cet objet";
-  b.onclick=ev=>{ev.stopPropagation();openLearn(t);};$("pc").appendChild(b);
+  if(!t.card.code){
+    const b=document.createElement("button");b.className="pbtn";b.textContent="✎ Pas ça ? Apprendre cet objet";
+    b.onclick=ev=>{ev.stopPropagation();openLearn(t);};$("pc").appendChild(b);
+  }
   panel.classList.add("open");
   window.__TL.panel={name:t.card.n,label:t.label};
 }
@@ -406,8 +425,8 @@ $("px").onclick=e=>{e.stopPropagation();closePanel();};
 
 /* mini-fiches (mode Multi) */
 function mkMini(t){
-  const el=document.createElement("div");el.className="mini";el.dataset.id=t.id;
-  const line=t.card.d.startsWith("Objet identifié")?"Fiche simplifiée":t.card.d.split(/[.:;]/)[0];
+  const el=document.createElement("div");el.className="mini"+(t.card.code?" code":"");el.dataset.id=t.id;
+  const line=t.card.short||(t.card.d.startsWith("Objet identifié")?"Fiche simplifiée":t.card.d.split(/[.:;]/)[0]);
   el.innerHTML=`<b><em>${esc(t.card.n)}</em><span class="p">${pct(t.score)}</span></b><small>${esc(t.card.cat)} · ${esc(line)}</small><i class="tap">TOUCHER POUR LA FICHE ▸</i>`;
   minis.appendChild(el);return el;
 }
@@ -415,7 +434,7 @@ function layoutMinis(list,W,H){
   const placed=[], m=6, top=74, bot=84;
   list.slice().sort((a,b)=>a.r[1]-b.r[1]).forEach(t=>{
     if(!t.el) t.el=mkMini(t);
-    const p=t.el.querySelector(".p"), v=pct(t.score); if(p.textContent!==v) p.textContent=v;
+    const p=t.el.querySelector(".p"), v=t.card.code?(t.card.kind==="qr"?"QR":"EAN"):pct(t.score); if(p.textContent!==v) p.textContent=v;
     const cw=t.el.offsetWidth,ch=t.el.offsetHeight,[x,y,w,h]=t.r;
     const cands=[[x+w+m,y],[x-cw-m,y],[x,y+h+m],[x,y-ch-m],[x+w-cw-m,y+h-ch-m]];
     let best=null;
@@ -458,7 +477,7 @@ function filterPreds(preds){
   return out;
 }
 function mkTrack(h,now,stable){return {id:nextId++,label:h.label,src:h.src,box:h.box,score:h.score,since:now,seen:now,stable:!!stable,card:h.card||cardFor(h.label,h.src),sm:null,
-  weak:!!h.weak,refined:!!h.refined,confirmed:!!h.refined||!h.weak};}
+  weak:!!h.weak,refined:!!h.refined,confirmed:!!h.refined||!h.weak,code:h.code||null};}
 function dropTrack(t){if(t.el){t.el.remove();t.el=null;}if(cardTrackId===t.id)hideCard();}
 function clearTracks(){tracks.forEach(dropTrack);tracks=[];}
 function updateTracks(hits,now){
@@ -469,7 +488,7 @@ function updateTracks(hits,now){
     for(const t of tracks){if(used.has(t)||t.label!==h.label)continue;const v=iou(t.box,h.box);if(v>bi){bi=v;best=t;}}
     if(!best&&!multi) best=tracks.find(t=>!used.has(t)&&t.label===h.label);
     if(best){best.box=h.box;if(!best.refined||best.src==="coco")best.score=best.score*.6+h.score*.4;best.seen=now;if(!h.weak)best.weak=false;}
-    else{best=mkTrack(h,now,false);tracks.push(best);}
+    else{best=mkTrack(h,now,!!h.code);tracks.push(best);}
     used.add(best);
     if(!best.stable&&now-best.since>=STABLE_MS&&(best.confirmed||!best.weak)) best.stable=true;
   }
@@ -494,7 +513,7 @@ async function detectStep(vw,vh){
   const now=performance.now();
   let hits=filterPreds(await coco.detect(video,20,COCO_WEAK));
   if(hits.some(h=>!h.weak)) lastHit=now;
-  const anyObj=hits.some(h=>!h.weak)||tracks.some(t=>t.weak&&t.confirmed&&!t.rejected);
+  const anyObj=hits.some(h=>!h.weak)||now-lastCodeAt<1500||tracks.some(t=>t.weak&&t.confirmed&&!t.rejected);
   if(!anyObj&&now-lastHit>800&&now-lastMnet>900){
     if(clipOK()&&!clipBusy){
       lastMnet=now;clipBusy=true;
@@ -503,6 +522,10 @@ async function detectStep(vw,vh){
       }catch(e){window.__TL.errors.push("clip: "+e.message);}
       clipBusy=false;
     }else if(mnet){lastMnet=now;const h=await classify(video,vw,vh);if(h){hits=[h];lastHit=now;}}
+  }
+  if(SCAN.ready&&now-lastScan>SCAN_MS){
+    lastScan=now;
+    try{const ch=await scanCodes(video,1);if(ch.length){hits=ch.concat(hits);lastHit=now;lastCodeAt=now;}}catch(e){window.__TL.errors.push("scan: "+e.message);}
   }
   if(frozenMode) return;
   updateTracks(hits,performance.now());
@@ -538,7 +561,7 @@ function loop(){
   for(const t of tracks) if(!t.stable&&t.confirmed&&!t.rejected&&now-t.since>=STABLE_MS) t.stable=true;
   const stable=tracks.filter(t=>t.stable&&!t.rejected), pending=tracks.filter(t=>!t.stable&&!t.rejected&&(!t.weak||t.confirmed));
   pending.forEach(t=>drawBox(t.r,t.card.n.toUpperCase()+" "+pct(t.score),(now-t.since)/STABLE_MS,false));
-  stable.forEach(t=>drawBox(t.r,t.card.n.toUpperCase(),null,true,t.id===panelTrackId));
+  stable.forEach(t=>drawBox(t.r,t.code?(t.code.kind==="qr"?"QR · ":"CODE-BARRES · ")+t.card.n.toUpperCase():t.card.n.toUpperCase(),null,true,t.id===panelTrackId,!!t.code));
   if(multi){ layoutMinis(stable,W,H); }
   else{
     const s=stable[0];
@@ -560,7 +583,14 @@ async function analyseStill(src,sw,sh,mirror){
   frozen.width=sw;frozen.height=sh;fctx.save();if(mirror){fctx.translate(sw,0);fctx.scale(-1,1);}fctx.drawImage(src,0,0,iw,ih,0,0,sw,sh);fctx.restore();
   frozen.style.display="block";geo={w:sw,h:sh,mirror:false};
   const t0=performance.now();analysing=true;
-  let hits=[];
+  let hits=[],codeHits=[];
+  try{
+    if(SCAN.loading&&!SCAN.ready) await SCAN.loading;
+    if(SCAN.ready){
+      codeHits=await scanCodes(frozen,1);
+      if(!codeHits.length&&k<1&&!(src instanceof HTMLVideoElement)) codeHits=await scanCodes(src,k); // image importée : résolution d'origine
+    }
+  }catch(e){window.__TL.errors.push("scan: "+e.message);}
   try{
     hits=filterPreds(await coco.detect(frozen,20,COCO_WEAK));
     if(clipOK()){
@@ -571,19 +601,20 @@ async function analyseStill(src,sw,sh,mirror){
       }
       window.__TL.stillDebug=hits.map(h=>({coco:h.label,cs:+(h.cocoScore||h.score).toFixed(2),weak:!!h.weak,top:(h.clipTop||[]).map(t=>t.key+":"+t.p.toFixed(2)).join(" ")}));
       hits=kept;
-      if(!hits.length){const box=centerBox(sw,sh),r=await clipRecognize(cropSquare(frozen,sw,sh,box,1));
+      if(!hits.length&&!codeHits.length){const box=centerBox(sw,sh),r=await clipRecognize(cropSquare(frozen,sw,sh,box,1));
         if(r.learned||r.p>=CLIP_T){const h={label:"clip:"+(r.learned?r.card.n:r.key),box,src:"clip",refined:true,score:0};applyClip(h,r,false);hits=[h];}}
     }else if(!hits.filter(h=>!h.weak).length){
       hits=[];if(!mnet&&mnetLoading)await mnetLoading;const h=await classify(frozen,sw,sh);if(h)hits=[h];
     }else hits=hits.filter(h=>!h.weak);
   }catch(e){window.__TL.errors.push(e.message);}
+  hits=codeHits.concat(hits);
   await new Promise(r=>setTimeout(r,Math.max(0,900-(performance.now()-t0))));
   analysing=false;stillHits=hits;buildStill();
 }
 function buildStill(){
   clearTracks();const now=performance.now();
   (multi?stillHits:stillHits.slice(0,1)).forEach(h=>tracks.push(mkTrack(h,now,true)));
-  window.__TL.still=tracks.map(t=>({name:t.card.n,key:t.card.key,src:t.card.src,score:+(+t.score).toFixed(2)}));
+  window.__TL.still=tracks.map(t=>({name:t.card.n,key:t.card.key,src:t.card.src,score:+(+t.score).toFixed(2),code:t.code?t.code.kind+":"+t.code.format:undefined}));
 }
 function resume(){
   frozenMode=false;analysing=false;frozen.style.display="none";clearTracks();hideCard();closePanel();
@@ -596,6 +627,247 @@ function toggleFreeze(){
   if(!video.videoWidth) return;
   analyseStill(video,video.videoWidth,video.videoHeight,facing==="user");
 }
+/* ================= CODES-BARRES & QR ================= */
+const SCAN={ready:false,loading:null,native:false,det:null}, SCAN_MS=380, CODE_FORMATS=["ean_13","ean_8","upc_a","upc_e","code_128","qr_code"];
+let lastScan=0,lastCodeAt=0;
+const FMT_FR={ean_13:"EAN-13",ean_8:"EAN-8",upc_a:"UPC-A",upc_e:"UPC-E",code_128:"CODE 128",qr_code:"QR CODE"};
+function initScanner(){
+  if(SCAN.loading) return SCAN.loading;
+  SCAN.loading=(async()=>{
+    try{
+      if("BarcodeDetector" in window){
+        const sup=await window.BarcodeDetector.getSupportedFormats();
+        if(["ean_13","qr_code"].every(f=>sup.includes(f))){SCAN.det=new window.BarcodeDetector({formats:CODE_FORMATS.filter(f=>sup.includes(f))});SCAN.native=true;}
+      }
+      if(SCAN.det){ // vérifie que le détecteur natif répond vraiment
+        try{const c=document.createElement("canvas");c.width=c.height=32;await SCAN.det.detect(c);}catch(e){SCAN.det=null;SCAN.native=false;}
+      }
+      if(!SCAN.det) await useZXing();
+      SCAN.ready=true;window.__TL.scanner=SCAN.native?"natif":"zxing-wasm";
+    }catch(e){window.__TL.errors.push("scan init: "+e.message);window.__TL.scanner="indisponible";}
+  })();
+  return SCAN.loading;
+}
+async function useZXing(){ // repli : ZXing (WebAssembly) via la bibliothèque barcode-detector, plusieurs CDN essayés
+  const m=await import("https://cdn.jsdelivr.net/npm/barcode-detector@3.2.3/dist/es/ponyfill.js");
+  const bases=["https://cdn.jsdelivr.net/npm/zxing-wasm@3.1.6/dist/reader/","https://unpkg.com/zxing-wasm@3.1.6/dist/reader/","https://fastly.jsdelivr.net/npm/zxing-wasm@3.1.6/dist/reader/"];
+  let lastErr=null;
+  for(const base of bases){
+    try{
+      m.purgeZXingModule();
+      await m.prepareZXingModule({overrides:{locateFile:(f,pre)=>f.endsWith(".wasm")?base+f:pre+f},fireImmediately:true});
+      const det=new m.BarcodeDetector({formats:CODE_FORMATS}),c=document.createElement("canvas");c.width=c.height=32;
+      await det.detect(c);SCAN.det=det;SCAN.native=false;window.__TL.zxingFrom=base;return;
+    }catch(e){lastErr=e;}
+  }
+  throw lastErr||new Error("zxing indisponible");
+}
+let scanFails=0;
+async function scanCodes(src,k){
+  let res;
+  try{res=await SCAN.det.detect(src);scanFails=0;}
+  catch(e){ // détecteur en panne : on bascule une fois sur ZXing
+    if(++scanFails>=3&&!SCAN.switching){SCAN.switching=true;SCAN.ready=false;scanFails=0;
+      useZXing().then(()=>{SCAN.ready=true;window.__TL.scanner="zxing-wasm";}).catch(()=>{window.__TL.scanner="indisponible";}).finally(()=>{SCAN.switching=false;});}
+    throw e;
+  }const out=[],seen=new Set();
+  for(const r of res){
+    const raw=r.rawValue; if(!raw||seen.has(raw))continue; seen.add(raw);
+    const b=r.boundingBox, pad=6, box=[b.x*k-pad,b.y*k-pad,b.width*k+2*pad,Math.max(b.height*k,18)+2*pad];
+    const code={raw,format:r.format,kind:r.format==="qr_code"?"qr":"bar"};
+    const card=codeCard(code);
+    out.push({label:"code:"+raw,score:1,box,src:"code",refined:true,code,card});
+    addCodeHistory(code,card.pending?"":card.n);
+  }
+  window.__TL.codes=out.map(h=>h.code.format+":"+h.code.raw);
+  return out;
+}
+/* --- historique & codes appris (local) --- */
+const lsGet=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d;}catch(e){return d;}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
+let codeHist=lsGet("tableLecture.codes.history",[]), codeNotes=lsGet("tableLecture.codes.learned",{});
+function addCodeHistory(code,title){
+  const old=codeHist.find(h=>h.raw===code.raw);
+  if(old&&!title&&Date.now()-old.date<5000) return;
+  codeHist=codeHist.filter(h=>h.raw!==code.raw);
+  codeHist.unshift({raw:code.raw,format:code.format,kind:code.kind,title:title||(old&&old.title)||"",date:Date.now()});
+  codeHist=codeHist.slice(0,30);lsSet("tableLecture.codes.history",codeHist);
+}
+function renderCodeMemory(pc){
+  const box=document.createElement("div");box.className="lf";
+  const nl=Object.keys(codeNotes);
+  box.innerHTML=`<h2 style="margin-top:18px">Codes scannés</h2>${codeHist.length?"":"<p>Aucun code scanné pour l'instant.</p>"}<div id="clist"></div>
+   ${codeHist.length?'<button class="pbtn" id="cclear">✖ Effacer l\'historique des codes</button>':""}
+   ${nl.length?'<h2 style="margin-top:18px">Codes appris</h2><div id="nlist"></div>':""}`;
+  pc.appendChild(box);
+  codeHist.forEach(h=>{const d=document.createElement("div");d.className="memi";
+    d.innerHTML=`<div>${esc(h.title||(h.kind==="qr"?"QR code":"Code "+h.raw))}<small>${esc(FMT_FR[h.format]||h.format)} · ${esc((r=>r.length>40?r.slice(0,40)+"…":r)(/^WIFI:/i.test(h.raw)?h.raw.replace(/P:((?:\\.|[^;])*)/i,"P:••••"):h.raw))} · ${new Date(h.date).toLocaleString("fr-FR")}</small></div><button data-a="see">Revoir</button><button data-a="del">✖</button>`;
+    d.querySelector('[data-a="see"]').onclick=e=>{e.stopPropagation();const c={raw:h.raw,format:h.format,kind:h.kind};const card=codeCard(c);
+      const t={id:-1,card,score:1,label:"code:"+h.raw,code:c};openPanel(t);};
+    d.querySelector('[data-a="del"]').onclick=e=>{e.stopPropagation();codeHist=codeHist.filter(x=>x!==h);lsSet("tableLecture.codes.history",codeHist);openMemory();};
+    $("clist").appendChild(d);});
+  if($("cclear"))$("cclear").onclick=e=>{e.stopPropagation();if(confirm("Effacer l'historique des codes ?")){codeHist=[];lsSet("tableLecture.codes.history",codeHist);openMemory();}};
+  nl.forEach(raw=>{const n=codeNotes[raw],d=document.createElement("div");d.className="memi";
+    d.innerHTML=`<div>${esc(n.name)}<small>${esc(raw)}${n.note?" · "+esc(n.note):""}</small></div><button>Supprimer</button>`;
+    d.querySelector("button").onclick=e=>{e.stopPropagation();if(confirm("Oublier « "+n.name+" » ?")){delete codeNotes[raw];lsSet("tableLecture.codes.learned",codeNotes);codeCache.delete(raw);openMemory();}};
+    $("nlist").appendChild(d);});
+}
+/* --- fiches de codes --- */
+const codeCache=new Map();
+const isGTIN=c=>/^\d{8}$|^\d{12,14}$/.test(c.raw)&&c.format!=="qr_code";
+function gs1Country(raw){
+  const c=raw.length===12?"0"+raw:raw; if(c.length!==13) return null; const p=+c.slice(0,3);
+  const T=[[0,19,"États-Unis / Canada"],[20,29,"usage interne (code magasin, produit au poids)"],[30,39,"États-Unis"],[60,139,"États-Unis / Canada"],[300,379,"France / Monaco"],[380,380,"Bulgarie"],[383,383,"Slovénie"],[385,385,"Croatie"],[400,440,"Allemagne"],[450,459,"Japon"],[460,469,"Russie"],[490,499,"Japon"],[500,509,"Royaume-Uni"],[520,521,"Grèce"],[528,528,"Liban"],[529,529,"Chypre"],[539,539,"Irlande"],[540,549,"Belgique / Luxembourg"],[560,560,"Portugal"],[569,569,"Islande"],[570,579,"Danemark"],[590,590,"Pologne"],[594,594,"Roumanie"],[599,599,"Hongrie"],[600,601,"Afrique du Sud"],[611,611,"Maroc"],[613,613,"Algérie"],[619,619,"Tunisie"],[640,649,"Finlande"],[690,699,"Chine"],[700,709,"Norvège"],[729,729,"Israël"],[730,739,"Suède"],[754,755,"Canada"],[759,759,"Venezuela"],[760,769,"Suisse / Liechtenstein"],[770,771,"Colombie"],[773,773,"Uruguay"],[775,775,"Pérou"],[779,779,"Argentine"],[780,780,"Chili"],[789,790,"Brésil"],[800,839,"Italie"],[840,849,"Espagne"],[858,858,"Slovaquie"],[859,859,"République tchèque"],[869,869,"Turquie"],[870,879,"Pays-Bas"],[880,880,"Corée du Sud"],[885,885,"Thaïlande"],[890,890,"Inde"],[893,893,"Viêt Nam"],[930,939,"Australie"],[940,949,"Nouvelle-Zélande"],[955,955,"Malaisie"],[977,977,"publication en série (ISSN)"],[978,979,"livre (ISBN)"]];
+  const m=T.find(([a,b])=>p>=a&&p<=b); return m?m[2]:null;
+}
+function codeCard(code){
+  if(codeCache.has(code.raw)) return codeCache.get(code.raw);
+  let card;
+  if(code.kind==="qr") card=qrCard(code);
+  else if(isGTIN(code)){card=barBaseCard(code,"Recherche du produit…","Interrogation des bases ouvertes (Open Food Facts…)");card.pending=true;lookupProduct(code);}
+  else card=textCodeCard(code);
+  codeCache.set(code.raw,card);return card;
+}
+function baseCode(code,o){return Object.assign({code:true,kind:code.kind,key:code.raw,fmt:FMT_FR[code.format]||code.format,src:"code",fh:"INFOS",f:[],actions:[]},o);}
+function barBaseCard(code,n,d){
+  const note=codeNotes[code.raw], c=gs1Country(code.raw), f=[];
+  if(note){f.push("Votre note : "+(note.note||"(aucune)"));}
+  f.push("Code : "+code.raw+" ("+(FMT_FR[code.format]||code.format)+")");
+  if(c) f.push("Préfixe GS1 : "+c+" (pays de l'organisme qui a attribué le code, pas forcément le lieu de fabrication).");
+  return baseCode(code,{n:note?note.name:n,cat:note?"Code appris":"Code-barres",d:note?(note.note||d):d,f,short:note?"Code appris":"Code-barres",srcLabel:note?"MÉMOIRE PERSONNELLE (code appris)":"LECTURE CODE-BARRES"});
+}
+function textCodeCard(code){
+  const c=barBaseCard(code,"Code "+(FMT_FR[code.format]||""),"Contenu du code : "+code.raw);
+  if(!codeNotes[code.raw]) teachAction(c,code);
+  return c;
+}
+function teachAction(card,code){
+  card.actions.push({run:()=>openLearnCode(code)});
+  card.acts=(card.acts||"")+`<button class="pbtn act" data-act="${card.actions.length-1}">✚ Apprendre ce code (nom + note)</button>`;
+}
+const ALLERG={"en:milk":"lait","en:nuts":"fruits à coque","en:soybeans":"soja","en:gluten":"gluten","en:eggs":"œufs","en:peanuts":"arachides","en:fish":"poisson","en:crustaceans":"crustacés","en:molluscs":"mollusques","en:celery":"céleri","en:mustard":"moutarde","en:sesame-seeds":"sésame","en:sulphur-dioxide-and-sulphites":"sulfites","en:lupin":"lupin"};
+const NOVA={1:"aliment peu ou pas transformé",2:"ingrédient culinaire transformé",3:"aliment transformé",4:"aliment ultra-transformé"};
+const NS_COL={a:"#038141",b:"#85bb2f",c:"#fecb02",d:"#ee8100",e:"#e63e11"};
+const DBS=[["https://world.openfoodfacts.org","Open Food Facts","Produit alimentaire"],["https://world.openbeautyfacts.org","Open Beauty Facts","Cosmétique / hygiène"],["https://world.openproductsfacts.org","Open Products Facts","Produit"],["https://world.openpetfoodfacts.org","Open Pet Food Facts","Alimentation animale"]];
+const FIELDS="product_name,product_name_fr,generic_name_fr,generic_name,brands,quantity,nutriscore_grade,nova_group,allergens_tags,categories_tags_fr,ingredients_text_fr,ingredients_text,image_front_small_url,labels_tags,origins";
+async function fetchJSON(url,ms){const ac=new AbortController(),t=setTimeout(()=>ac.abort(),ms);try{const r=await fetch(url,{signal:ac.signal});if(r.status===404)return {status:0};if(!r.ok)throw new Error("HTTP "+r.status);return await r.json();}finally{clearTimeout(t);}}
+async function lookupProduct(code){
+  let found=null,errs=0;
+  for(const [base,name,cat] of DBS){
+    try{const j=await fetchJSON(base+"/api/v2/product/"+encodeURIComponent(code.raw)+".json?fields="+FIELDS,8000);
+      if(j&&j.status===1&&j.product){found={p:j.product,base,name,cat};break;}}catch(e){errs++;}
+  }
+  let card;
+  if(found) card=productCard(code,found);
+  else{
+    card=barBaseCard(code,errs===DBS.length?"Recherche impossible":"Produit inconnu",errs===DBS.length?"Les bases ouvertes n'ont pas répondu (connexion ?). Réessayez plus tard.":"Ce code n'est dans aucune des bases ouvertes consultées (Open Food Facts, Open Beauty Facts, Open Products Facts, Open Pet Food Facts).");
+    if(!codeNotes[code.raw]) teachAction(card,code);
+  }
+  codeCache.set(code.raw,card);addCodeHistory(code,card.n);refreshCodeTracks(code.raw);
+  window.__TL.lookup=Object.assign(window.__TL.lookup||{},{[code.raw]:{name:card.n,src:card.srcLabel}});
+}
+function productCard(code,{p,base,name,cat}){
+  const note=codeNotes[code.raw];
+  const pname=p.product_name_fr||p.product_name||p.generic_name_fr||p.generic_name||"Produit "+code.raw;
+  const cats=(p.categories_tags_fr||[]).filter(c=>!c.includes(":")).slice(0,3);
+  const f=[];
+  if(note) f.push("Votre note : "+(note.note||note.name));
+  if(p.brands) f.push("Marque : "+p.brands);
+  if(p.quantity) f.push("Quantité : "+String(p.quantity).replace(/\s*(℮|\be)$/,""));
+  const ns=(p.nutriscore_grade||"").toLowerCase();
+  if(base.includes("openfoodfacts")) f.push("Nutri-Score : "+(NS_COL[ns]?ns.toUpperCase():ns==="not-applicable"?"non applicable":"non calculé pour ce produit"));
+  if(NOVA[p.nova_group]) f.push("Groupe NOVA "+p.nova_group+" : "+NOVA[p.nova_group]+".");
+  const al=(p.allergens_tags||[]).map(a=>ALLERG[a]||a.replace(/^\w\w:/,"").replace(/-/g," "));
+  if(base.includes("openfoodfacts")) f.push("Allergènes déclarés : "+(al.length?al.join(", "):"aucun renseigné"));
+  const ing=(p.ingredients_text_fr||p.ingredients_text||"").replace(/\s+/g," ").trim();
+  if(ing) f.push("Ingrédients : "+(ing.length>180?ing.slice(0,180)+"…":ing));
+  const c=gs1Country(code.raw); if(c) f.push("Préfixe GS1 : "+c+" (organisme d'attribution, pas forcément l'origine).");
+  const img=/^https:\/\/images\.open(food|beauty|products|petfood)facts\.org\/[\w\/.\-]+$/.test(p.image_front_small_url||"")?p.image_front_small_url:null;
+  const card=baseCode(code,{n:note?note.name:pname,cat:cats.length?cats[cats.length-1]:cat,d:(note&&note.note)||p.generic_name_fr||p.generic_name||(cat+(p.brands?" · "+p.brands:"")),
+    f,img,fh:"INFOS PRODUIT",short:(p.brands||cat).split(",")[0],srcLabel:name.toUpperCase()+" (licence ODbL) · "+code.raw,
+    extra:NS_COL[ns]?`<div class="kv">NUTRI-SCORE <span class="badge" style="background:${NS_COL[ns]}">${ns.toUpperCase()}</span></div>`:""});
+  card.actions.push({run:()=>window.open(base+"/product/"+encodeURIComponent(code.raw),"_blank","noopener,noreferrer")});
+  card.acts=`<button class="pbtn act" data-act="0">↗ Voir la fiche sur ${esc(name)}</button>`;
+  if(!note) teachAction(card,code);
+  return card;
+}
+function refreshCodeTracks(raw){
+  const card=codeCache.get(raw);
+  for(const t of tracks) if(t.code&&t.code.raw===raw){t.card=card;if(t.el){t.el.remove();t.el=null;}if(cardTrackId===t.id)cardTrackId=null;if(panelTrackId===t.id)openPanel(t);}
+  if(window.__TL.still) window.__TL.still=tracks.map(t=>({name:t.card.n,key:t.card.key,src:t.card.src,score:+(+t.score).toFixed(2),code:t.code?t.code.kind+":"+t.code.format:undefined}));
+}
+/* --- QR codes : décodage et affichage, jamais d'action automatique --- */
+const SHORT=/^(bit\.ly|tinyurl\.com|t\.co|goo\.gl|ow\.ly|is\.gd|buff\.ly|rebrand\.ly|cutt\.ly|shorturl\.at|rb\.gy|t\.ly|tiny\.cc|s\.id|qrco\.de|lnkd\.in|v\.gd|bl\.ink|short\.io|tiny\.one|urlz\.fr|qr\.net|u\.to)$/i;
+function kv(k,v){return `<div class="kv"><b>${esc(k)}</b>${esc(v)}</div>`;}
+function qrParams(body){const o={};body.replace(/([A-Z]+):((?:\\.|[^;])*);/g,(m,k,v)=>{o[k]=v.replace(/\\(.)/g,"$1");return "";});return o;}
+function qrCard(code){
+  const raw=code.raw.trim(), c=baseCode(code,{cat:"QR code",fh:"DÉTAILS",srcLabel:"LECTURE QR CODE (dans le navigateur)"});
+  let u=null; try{ if(/^[a-z][a-z0-9+.\-]*:\/\//i.test(raw)) u=new URL(raw); }catch(e){}
+  if(!u&&/^www\.[^\s]+\.[a-z]{2,}/i.test(raw)){try{u=new URL("http://"+raw);}catch(e){}}
+  if(u&&/^https?:$/.test(u.protocol)){
+    const host=u.hostname, warns=[];
+    if(u.protocol!=="https:") warns.push("Lien non sécurisé (http, pas https).");
+    if(SHORT.test(host.replace(/^www\./,""))) warns.push("Lien raccourci : la vraie destination est cachée.");
+    if(/^\d{1,3}(\.\d{1,3}){3}$/.test(host)||host.startsWith("[")) warns.push("L'adresse est une IP brute au lieu d'un nom de site.");
+    if(/(^|\.)xn--/.test(host)) warns.push("Nom de domaine internationalisé (peut imiter un autre site).");
+    if(u.username||u.password||raw.includes("@")&&raw.indexOf("@")<raw.indexOf(host)+host.length) warns.push("L'adresse contient un « @ » : le vrai site peut être différent de ce qui s'affiche.");
+    Object.assign(c,{n:"Lien web",short:host,d:"Ce QR code mène au site : "+host,
+      f:["Domaine : "+host,"Protocole : "+u.protocol.replace(":","").toUpperCase(),"Le lien ne s'ouvre jamais tout seul : vérifiez le domaine avant d'ouvrir."],
+      extra:`<div class="url">${esc(raw.length>300?raw.slice(0,300)+"…":raw)}</div>`+(warns.length?`<div class="warnbox">⚠ PRUDENCE<br>${warns.map(esc).join("<br>")}</div>`:"")});
+    c.warn=warns.length>0;
+    c.actions.push({run:()=>{ if(warns.length&&!confirm("Ce lien présente des signes suspects :\n- "+warns.join("\n- ")+"\n\nOuvrir quand même "+host+" ?")) return; window.open(u.href,"_blank","noopener,noreferrer");}});
+    c.acts=`<button class="pbtn act${warns.length?" warn":""}" data-act="0">${warns.length?"⚠ Ouvrir le lien (suspect)":"↗ Ouvrir le lien"} · ${esc(host)}</button>`;
+    return c;
+  }
+  if(/^WIFI:/i.test(raw)){
+    const o=qrParams(raw.slice(5)+(raw.endsWith(";")?"":";")), sec=(o.T||"").toUpperCase();
+    Object.assign(c,{n:"Réseau Wi-Fi",short:o.S||"Wi-Fi",d:"Identifiants Wi-Fi pour le réseau « "+(o.S||"?")+" ». Rien n'est connecté automatiquement.",
+      f:["Nom du réseau (SSID) : "+(o.S||"?"),"Sécurité : "+(sec==="NOPASS"||!sec?"aucune (réseau ouvert)":sec),"Réseau masqué : "+(/^true$/i.test(o.H||"")?"oui":"non")],
+      extra:o.P?`<div class="kv"><b>MOT DE PASSE</b><span class="pw">••••••••</span></div>`:""});
+    if(o.P){c.actions.push({run:b=>{const el=b.closest(".fc").querySelector(".pw");if(el){el.textContent=o.P;b.remove();}}});c.acts=`<button class="pbtn act" data-act="0">👁 Afficher le mot de passe</button>`;}
+    return c;
+  }
+  if(/^BEGIN:VCARD/i.test(raw)||/^MECARD:/i.test(raw)){
+    let o={};
+    if(/^MECARD:/i.test(raw)){const m=qrParams(raw.slice(7));o={name:(m.N||"").replace(","," "),tel:m.TEL,mail:m.EMAIL,org:m.ORG,url:m.URL,adr:m.ADR};}
+    else{const g=k=>{const m=raw.match(new RegExp("^"+k+"(?:;[^:\\r\\n]*)?:(.*)$","im"));return m?m[1].trim():"";};
+      o={name:g("FN")||g("N").split(";").filter(Boolean).reverse().join(" "),tel:g("TEL"),mail:g("EMAIL"),org:g("ORG").replace(/;/g," "),title:g("TITLE"),url:g("URL"),adr:g("ADR").split(";").filter(Boolean).join(", ")};}
+    const f=[];if(o.org)f.push("Organisation : "+o.org);if(o.title)f.push("Fonction : "+o.title);if(o.tel)f.push("Téléphone : "+o.tel);if(o.mail)f.push("E-mail : "+o.mail);if(o.url)f.push("Site : "+o.url);if(o.adr)f.push("Adresse : "+o.adr);
+    Object.assign(c,{n:o.name||"Carte de visite",short:"Contact",d:"Carte de visite (contact). Rien n'est ajouté à vos contacts automatiquement.",f:f.length?f:["Aucun détail lisible."]});
+    return c;
+  }
+  const geo=raw.match(/^geo:(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/i);
+  if(geo){const la=+geo[1],lo=+geo[2];
+    Object.assign(c,{n:"Position GPS",short:la.toFixed(4)+", "+lo.toFixed(4),d:"Coordonnées géographiques.",f:["Latitude : "+la,"Longitude : "+lo]});
+    c.actions.push({run:()=>window.open("https://www.openstreetmap.org/?mlat="+la+"&mlon="+lo+"#map=16/"+la+"/"+lo,"_blank","noopener,noreferrer")});
+    c.acts=`<button class="pbtn act" data-act="0">↗ Voir sur OpenStreetMap</button>`;return c;}
+  const sch=raw.match(/^(tel|mailto|smsto|sms|mms):(.*)$/i);
+  if(sch){const k=sch[1].toLowerCase(),v=decodeURIComponent(sch[2].split("?")[0]).replace(/:.*$/,"");
+    Object.assign(c,{n:k==="mailto"?"Adresse e-mail":k==="tel"?"Numéro de téléphone":"SMS",short:v,d:(k==="mailto"?"E-mail : ":k==="tel"?"Téléphone : ":"Destinataire : ")+v+". Aucune action n'est lancée.",f:["Contenu brut : "+raw.slice(0,200)]});return c;}
+  if(/^BEGIN:VEVENT/i.test(raw)||/BEGIN:VCALENDAR/i.test(raw)){const g=k=>{const m=raw.match(new RegExp("^"+k+"[^:\\r\\n]*:(.*)$","im"));return m?m[1].trim():"";};
+    Object.assign(c,{n:g("SUMMARY")||"Événement",short:"Événement",d:"Événement d'agenda. Rien n'est ajouté à votre agenda.",f:["Début : "+(g("DTSTART")||"?"),"Fin : "+(g("DTEND")||"?"),"Lieu : "+(g("LOCATION")||"non précisé")]});return c;}
+  if(u){ // autre schéma (javascript:, data:, intent:…) : affiché seulement
+    Object.assign(c,{n:"Lien spécial",short:u.protocol,d:"Lien de type « "+u.protocol+" » : non ouvert par sécurité.",f:["Contenu : "+raw.slice(0,200)],extra:`<div class="warnbox">⚠ Ce type de lien peut lancer une action : il n'est pas proposé à l'ouverture.</div>`});return c;}
+  Object.assign(c,{n:"Texte",short:raw.slice(0,40),d:raw.length>400?raw.slice(0,400)+"…":raw,f:["Longueur : "+raw.length+" caractères"]});
+  return c;
+}
+/* --- apprendre un code (nom + note, stocké sur l'appareil) --- */
+function openLearnCode(code){
+  const pc=$("pc"),cur=codeNotes[code.raw]||{};panelTrackId=null;
+  pc.innerHTML=`<div class="lf"><div class="id"><span>APPRENDRE UN CODE</span><span>${esc(FMT_FR[code.format]||code.format)}</span></div><h2>${esc(code.raw)}</h2>
+   <p>Associez un nom et une note à ce code : la table les affichera à chaque lecture (stocké sur cet appareil seulement).</p>
+   <label for="cname">NOM</label><input id="cname" maxlength="60" autocomplete="off" placeholder="ex. Mon thé préféré">
+   <label for="cnote">NOTE (FACULTATIF)</label><textarea id="cnote" maxlength="300" placeholder="ex. Acheté au marché, à racheter"></textarea>
+   <button class="pbtn" id="csave">✔ Enregistrer</button></div>`;
+  $("cname").value=cur.name||"";$("cnote").value=cur.note||"";
+  $("csave").onclick=e=>{e.stopPropagation();const name=$("cname").value.trim();if(!name){$("cname").focus();return;}
+    codeNotes[code.raw]={name,note:$("cnote").value.trim(),date:Date.now()};lsSet("tableLecture.codes.learned",codeNotes);
+    codeCache.delete(code.raw);const card=codeCard(code);addCodeHistory(code,name);
+    for(const t of tracks) if(t.code&&t.code.raw===code.raw){t.card=card;if(t.el){t.el.remove();t.el=null;}}
+    closePanel();setStatus("✔ CODE APPRIS : "+name.toUpperCase());};
+  panel.classList.add("open");window.__TL.panel={learnCode:code.raw};
+}
+
 /* ================= MODE APPRENDRE ================= */
 let learnTarget=null;
 function learnSource(){return frozenMode?{src:frozen,w:frozen.width,h:frozen.height}:{src:video,w:video.videoWidth,h:video.videoHeight};}
@@ -657,6 +929,7 @@ function openMemory(){
     d.querySelector("button").onclick=e=>{e.stopPropagation();if(confirm("Oublier « "+L.name+" » ?")){learned=learned.filter(x=>x!==L);saveLearned();openMemory();}};
     ml.appendChild(d);});
   if($("mclear"))$("mclear").onclick=e=>{e.stopPropagation();if(confirm("Effacer tous les objets appris ?")){learned=[];saveLearned();openMemory();}};
+  renderCodeMemory(pc);
   panel.classList.add("open");window.__TL.panel={memory:true};
 }
 $("bLearn").onclick=e=>{e.stopPropagation();if(analysing)return;startLearn();};
