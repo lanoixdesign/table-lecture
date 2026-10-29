@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#00141a">
@@ -55,7 +56,9 @@ body.off-wx #wx,body.off-mem #mem,body.off-fps #fps,body.off-status #status,body
 body.off-bPhoto #bar label.btn,body.off-bLearn #bLearn,body.off-bFilms #bFilms,body.off-bTV #bTV,body.off-bReco #bReco,body.off-history #chist,
 body.off-anim .scan,body.off-details .mini small,body.off-details .mini .tap,body.off-pct .mini .p,body.off-pct .fc .conf,body.off-pct .fc .pctrow{display:none!important}
 body.off-anim #sel.run{animation:none}
-#gear{pointer-events:auto;cursor:pointer;font-size:15px;letter-spacing:0;margin-top:-4px;padding:2px 4px;text-shadow:0 0 8px var(--c)}
+#gear{position:fixed;top:calc(env(safe-area-inset-top) + 4px);left:calc(env(safe-area-inset-left) + 4px);z-index:6;width:44px;height:44px;max-width:44px;flex:none;padding:0;display:flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center;font-size:24px;letter-spacing:0;line-height:1;border-radius:50%;background:rgba(0,20,26,.85);text-shadow:0 0 8px var(--c);pointer-events:auto;text-transform:none}
+#hud{overflow:hidden}#hud span{min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis}
+#ver{position:fixed;right:calc(env(safe-area-inset-right) + 8px);bottom:calc(env(safe-area-inset-bottom) + 1px);z-index:4;font-size:9px;letter-spacing:1px;opacity:.7;pointer-events:none;text-shadow:0 0 6px var(--c)}
 .setg{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid rgba(0,240,255,.12);font-size:13px;cursor:pointer}
 .setg input{width:20px;height:20px;accent-color:#00f0ff;flex:none}.setg small{display:block;opacity:.65;font-size:10px}
 #sel.low{border-color:rgba(180,140,255,.7)}#sel .lbl.low{color:#c9b0ff;pointer-events:auto;cursor:pointer}form.lsrch{display:flex;gap:6px;margin-top:10px}form.lsrch input{flex:1;min-width:0;background:#0008;border:1px solid var(--c2);color:#e8fbff;padding:8px;font:inherit}#sel .lbl{position:absolute;left:0;top:-17px;font-size:10px;letter-spacing:2px;color:var(--c2);text-shadow:0 0 6px var(--c);white-space:nowrap;pointer-events:none}
@@ -155,7 +158,7 @@ body.off-anim #sel.run{animation:none}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v5</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span><span id="gear" role="button" aria-label="Paramètres" title="Paramètres">⚙</span></div>
+  <div id="hud"><span>TABLE·LECTURE v5.1</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.1</div>
   <div id="status">INITIALISATION</div>
   <div id="minis"></div>
   <div id="sel"></div>
@@ -1041,7 +1044,7 @@ function openSettings(){
    <div class="id" style="margin-top:12px"><span>SEUIL DES FICHES</span><span id="seuilv">${Math.round(CONF_T*100)} %</span></div>
    <input type="range" id="seuil" min="40" max="90" step="5" value="${Math.round(CONF_T*100)}" aria-label="Seuil de confiance" style="width:100%;accent-color:#00f0ff">
    <p style="font-size:12px;opacity:.8">En dessous de ce niveau, pas de fiche : seulement un cadre discret « Objet non identifié » (touchez-le pour chercher ou apprendre). Codes-barres/QR (lecture exacte) et objets appris (ressemblance ≥ ${Math.round(LEARN_T*100)} %) ne sont pas concernés.</p>
-   <div id="setl"></div><button class="pbtn" id="sreset">↺ Réinitialiser les paramètres</button></div>`;
+   <div id="setl"></div><p style="font-size:12px;opacity:.85;margin-top:14px">Version installée : <b>v${APP_VER}</b> · <a href="#" id="supd" style="color:var(--c2)">vérifier les mises à jour</a></p><button class="pbtn" id="sreset">↺ Réinitialiser les paramètres</button></div>`;
   const L=$("setl");
   SETTINGS.forEach(([g,items])=>{const h=document.createElement("h3");h.textContent=g;L.appendChild(h);
     items.forEach(([k,lab,sub])=>{const r=document.createElement("label");r.className="setg";
@@ -1053,6 +1056,7 @@ function openSettings(){
   panel.classList.add("open");window.__TL.panel={settings:true};
 }
 $("gear").addEventListener("click",e=>{e.stopPropagation();openSettings();});
+document.addEventListener("click",e=>{if(e.target&&e.target.id==="supd"){e.preventDefault();e.stopPropagation();checkUpdate(true);}},true);
 addEventListener("tl-pref",e=>{const k=e.detail.k;
   if((k==="codes"||k==="*")&&pref("codes")&&coco)initScanner();
   if((k==="framing"||k==="*")&&!pref("framing")&&window.TLSEL&&TLSEL.SEL)TLSEL.dismissSel();});
@@ -1215,6 +1219,11 @@ function selClick(e){ // renvoie true si le clic concerne le cadre
 }
 window.TLSEL={get SEL(){return SEL;},get selT(){return selT;},dismissSel,analyzeSel};
 addEventListener("error",e=>window.__TL.errors.push(String(e.message)));
+const APP_VER="5.1";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
+function checkUpdate(manual){fetch(location.pathname+"?nv="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const APP_VER="([^"]+)"/);const nv=m&&m[1];
+  if(nv&&nv!==APP_VER){const k="tableLecture.upd."+nv;if(manual||!sessionStorage.getItem(k)){sessionStorage.setItem(k,"1");location.replace(location.pathname+"?v="+encodeURIComponent(nv));}}
+  else if(manual)alert("Vous avez la dernière version (v"+APP_VER+").");}).catch(()=>{if(manual)alert("Vérification impossible (hors ligne ?).");});}
+setTimeout(()=>checkUpdate(false),800);
 /* ================= VISAGES (v5) : détection locale + reconnaissance OPT-IN des proches enregistrés ================= */
 /* Aucune identification d'inconnus ni de célébrités : seuls les visages enregistrés ici, avec accord, peuvent être nommés.
    Seules des empreintes numériques (128 nombres) sont stockées sur cet appareil ; aucune image, aucun envoi. */
