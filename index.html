@@ -90,6 +90,20 @@ body.off-anim #sel.run{animation:none}
 #slots.pos-gauche .stool,#slots.pos-droite .stool{flex-direction:row}#slots.pos-gauche .stool button,#slots.pos-droite .stool button{width:32px}
 #slots.pos-gauche #slist,#slots.pos-droite #slist{flex-direction:column;overflow-x:hidden;overflow-y:auto;touch-action:pan-y}
 #slots.pos-gauche #sq,#slots.pos-droite #sq{position:fixed;top:calc(env(safe-area-inset-top) + 86px);bottom:auto;left:8px;right:8px;width:auto}
+/* v5.6 : chargement unique, discret, en haut (barre fine + petite pastille) */
+#tlb{position:fixed;left:0;right:0;top:0;z-index:12;pointer-events:none;opacity:0;transform:translateY(-6px);transition:opacity .35s ease,transform .35s ease}
+#tlb.show{opacity:1;transform:none}
+#tlb .tr{position:absolute;left:0;right:0;top:env(safe-area-inset-top);height:3px;background:rgba(0,240,255,.14);overflow:hidden}
+#tlb .tr i{position:absolute;inset:0;background:linear-gradient(90deg,#00b8c4,var(--c));box-shadow:0 0 8px var(--c);transform-origin:0 50%;transform:scaleX(0);transition:transform .5s cubic-bezier(.2,.7,.3,1)}
+#tlb .tx{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 9px);transform:translateX(-50%);max-width:calc(100vw - 116px);box-sizing:border-box;padding:3px 10px;border:1px solid rgba(0,240,255,.45);border-radius:11px;background:rgba(0,14,20,.82);
+  font-size:10px;line-height:14px;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#cffcff;text-shadow:0 0 6px var(--c);font-variant-numeric:tabular-nums}
+#tlb.err .tx{border-color:#ffb347;color:#ffd9a0}#tlb.err .tr i{background:#ffb347}
+body.tl-loading #mem{visibility:hidden}
+@media (max-width:599px){body.tl-loading #hud{opacity:0}#hud>span:first-child{display:none}#hud{justify-content:space-around}}
+#hud{transition:opacity .35s ease}
+.corner.tl{display:none}
+#load,#load2{display:none}
+@media (prefers-reduced-motion:reduce){#tlb,#tlb .tr i,#hud{transition:none!important}#start .ring{animation:none}}
 #ver{position:fixed;right:calc(env(safe-area-inset-right) + 8px);bottom:calc(env(safe-area-inset-bottom) + 1px);z-index:4;font-size:9px;letter-spacing:1px;opacity:.7;pointer-events:none;text-shadow:0 0 6px var(--c)}
 .setg{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid rgba(0,240,255,.12);font-size:13px;cursor:pointer}
 .setg input{width:20px;height:20px;accent-color:#00f0ff;flex:none}.setg small{display:block;opacity:.65;font-size:10px}
@@ -190,7 +204,7 @@ body.off-anim #sel.run{animation:none}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v5.5</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.5</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
+  <div id="hud"><span>TABLE·LECTURE v5.6</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.6</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
   <div id="status">INITIALISATION</div>
   <div id="minis"></div>
   <div id="sel"></div>
@@ -342,22 +356,45 @@ function overlap(a,b){const w=Math.min(a[0]+a[2],b[0]+b[2])-Math.max(a[0],b[0]),
 function esc(s){const d=document.createElement("div");d.textContent=String(s);return d.innerHTML;}
 const pct=s=>Math.round(s*100)+" %";
 
+/* ================= CHARGEMENT : une seule progression agrégée (v5.6) ================= */
+const TLL=(()=>{
+  const el=document.createElement("div");el.id="tlb";el.setAttribute("role","progressbar");el.setAttribute("aria-valuemin","0");el.setAttribute("aria-valuemax","100");el.setAttribute("aria-label","Chargement des modèles");
+  el.innerHTML='<div class="tr"><i></i></div><span class="tx">Chargement des modèles… 0 %</span>';document.body.appendChild(el);
+  const bar=el.querySelector("i"),tx=el.querySelector(".tx");
+  const parts={coco:{w:20,p:0},clip:{w:70,p:0},faces:{w:10,p:0}};
+  let shown=0,done=false,raf=0,label="",sub="Chargement des modèles…",showT=setTimeout(()=>{if(!done)el.classList.add("show");},300),hideT=0;
+  document.body.classList.add("tl-loading");
+  function total(){let a=0,b=0;for(const k in parts){if(parts[k].off)continue;a+=parts[k].w*parts[k].p;b+=parts[k].w;}return b?a/b:1;}
+  function paint(){raf=0;const v=Math.max(shown,Math.min(1,total()));shown=v;const n=Math.floor(v*100);
+    bar.style.transform="scaleX("+v.toFixed(3)+")";el.setAttribute("aria-valuenow",n);
+    const t=label||(n>=100?"Modèles prêts ✓":sub+" "+n+" %");if(tx.textContent!==t)tx.textContent=t;
+    window.__TL.loading={pct:n,done,text:t};
+    if(!done&&Object.keys(parts).every(k=>parts[k].off||parts[k].p>=1))finish();}
+  const kick=()=>{if(!raf)raf=requestAnimationFrame(paint);};
+  function set(k,p){const P=parts[k];if(!P||P.off)return;P.p=Math.max(P.p,Math.min(1,p));kick();}
+  function off(k){if(parts[k]){parts[k].off=true;kick();}}
+  function finish(){done=true;clearTimeout(showT);bar.style.transform="scaleX(1)";
+    hideT=setTimeout(()=>{el.classList.remove("show");document.body.classList.remove("tl-loading");window.__TL.loading={pct:100,done:true,text:"",hidden:true};},label?3500:900);}
+  function fail(msg){label=msg;el.classList.add("err","show");kick();}
+  window.__TL.loading={pct:0,done:false,text:tx.textContent};
+  return {set,off,fail,parts,note:t=>{sub=t;kick();}};
+})();
 /* ================= MODÈLES ================= */
 async function loadModels(){
   const L=$("load");
   try{
     try{await tf.setBackend("webgl");}catch(e){await tf.setBackend("cpu");}
-    await tf.ready();
+    await tf.ready();TLL.set("coco",0.3);
     L.textContent="MOTEUR : "+tf.getBackend().toUpperCase()+" · CHARGEMENT COCO-SSD…";
-    coco=await cocoSsd.load({base:"lite_mobilenet_v2"});
+    coco=await cocoSsd.load({base:"lite_mobilenet_v2"});TLL.set("coco",1);
     L.textContent="COCO-SSD PRÊT (détection rapide)";
     if(pref("codes"))initScanner();
-    setTimeout(()=>ensureFaceModels(),1500);
+    if(pref("faces"))setTimeout(()=>Promise.resolve(ensureFaceModels()).finally(()=>TLL.set("faces",1)),1500);else TLL.off("faces");
     window.__TL.coco=true;
     $("bStart").disabled=false;$("bStart").textContent="▶ Activer la table";
     window.__TL.ready=true;
   }catch(e){
-    window.__TL.errors.push(e.message);$("err").textContent="Erreur de chargement des modèles : "+e.message+". Vérifiez la connexion.";
+    window.__TL.errors.push(e.message);TLL.fail("Chargement impossible · vérifiez la connexion");$("err").textContent="Erreur de chargement des modèles : "+e.message+". Vérifiez la connexion.";
   }
 }
 
@@ -370,9 +407,9 @@ function loadMobileNetFallback(){
     .catch(e=>{window.__TL.errors.push("mobilenet: "+e.message);});
   return mnetLoading;
 }
-addEventListener("clip-progress",e=>{const t="MÉMOIRE ÉTENDUE "+e.detail+" %";$("mem").textContent=t;$("load2").textContent=t;});
-addEventListener("clip-ready",()=>{const n=window.VOC.keys.length;$("mem").textContent="MÉMOIRE : "+n+" OBJETS";$("load2").textContent="MÉMOIRE ÉTENDUE PRÊTE · "+n+" OBJETS CONNUS";window.__TL.clip=true;});
-addEventListener("clip-failed",e=>{$("mem").textContent="MÉMOIRE ÉTENDUE INDISPONIBLE";$("load2").textContent="Mémoire étendue indisponible ("+e.detail+") — mode réduit";window.__TL.errors.push("clip: "+e.detail);loadMobileNetFallback();});
+addEventListener("clip-progress",e=>{const t="MÉMOIRE ÉTENDUE "+e.detail+" %";$("mem").textContent=t;$("load2").textContent=t;TLL.set("clip",Math.min(0.95,e.detail/100));if(e.detail>=100)TLL.note("Préparation des modèles…");});
+addEventListener("clip-ready",()=>{const n=window.VOC.keys.length;$("mem").textContent="MÉMOIRE : "+n+" OBJETS";$("load2").textContent="MÉMOIRE ÉTENDUE PRÊTE · "+n+" OBJETS CONNUS";window.__TL.clip=true;TLL.set("clip",1);});
+addEventListener("clip-failed",e=>{$("mem").textContent="MÉMOIRE ÉTENDUE INDISPONIBLE";$("load2").textContent="Mémoire étendue indisponible ("+e.detail+") — mode réduit";window.__TL.errors.push("clip: "+e.detail);TLL.set("clip",1);loadMobileNetFallback();});
 
 /* ================= MÉMOIRE ÉTENDUE (MobileCLIP) & OBJETS APPRIS ================= */
 const CLIP_T=0.30, CLIP_WEAK=0.60, CLIP_CENTER=0.45, LEARN_T=0.86, COCO_WEAK=0.25;
@@ -1272,7 +1309,7 @@ function selClick(e){ // renvoie true si le clic concerne le cadre
 }
 window.TLSEL={get SEL(){return SEL;},get selT(){return selT;},dismissSel,analyzeSel};
 addEventListener("error",e=>window.__TL.errors.push(String(e.message)));
-const APP_VER="5.5";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
+const APP_VER="5.6";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
 function checkUpdate(manual){if(window.TLPWA&&TLPWA.reg)return TLPWA.check(manual);if(!manual&&navigator.serviceWorker&&navigator.serviceWorker.controller)return;fetch(location.pathname+"?nv="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const APP_VER="([^"]+)"/);const nv=m&&m[1];
   if(nv&&nv!==APP_VER){const k="tableLecture.upd."+nv;if(manual||!sessionStorage.getItem(k)){sessionStorage.setItem(k,"1");location.replace(location.pathname+"?v="+encodeURIComponent(nv));}}
   else if(manual)alert("Vous avez la dernière version (v"+APP_VER+").");}).catch(()=>{if(manual)alert("Vérification impossible (hors ligne ?).");});}
@@ -1307,7 +1344,7 @@ function faceModel(k){ // charge un modèle une seule fois, à la demande
 }
 function ensureFaceModels(){
   if(!pref("faces")||!window.tf)return;
-  faceModel("det");if(pref("faceExpr"))faceModel("expr");if(pref("faceReco"))faceModel("rec");
+  return Promise.all([faceModel("det"),pref("faceExpr")&&faceModel("expr"),pref("faceReco")&&faceModel("rec")]);
 }
 function faceMatch(desc){
   let best=null;

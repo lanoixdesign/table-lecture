@@ -3,7 +3,7 @@
    - Modèles d'IA et bibliothèques (CDN, Hugging Face, Google Storage) : cache d'abord (tl-models-1).
    - Données en ligne (météo, Open*Facts, Wikipédia/Wikidata, guide TV…) : réseau d'abord, cache en secours (tl-data-1).
    Seules les réponses OK et lisibles (same-origin ou CORS) sont mises en cache, jamais les réponses opaques. */
-const VER = "5.5";
+const VER = "5.6";
 const SHELL = "tl-shell-" + VER, MODELS = "tl-models-1", DATA = "tl-data-1";
 const KEEP = [SHELL, MODELS, DATA];
 const SHELL_FILES = ["./", "index.html", "credits.html", "vocab.json", "manifest.webmanifest",
