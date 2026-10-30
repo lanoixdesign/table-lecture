@@ -121,6 +121,7 @@ body.tl-loading #mem{visibility:hidden}
 @keyframes pop{from{opacity:0;clip-path:polygon(0 0,0 0,0 0,0 0,0 0,0 0)}}
 #panel{position:absolute;left:0;right:0;bottom:0;max-height:74vh;overflow:auto;z-index:5;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px);background:linear-gradient(160deg,rgba(0,42,54,.96),rgba(0,10,15,.98));border-top:1px solid var(--c);box-shadow:0 -6px 30px rgba(0,240,255,.35);transform:translateY(105%);transition:transform .35s ease}
 #panel.open{transform:none}
+#panel{padding-bottom:calc(env(safe-area-inset-bottom) + 18px + var(--slotpb,0px));padding-right:calc(16px + var(--slotpr,0px));padding-left:calc(16px + var(--slotpl,0px))}
 #panel::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,240,255,.05) 0 1px,transparent 1px 3px);pointer-events:none}
 #panel .x{position:absolute;top:10px;right:10px;flex:none;width:42px;max-width:42px;padding:8px 0;z-index:1}
 #pc{padding-right:44px}
@@ -204,7 +205,7 @@ body.tl-loading #mem{visibility:hidden}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v5.6</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.6</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
+  <div id="hud"><span>TABLE·LECTURE v5.7</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.7</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
   <div id="status">INITIALISATION</div>
   <div id="minis"></div>
   <div id="sel"></div>
@@ -418,7 +419,7 @@ const clipOK=()=>window.CLIPX&&window.CLIPX.ready;
 let CONF_T=(()=>{const v=parseFloat(localStorage.getItem("tableLecture.seuil"));return v>=0.4&&v<=0.9?v:0.65;})();window.__TL.seuil=CONF_T;
 function setConfT(v){CONF_T=clamp(+v,0.4,0.9);try{localStorage.setItem("tableLecture.seuil",String(CONF_T));}catch(e){}window.__TL.seuil=CONF_T;}
 /* codes (lecture exacte) et objets appris (seuil propre LEARN_T) ne sont pas concernés */
-function isLow(t){return !!t&&t.src!=="face"&&!t.code&&!(t.card&&t.card.code)&&t.src!=="learned"&&!(t.card&&t.card.src==="learned")&&((t.card&&t.card.key==="cadre")||!(t.score>=CONF_T));}
+function isLow(t){return !!t&&t.src!=="face"&&t.src!=="ai"&&!(t.card&&t.card.src==="ai")&&!t.code&&!(t.card&&t.card.code)&&t.src!=="learned"&&!(t.card&&t.card.src==="learned")&&((t.card&&t.card.key==="cadre")||!(t.score>=CONF_T));}
 function lowCard(t){
   if(t.card.key==="cadre") return {...t.card,lowSearch:true};
   return {n:"Objet non identifié",cat:"Confiance trop faible",key:"bas",src:t.card.src,srcLabel:"SEUIL D'AFFICHAGE "+Math.round(CONF_T*100)+" %",lowSearch:true,
@@ -437,7 +438,8 @@ function centerBox(sw,sh){const s=Math.min(sw,sh)*.6;return [(sw-s)/2,(sh-s)/2,s
 let learned=[];
 try{learned=JSON.parse(localStorage.getItem("tableLecture.learned")||"[]");}catch(e){learned=[];}
 function saveLearned(){try{localStorage.setItem("tableLecture.learned",JSON.stringify(learned));}catch(e){alert("Mémoire du navigateur pleine : supprimez des objets appris.");}}
-function learnedCard(L,sim){return {n:L.name,cat:"Objet appris",key:L.name,src:"learned",
+function learnedCard(L,sim){if(L.card&&L.card.d)return {...L.card,n:L.name,key:L.name,src:"learned",srcLabel:"MÉMOIRE PERSONNELLE (nommé par l'IA en ligne)",f:(L.card.f||[]).concat(["Reconnu sans connexion : ressemblance "+Math.round(sim*100)+" % avec "+L.embs.length+" empreinte(s)."])};
+  return {n:L.name,cat:"Objet appris",key:L.name,src:"learned",
   d:L.note||("Objet que vous avez enseigné à la table le "+new Date(L.date).toLocaleDateString("fr-FR")+"."),
   f:["Reconnu par comparaison avec "+L.embs.length+" empreinte(s) visuelle(s) enregistrée(s).","Ressemblance avec votre exemple : "+Math.round(sim*100)+" %.","Ajoutez d'autres vues de l'objet (bouton Apprendre) pour une reconnaissance plus sûre."]};}
 function dot(a,b,o){let s=0;for(let i=0;i<512;i++)s+=a[i]*b[o+i];return s;}
@@ -541,7 +543,7 @@ function cardHTML(info,score){
      :`<div class="id pctrow"><span>CORRESPONDANCE</span><span>${pct(score)}</span></div><div class="conf"><i></i></div>`}
    ${info.img?`<img class="pimg" alt="" referrerpolicy="no-referrer" src="${info.img}">`:""}
    <p>${esc(info.d)}</p>${info.extra||""}<h3>${esc(info.fh||"LE SAVIEZ-VOUS ?")}</h3><ul>${info.f.map(x=>"<li>"+esc(x)+"</li>").join("")}</ul>${info.acts||""}
-   <div class="src">SOURCE : ${esc(info.srcLabel||({coco:"COCO-SSD (détection)",mobilenet:"MOBILENET (classification)",clip:"MOBILECLIP (mémoire étendue)",learned:"MÉMOIRE PERSONNELLE (objet appris)"})[info.src]||info.src)}${info.code?"":" · "+esc(info.key)}</div>`;
+   <div class="src">SOURCE : ${esc(info.srcLabel||({coco:"COCO-SSD (détection)",mobilenet:"MOBILENET (classification)",clip:"MOBILECLIP (mémoire étendue)",learned:"MÉMOIRE PERSONNELLE (objet appris)",ai:"IA EN LIGNE"})[info.src]||info.src)}${info.code?"":" · "+esc(info.key)}</div>`;
 }
 let typeSerial=0;
 function fillCard(el,info,score){
@@ -571,7 +573,8 @@ function openPanel(t){
     f.onclick=ev=>ev.stopPropagation();
     f.onsubmit=ev=>{ev.preventDefault();const q=f.querySelector("input").value.trim();if(!q)return;window.__TL.lowSearch=q;
       window.open("https://fr.wikipedia.org/w/index.php?search="+encodeURIComponent(q),"_blank","noopener");};
-    $("pc").appendChild(f);}
+    $("pc").appendChild(f);
+    if(window.TLAI&&!t.card.code)$("pc").appendChild(TLAI.button(()=>TLAI.askTrack(t)));}
   if(t.src==="face"){
     const b=document.createElement("button");b.className="pbtn";
     if(pref("faceReco")){b.textContent=t.face&&t.face.name?"＋ Ajouter une vue de "+t.face.name+" (avec accord)":"＋ Enregistrer ce visage (avec accord)";b.onclick=ev=>{ev.stopPropagation();openFaceEnroll(t);};}
@@ -728,6 +731,7 @@ function loop(){
   const stable=tracks.filter(t=>t.stable&&!t.rejected), pending=tracks.filter(t=>!t.stable&&!t.rejected&&(!t.weak||t.confirmed));
   pending.forEach(t=>drawBox(t.r,isLow(t)?"ANALYSE…":t.card.n.toUpperCase()+" "+pct(t.score),(now-t.since)/STABLE_MS,false));
   const lows=stable.filter(isLow),shown=stable.filter(t=>!isLow(t));
+  if(window.TLAI&&lows.length)TLAI.auto(lows);
   lows.forEach(t=>{if(t.el){t.el.remove();t.el=null;}if(pref("low"))drawLow(t.r,t.id===panelTrackId||t.id===selId);});
   if(window.TLS)for(const t of shown)if(!t.slotDone&&!t.refining&&(t.refined||t.code||t.src==="face"||(!clipOK()&&now-t.since>3000)))TLS.capture(t);
   const sH=pref("slots")&&pref("slotHide"),sC=pref("slots")&&pref("slotCompact"),isS=t=>t.slotId&&(sH||sC)&&t.id!==panelTrackId&&t.id!==selId;
@@ -1129,7 +1133,7 @@ function openSettings(){
    <div class="id" style="margin-top:12px"><span>SEUIL DES FICHES</span><span id="seuilv">${Math.round(CONF_T*100)} %</span></div>
    <input type="range" id="seuil" min="40" max="90" step="5" value="${Math.round(CONF_T*100)}" aria-label="Seuil de confiance" style="width:100%;accent-color:#00f0ff">
    <p style="font-size:12px;opacity:.8">En dessous de ce niveau, pas de fiche : seulement un cadre discret « Objet non identifié » (touchez-le pour chercher ou apprendre). Codes-barres/QR (lecture exacte) et objets appris (ressemblance ≥ ${Math.round(LEARN_T*100)} %) ne sont pas concernés.</p>
-   <div id="setl"></div><div id="slotset" class="lf"></div><div id="offbox"></div><p style="font-size:12px;opacity:.85;margin-top:14px">Version installée : <b>v${APP_VER}</b> · <a href="#" id="supd" style="color:var(--c2)">vérifier les mises à jour</a></p><button class="pbtn" id="sreset">↺ Réinitialiser les paramètres</button></div>`;
+   <div id="setl"></div><div id="slotset" class="lf"></div><div id="aiset" class="lf"></div><div id="offbox"></div><p style="font-size:12px;opacity:.85;margin-top:14px">Version installée : <b>v${APP_VER}</b> · <a href="#" id="supd" style="color:var(--c2)">vérifier les mises à jour</a></p><button class="pbtn" id="sreset">↺ Réinitialiser les paramètres</button></div>`;
   const L=$("setl");
   SETTINGS.forEach(([g,items])=>{const h=document.createElement("h3");h.textContent=g;L.appendChild(h);
     items.forEach(([k,lab,sub])=>{const r=document.createElement("label");r.className="setg";
@@ -1138,6 +1142,7 @@ function openSettings(){
   const sl=$("seuil");sl.onclick=e=>e.stopPropagation();
   sl.oninput=()=>{setConfT(sl.value/100);$("seuilv").textContent=Math.round(CONF_T*100)+" %";if(typeof drawSel==="function"&&window.TLSEL&&TLSEL.SEL)drawSel(true);};
   if(window.TLS)TLS.controls($("slotset"));
+  if(window.TLAI)TLAI.controls($("aiset"));
   if(window.TLPWA)TLPWA.render($("offbox"));
   $("sreset").onclick=e=>{e.stopPropagation();if(confirm("Remettre tous les paramètres par défaut ?")){resetPrefs();CONF_T=0.65;window.__TL.seuil=CONF_T;openSettings();}};
   panel.classList.add("open");window.__TL.panel={settings:true};
@@ -1309,7 +1314,7 @@ function selClick(e){ // renvoie true si le clic concerne le cadre
 }
 window.TLSEL={get SEL(){return SEL;},get selT(){return selT;},dismissSel,analyzeSel};
 addEventListener("error",e=>window.__TL.errors.push(String(e.message)));
-const APP_VER="5.6";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
+const APP_VER="5.7";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
 function checkUpdate(manual){if(window.TLPWA&&TLPWA.reg)return TLPWA.check(manual);if(!manual&&navigator.serviceWorker&&navigator.serviceWorker.controller)return;fetch(location.pathname+"?nv="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const APP_VER="([^"]+)"/);const nv=m&&m[1];
   if(nv&&nv!==APP_VER){const k="tableLecture.upd."+nv;if(manual||!sessionStorage.getItem(k)){sessionStorage.setItem(k,"1");location.replace(location.pathname+"?v="+encodeURIComponent(nv));}}
   else if(manual)alert("Vous avez la dernière version (v"+APP_VER+").");}).catch(()=>{if(manual)alert("Vérification impossible (hors ligne ?).");});}
@@ -1575,13 +1580,17 @@ function slotRender(){
   if(!list.length){const e=document.createElement("div");e.className="sempty";e.textContent=q?"Aucun slot ne correspond.":"Les objets identifiés apparaîtront ici.";slistEl.appendChild(e);}
   window.__TL.slots=slots.map(s=>({id:s.id,name:slotName(s),kind:s.kind,key:s.key,count:s.count,pinned:s.pinned,st:s.idx.status,score:s.score,tags:s.idx.tags,labels:(s.idx.labels||[]).slice(0,3).map(l=>l.n+":"+l.p),text:s.idx.text,ocrErr:s.idx.ocrErr||null,colors:(s.idx.colors||[]).map(c=>c.n),refined:s.idx.refined||null,thumb:!!s.thumb}));
   window.__TL.slotsShown=list.length;placeSlots();}
+/* le panneau garde son contenu au-dessus/à côté de la barre de slots (sinon la barre masque les derniers boutons) */
+function slotPad(){const st=document.documentElement.style,on=!slotsEl.hidden,pos=slotPos();
+  st.setProperty("--slotpb",on&&pos==="bas"?(parseFloat(slotsEl.style.bottom)||0)+slotsEl.offsetHeight+8+"px":"0px");
+  st.setProperty("--slotpr",on&&pos==="droite"?slotsEl.offsetWidth+6+"px":"0px");st.setProperty("--slotpl",on&&pos==="gauche"?slotsEl.offsetWidth+6+"px":"0px");}
 function placeSlots(){
   const on=pref("slots"),pos=slotPos();slotsEl.className="pos-"+pos;slotsEl.hidden=!on||!running;
-  SLOT_IN={b:0,l:0,r:0};if(slotsEl.hidden)return;
+  SLOT_IN={b:0,l:0,r:0};if(slotsEl.hidden){slotPad();return;}
   const bar=$("bar"),br=bar&&bar.offsetParent?bar.getBoundingClientRect():null,bottom=br?Math.max(0,innerHeight-br.top)+6:10;
   if(pos==="bas"){slotsEl.style.bottom=bottom+"px";slotsEl.style.top="";SLOT_IN.b=slotsEl.offsetHeight+6;}
   else{slotsEl.style.bottom=bottom+"px";slotsEl.style.top="calc(env(safe-area-inset-top) + 124px)";SLOT_IN[pos==="gauche"?"l":"r"]=slotsEl.offsetWidth+4;}
-  window.__TL.slotIn=SLOT_IN;}
+  window.__TL.slotIn=SLOT_IN;slotPad();}
 addEventListener("resize",()=>setTimeout(placeSlots,50));
 slotsEl.querySelector("#sfind").onclick=e=>{e.stopPropagation();sqEl.hidden=!sqEl.hidden;if(!sqEl.hidden)sqEl.focus();else{sqEl.value="";slotRender();}placeSlots();};
 sqEl.addEventListener("input",()=>slotRender());
@@ -1606,6 +1615,7 @@ function openSlot(s){
   if(s.kind==="film"&&s.html){pc.innerHTML=s.html;}
   else{const info={...(s.live||s.card)};if(s.userName)info.n=s.userName;if(!info.f)info.f=[];if(!info.d)info.d="";fillCard(pc,info,s.score);}
   const x=document.createElement("div");x.className="lf";x.innerHTML=slotInfoHTML(s)+`<div class="row"><button class="pbtn" data-a="menu">⋯ Options du slot</button>${s.kind==="obj"&&s.img?'<button class="pbtn" data-a="learn">✚ Apprendre</button>':""}</div>`;
+  if(window.TLAI&&s.kind==="obj"&&s.img)x.querySelector(".row").appendChild(TLAI.button(()=>TLAI.ask({img:s.img,slot:s})));
   x.querySelector('[data-a="menu"]').onclick=e=>{e.stopPropagation();openSlotMenu(s);};
   const lb=x.querySelector('[data-a="learn"]');if(lb)lb.onclick=e=>{e.stopPropagation();slotLearn(s,lb);};
   pc.appendChild(x);panel.classList.add("open");panelTrackId=null;window.__TL.panel={slot:s.id,name:slotName(s)};}
@@ -1618,7 +1628,7 @@ function openSlotMenu(s){
    <div class="row"><button class="pbtn" id="sopen">▸ Ouvrir la fiche</button>${s.kind!=="film"&&s.kind!=="face"?'<button class="pbtn" id="sreidx">⟳ Réindexer</button>':""}</div>
    <div class="row">${s.kind==="obj"&&s.img?'<button class="pbtn" id="slearn">✚ Envoyer à Apprendre</button>':""}<button class="pbtn" id="sdel">🗑 Supprimer</button></div></div>`;
   const on=(id,fn)=>{const b=$(id);if(b)b.onclick=e=>{e.stopPropagation();fn(b);};};
-  on("srnok",()=>{const v=$("srn").value.trim();s.userName=v&&v!==s.name?v:"";if(s.idx&&s.idx.tags&&v)s.idx.tags=[...new Set(s.idx.tags.concat(nrm(v)))];slotSave(s);slotRender();openSlot(s);});
+  on("srnok",()=>{const v=$("srn").value.trim();s.userName=v&&v!==s.name?v:"";if(s.userName&&s.kind==="obj"&&s.emb&&window.TLAI)TLAI.addRef(s.userName,s.emb,"Nom corrigé dans un slot",null,s.thumb);if(s.idx&&s.idx.tags&&v)s.idx.tags=[...new Set(s.idx.tags.concat(nrm(v)))];slotSave(s);slotRender();openSlot(s);});
   on("spin",()=>{s.pinned=!s.pinned;slotSave(s);slotRender();openSlotMenu(s);});
   on("sopen",()=>openSlot(s));
   on("sreidx",()=>{s.idx.status="wait";s.idx.refined=null;slotSave(s);slotRender();idxRun=false;idxPump();openSlot(s);});
@@ -1662,6 +1672,147 @@ slotOpen().then(async db=>{slotIdb=db;const all=await new Promise((res,rej)=>{co
 window.TLS={get slots(){return slots;},capture:slotCapture,open:openSlot,menu:openSlotMenu,manager:openSlotsManager,render:slotRender,place:placeSlots,updCode:slotUpdCode,addFilm:slotAddFilm,clear:()=>{slots=[];slotTx("readwrite",st=>st.clear());slotRender();},controls:slotsControls,pump:idxPump,reuse:slotReuse,learn:slotLearn,exportJSON:slotsExport};
 
 loadModels();
+/* ================= IA EN LIGNE (secours facultatif · clé de l'utilisateur, stockée sur cet appareil) ================= */
+(function(){
+const AK="tableLecture.ai",UK="tableLecture.aiUse",CK="tableLecture.aiCache";
+const PRESETS={
+  openai:{lab:"OpenAI (ChatGPT)",api:"oa",base:"https://api.openai.com/v1",model:"gpt-5.4-mini",get:"https://platform.openai.com/api-keys"},
+  xai:{lab:"xAI (Grok)",api:"oa",base:"https://api.x.ai/v1",model:"grok-4.7",get:"https://console.x.ai/"},
+  openrouter:{lab:"OpenRouter (nombreux modèles)",api:"oa",base:"https://openrouter.ai/api/v1",model:"openai/gpt-5.4-mini",get:"https://openrouter.ai/keys"},
+  gemini:{lab:"Google Gemini",api:"gemini",base:"https://generativelanguage.googleapis.com/v1beta",model:"gemini-flash-latest",get:"https://aistudio.google.com/apikey"},
+  anthropic:{lab:"Anthropic (Claude)",api:"anthropic",base:"https://api.anthropic.com/v1",model:"claude-haiku-4-5",get:"https://console.anthropic.com/settings/keys"},
+  mistral:{lab:"Mistral",api:"oa",base:"https://api.mistral.ai/v1",model:"mistral-small-latest",get:"https://console.mistral.ai/api-keys"},
+  custom:{lab:"Autre service compatible OpenAI",api:"oa",base:"",model:"",get:""}};
+const DEF={preset:"openai",base:PRESETS.openai.base,model:PRESETS.openai.model,keys:{},auto:false,capDay:20,capSess:10};
+let C=(()=>{try{return {...DEF,...JSON.parse(localStorage.getItem(AK)||"{}")};}catch(e){return {...DEF};}})();
+const save=()=>{try{localStorage.setItem(AK,JSON.stringify(C));}catch(e){}};
+const P=()=>PRESETS[C.preset]||PRESETS.custom;
+const key=()=>(C.keys||{})[C.preset]||"";
+const today=()=>new Date().toLocaleDateString("fr-CA");
+let sess=0,busy=null;
+function use(){let u;try{u=JSON.parse(localStorage.getItem(UK)||"{}");}catch(e){u={};}if(u.day!==today())u={day:today(),n:0};return u;}
+function bump(){const u=use();u.n++;try{localStorage.setItem(UK,JSON.stringify(u));}catch(e){}sess++;}
+function capLeft(){return Math.min(C.capDay-use().n,C.capSess-sess);}
+let cache=(()=>{try{return JSON.parse(localStorage.getItem(CK)||"[]");}catch(e){return [];}})();
+const e8=a=>{const b=new Int8Array(512);for(let i=0;i<512;i++)b[i]=Math.max(-127,Math.min(127,Math.round(a[i]*400)));return btoa(String.fromCharCode(...new Uint8Array(b.buffer)));};
+const d8=s=>{const u=Uint8Array.from(atob(s),c=>c.charCodeAt(0)),b=new Int8Array(u.buffer),o=new Float32Array(512);let n=0;for(let i=0;i<512;i++){o[i]=b[i];n+=b[i]*b[i];}n=Math.sqrt(n)||1;for(let i=0;i<512;i++)o[i]/=n;return o;};
+function cacheFind(emb){if(!emb)return null;let best=null,bs=0.93;for(const c of cache){if(!c.e)continue;const v=dot(emb,d8(c.e),0);if(v>bs){bs=v;best=c;}}return best;}
+function cachePut(emb,res){cache.unshift({e:emb?e8(emb):null,r:res,t:Date.now()});cache=cache.slice(0,150);try{localStorage.setItem(CK,JSON.stringify(cache));}catch(e){cache=cache.slice(0,40);try{localStorage.setItem(CK,JSON.stringify(cache));}catch(e2){}}}
+const PROMPT=`Identifie l'objet principal au centre de cette photo (prise par la caméra d'une table de lecture).
+Réponds UNIQUEMENT par un objet JSON valide, en français, sans aucun texte autour, de la forme :
+{"nom":"nom courant et précis (1 à 4 mots ; marque/modèle seulement si lisible)","categorie":"catégorie courte (ex. Cuisine, Outil, Jouet, Aliment…)","description":"1 à 2 phrases simples","faits":["fait court et exact","fait court et exact","fait court et exact"],"texte":"texte lisible sur l'objet, sinon chaîne vide","marque":"marque visible, sinon chaîne vide","confiance":0.0}
+Si l'image est trop floue ou vide, mets "nom":"Indéterminé" et "confiance":0.`;
+function parse(txt){if(!txt)throw new Error("Réponse vide du service.");let s=String(txt).replace(/```(?:json)?/gi,"").trim();const a=s.indexOf("{"),b=s.lastIndexOf("}");if(a<0||b<a)throw new Error("Réponse illisible du service.");
+  const j=JSON.parse(s.slice(a,b+1));const str=v=>typeof v==="string"?v.trim().slice(0,300):"";
+  const r={nom:str(j.nom).slice(0,60),categorie:str(j.categorie).slice(0,40)||"Objet",description:str(j.description),faits:(Array.isArray(j.faits)?j.faits:[]).map(str).filter(Boolean).slice(0,3),texte:str(j.texte).slice(0,200),marque:str(j.marque).slice(0,60),confiance:Math.max(0,Math.min(1,+j.confiance||0))};
+  if(!r.nom)throw new Error("Le service n'a pas donné de nom.");return r;}
+function errMsg(st,body){const m=(body||"").slice(0,160);
+  if(st===401||st===403)return "Clé refusée par le service ("+st+"). Vérifiez-la dans ⚙ › IA en ligne.";
+  if(st===429)return "Limite ou crédit épuisé chez le fournisseur (429). Réessayez plus tard.";
+  if(st===404)return "Modèle ou adresse introuvable (404). Vérifiez le nom du modèle dans ⚙ › IA en ligne.";
+  if(st===400)return "Requête refusée (400) : ce modèle accepte-t-il les images ? "+m;
+  return "Erreur du service ("+st+"). "+m;}
+async function call(dataURL){
+  const p=P(),k=key(),b64=dataURL.split(",")[1],base=(C.base||p.base).replace(/\/+$/,""),model=C.model||p.model;
+  const ac=new AbortController(),to=setTimeout(()=>ac.abort(),30000);let url,opt;
+  if(p.api==="gemini"){url=base+"/models/"+encodeURIComponent(model)+":generateContent";
+    opt={method:"POST",headers:{"content-type":"application/json","x-goog-api-key":k},body:JSON.stringify({contents:[{parts:[{text:PROMPT},{inline_data:{mime_type:"image/jpeg",data:b64}}]}],generationConfig:{responseMimeType:"application/json"}})};}
+  else if(p.api==="anthropic"){url=base+"/messages";
+    opt={method:"POST",headers:{"content-type":"application/json","x-api-key":k,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model,max_tokens:700,messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}},{type:"text",text:PROMPT}]}]})};}
+  else{url=base+"/chat/completions";
+    opt={method:"POST",headers:{"content-type":"application/json","authorization":"Bearer "+k},body:JSON.stringify({model,messages:[{role:"user",content:[{type:"text",text:PROMPT},{type:"image_url",image_url:{url:dataURL}}]}]})};}
+  opt.signal=ac.signal;let r;
+  try{r=await fetch(url,opt);}catch(e){clearTimeout(to);if(e.name==="AbortError")throw new Error("Pas de réponse du service en 30 s. Réessayez.");
+    throw new Error(navigator.onLine?"Service injoignable (adresse erronée, blocage réseau ou CORS).":"Hors ligne : l'IA en ligne a besoin d'Internet.");}
+  clearTimeout(to);const t=await r.text();if(!r.ok)throw new Error(errMsg(r.status,t));
+  let j;try{j=JSON.parse(t);}catch(e){throw new Error("Réponse illisible du service.");}
+  let txt;if(p.api==="gemini")txt=(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(x=>x.text||"").join("");
+  else if(p.api==="anthropic")txt=(j.content||[]).map(x=>x.text||"").join("");
+  else{const c=((j.choices||[])[0]||{}).message||{};txt=typeof c.content==="string"?c.content:(c.content||[]).map(x=>x.text||"").join("");}
+  return parse(txt);}
+function toCard(r,src){const f=r.faits.slice();if(r.marque)f.push("Marque visible : "+r.marque+".");if(r.texte)f.push("Texte lu : « "+r.texte+" ».");
+  if(!f.length)f.push("Réponse donnée par l'IA en ligne : à vérifier en cas de doute.");
+  return {n:r.nom,cat:r.categorie,key:"ia:"+nrm(r.nom),src:"ai",srcLabel:"IA EN LIGNE · "+(src||P().lab).toUpperCase(),d:r.description||"Objet identifié par l'IA en ligne.",f,ai:r};}
+const prov=()=>P().lab+" · "+(C.model||P().model);
+/* ajoute une référence visuelle locale (apprentissage continu : correction ou réponse de l'IA) */
+async function addRef(name,emb,note,card,thumb){if(!name||!emb)return;const v=Array.from(emb,x=>+(+x).toFixed(4));
+  let L=learned.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(L){L.embs=L.embs.concat([v]).slice(-16);if(card&&!L.card)L.card=card;}else{L={id:Date.now(),name,note:note||"",date:Date.now(),embs:[v],thumb:thumb||"",card:card||null};learned.push(L);}
+  saveLearned();window.__TL.learnedCount=learned.length;}
+async function embOf(dataURL){if(!clipOK())return null;try{const im=await loadImgURL(dataURL),c=document.createElement("canvas");c.width=im.naturalWidth;c.height=im.naturalHeight;c.getContext("2d").drawImage(im,0,0);return await window.CLIPX.embed(cropSquare(c,c.width,c.height,[0,0,c.width,c.height],1,0));}catch(e){return null;}}
+function slotApply(s,r,card){s.ai={...r,prov:prov(),date:Date.now()};s.card=cardJSON(card);s.live=card;s.name=r.nom;s.score=Math.max(+s.score||0,0.9);
+  const X=s.idx||(s.idx={status:"done",tags:[]});X.tags=[...new Set((X.tags||[]).concat([r.nom,r.categorie,r.marque,r.texte].filter(Boolean).map(nrm)))];if(r.texte&&!X.text)X.text=r.texte;
+  slotSave(s);slotRender();}
+/* point d'entrée : {img:dataURL, emb?, slot?, track?, auto?} → {card} ou exception (message en français) */
+async function ask(o){
+  if(!key())throw Object.assign(new Error("Aucune clé configurée : ⚙ › IA en ligne."),{nokey:true});
+  if(o.slot&&o.slot.ai&&o.slot.ai.nom){const card=toCard(o.slot.ai,o.slot.ai.prov);window.__TL.ai={...window.__TL.ai,cached:(window.__TL.ai&&window.__TL.ai.cached||0)+1};return {card,cached:true};}
+  const emb=o.emb||(o.slot&&o.slot.emb)||await embOf(o.img);
+  const hit=cacheFind(emb);if(hit){const card=toCard(hit.r);if(o.slot)slotApply(o.slot,hit.r,card);window.__TL.ai={...window.__TL.ai,cached:(window.__TL.ai&&window.__TL.ai.cached||0)+1};return {card,cached:true};}
+  if(!navigator.onLine)throw new Error("Hors ligne : l'IA en ligne a besoin d'Internet. La reconnaissance locale reste disponible.");
+  if(capLeft()<=0)throw new Error("Plafond d'appels atteint ("+C.capDay+"/jour, "+C.capSess+"/session). Modifiable dans ⚙ › IA en ligne.");
+  if(busy)throw new Error("Une demande est déjà en cours…");
+  bump();busy=true;window.__TL.ai={...window.__TL.ai,calls:(window.__TL.ai&&window.__TL.ai.calls||0)+1,busy:true};
+  try{const r=await call(o.img);if(r.nom==="Indéterminé"||r.confiance===0&&!r.description)throw new Error("L'IA n'a pas pu identifier l'objet (image floue ou vide ?).");
+    const card=toCard(r,prov());cachePut(emb,r);
+    if(o.slot)slotApply(o.slot,r,card);
+    if(emb)addRef(r.nom,emb,"Nommé par l'IA en ligne ("+prov()+")",{...cardJSON(card)},(o.slot&&o.slot.thumb)||"");
+    window.__TL.ai={...window.__TL.ai,last:r.nom};return {card};}
+  finally{busy=false;if(window.__TL.ai)window.__TL.ai.busy=false;}}
+function trackImg(t){return slotCrop(t,512,.85);}
+async function askTrack(t,btn){
+  const img=trackImg(t);if(!img)throw new Error("Image indisponible.");
+  const s=pref("slots")&&t.slotId?slots.find(x=>x.id===t.slotId):null;
+  const res=await ask({img,emb:t.emb,slot:s,track:t});
+  t.card=res.card;t.score=Math.max(0.9,res.card.ai?res.card.ai.confiance||0.9:0.9);t.src="ai";t.confirmed=true;t.refined=true;if(t.el){t.el.remove();t.el=null;}
+  if(!s&&window.TLS){t.slotDone=false;const ns=slotCapture(t);if(ns&&res.card.ai)slotApply(ns,res.card.ai,res.card);}
+  return res;}
+function showResult(res){const pc=$("pc");fillCard(pc,res.card,res.card.ai?Math.max(.5,res.card.ai.confiance||.9):.9);
+  const n=document.createElement("p");n.style.cssText="font-size:12px;opacity:.8";n.textContent=res.cached?"Résultat réutilisé (déjà demandé pour cet objet : aucun nouvel envoi).":"Réponse de l'IA en ligne, à vérifier. L'objet est mémorisé : la table le reconnaîtra désormais sans connexion.";pc.appendChild(n);
+  panel.classList.add("open");window.__TL.panel={ai:true,name:res.card.n};}
+function button(run){const b=document.createElement("button");b.className="pbtn aib";b.textContent="🤖 Demander à l'IA";
+  b.onclick=async ev=>{ev.stopPropagation();if(!key()){openCfg("Pour utiliser l'IA en ligne, choisissez un service et collez votre clé personnelle.");return;}
+    b.disabled=true;b.textContent="… L'IA analyse ("+P().lab+")";
+    try{showResult(await run());}catch(e){b.disabled=false;b.textContent="🤖 Demander à l'IA";if(e.nokey){openCfg(e.message);return;}
+      let w=b.parentNode.querySelector(".aierr");if(!w){w=document.createElement("div");w.className="warnbox aierr";b.after(w);}w.textContent=e.message;}};return b;}
+/* mode automatique (désactivé par défaut) : seulement les objets stables restés sous le seuil */
+let lastAuto=0;
+function auto(lows){if(!C.auto||!key()||busy||!navigator.onLine||capLeft()<=0)return;const now=performance.now();if(now-lastAuto<4000)return;
+  const t=lows.find(t=>t.stable&&!t.aiTried&&!t.code&&t.src!=="face"&&t.box&&now-t.since>1500);if(!t)return;t.aiTried=true;lastAuto=now;
+  askTrack(t).then(r=>setStatus("🤖 IA : "+r.card.n.toUpperCase())).catch(e=>{window.__TL.ai={...window.__TL.ai,err:e.message};setStatus("🤖 "+e.message);});}
+function controls(el){const p=P(),u=use();
+  el.innerHTML=`<h3>IA EN LIGNE (FACULTATIF)</h3>
+   <p style="font-size:12px;opacity:.85">Quand la table doute, une IA en ligne peut identifier l'objet. <b>La photo recadrée de l'objet ne quitte le téléphone que lorsque vous touchez « 🤖 Demander à l'IA »</b> (ou si le mode automatique ci-dessous est activé). Elle est envoyée directement au service choisi, avec <b>votre propre clé</b>, gardée uniquement sur cet appareil. Le service peut facturer chaque appel.</p>
+   <label for="aipre">SERVICE</label><select id="aipre">${Object.entries(PRESETS).map(([k,v])=>`<option value="${k}">${esc(v.lab)}</option>`).join("")}</select>
+   <div id="aibasew"><label for="aibase">ADRESSE DE L'API (compatible OpenAI)</label><input id="aibase" autocomplete="off" spellcheck="false" placeholder="https://…/v1"></div>
+   <label for="aimodel">MODÈLE (doit accepter les images)</label><input id="aimodel" autocomplete="off" spellcheck="false">
+   <label for="aikey">CLÉ API PERSONNELLE</label><input id="aikey" type="password" autocomplete="off" spellcheck="false" placeholder="collez votre clé ici">
+   <p style="font-size:12px;opacity:.8" id="aiget"></p>
+   <label class="setg"><input type="checkbox" id="aiauto"><span>Appeler l'IA automatiquement quand l'appli doute<small>Désactivé par défaut · envoie l'image des objets restés « non identifiés », dans la limite du plafond</small></span></label>
+   <label for="aicapd">PLAFOND D'APPELS PAR JOUR</label><select id="aicapd">${[5,10,20,50,100,300].map(n=>`<option value="${n}">${n}</option>`).join("")}</select>
+   <label for="aicaps">PLAFOND PAR SESSION (jusqu'à la fermeture de l'appli)</label><select id="aicaps">${[3,5,10,20,50].map(n=>`<option value="${n}">${n}</option>`).join("")}</select>
+   <p style="font-size:12px;opacity:.8">Aujourd'hui : ${u.n} appel(s) · cette session : ${sess} · résultats en cache : ${cache.length} (un même objet n'est jamais envoyé deux fois).</p>
+   <div class="row"><button class="pbtn" id="aisave">✔ Enregistrer</button><button class="pbtn" id="aitest">🧪 Tester la connexion</button><button class="pbtn" id="aidel">🗑 Effacer la clé</button></div><div id="aimsg" class="warnbox" style="display:none"></div>`;
+  const q=s=>el.querySelector(s),pre=q("#aipre"),base=q("#aibase"),model=q("#aimodel"),k=q("#aikey"),msg=q("#aimsg");
+  el.querySelectorAll("input,select,label,button").forEach(x=>x.addEventListener("click",e=>e.stopPropagation()));
+  const fill=()=>{const pp=PRESETS[pre.value];q("#aibasew").style.display=pp.api==="oa"?"":"none";base.value=pre.value===C.preset?C.base||pp.base:pp.base;model.value=pre.value===C.preset?C.model||pp.model:pp.model;k.value=(C.keys||{})[pre.value]||"";
+    q("#aiget").innerHTML=pp.get?`Obtenir une clé : <a href="${pp.get}" target="_blank" rel="noopener" style="color:var(--c2)">${esc(pp.get.replace(/^https:\/\//,""))}</a>`:"Indiquez l'adresse /v1 et le modèle de votre service.";};
+  pre.value=C.preset;fill();pre.onchange=fill;q("#aiauto").checked=!!C.auto;q("#aicapd").value=String(C.capDay);q("#aicaps").value=String(C.capSess);
+  const store=()=>{C.preset=pre.value;C.base=base.value.trim()||PRESETS[pre.value].base;C.model=model.value.trim()||PRESETS[pre.value].model;C.keys={...(C.keys||{}),[pre.value]:k.value.trim()};
+    C.auto=q("#aiauto").checked;C.capDay=+q("#aicapd").value;C.capSess=+q("#aicaps").value;save();};
+  const say=t=>{msg.style.display="block";msg.textContent=t;};
+  q("#aisave").onclick=()=>{store();say(key()?"Enregistré. « 🤖 Demander à l'IA » apparaît sur les objets non identifiés et dans les slots.":"Enregistré (sans clé : l'IA en ligne reste inactive).");};
+  q("#aiauto").onchange=()=>{store();};
+  q("#aitest").onclick=async()=>{store();if(!key()){say("Collez d'abord une clé.");return;}say("Test en cours (une petite image est envoyée, cela compte pour 1 appel)…");
+    const c=document.createElement("canvas");c.width=c.height=64;const g=c.getContext("2d");g.fillStyle="#d22";g.beginPath();g.arc(32,32,26,0,7);g.fill();
+    try{if(capLeft()<=0)throw new Error("Plafond atteint.");bump();const r=await call(c.toDataURL("image/jpeg",.8));say("✔ Connexion réussie avec "+prov()+". Réponse : « "+r.nom+" ».");}catch(e){say("✖ "+e.message);}};
+  q("#aidel").onclick=()=>{C.keys={...(C.keys||{}),[pre.value]:""};save();fill();say("Clé effacée de cet appareil.");};}
+function openCfg(note){const pc=$("pc");closePanel();pc.innerHTML=`<div class="lf"><div class="id"><span>PARAMÈTRES</span><span>IA EN LIGNE</span></div><h2>IA en ligne</h2>${note?`<div class="warnbox">${esc(note)}</div>`:""}<div id="aicfg" class="lf"></div></div>`;
+  controls(pc.querySelector("#aicfg"));panel.classList.add("open");window.__TL.panel={aiCfg:true};}
+window.TLAI={ask,askTrack,button,auto,controls,openCfg,addRef,get cfg(){return {...C,keys:undefined,hasKey:!!key()};},reset:()=>{sess=0;},PRESETS};
+window.__TL.ai={calls:0,cached:0};
+})();
 </script>
 <script>
 /* ===== v4 : météo, films & séries, programme TV, reconnaissance TV (tout côté navigateur, sans clé obligatoire) ===== */
