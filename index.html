@@ -120,7 +120,7 @@ body.tl-loading #mem{visibility:hidden}
 .mini .tap{display:block;font-style:normal;font-size:8px;letter-spacing:1px;opacity:.5;margin-top:2px}
 @keyframes pop{from{opacity:0;clip-path:polygon(0 0,0 0,0 0,0 0,0 0,0 0)}}
 #panel{position:absolute;left:0;right:0;bottom:0;max-height:74vh;overflow:auto;z-index:5;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px);background:linear-gradient(160deg,rgba(0,42,54,.96),rgba(0,10,15,.98));border-top:1px solid var(--c);box-shadow:0 -6px 30px rgba(0,240,255,.35);transform:translateY(105%);transition:transform .35s ease}
-#panel.open{transform:none}
+#panel.open{transform:none}.sw{display:inline-flex;align-items:center;gap:4px;margin-right:8px;vertical-align:middle}.sw i{display:inline-block;width:9px;height:9px;border-radius:50%;border:1px solid #ffffff80;box-shadow:0 0 4px #0008}.sw.big i{width:14px;height:14px}.cols{margin:10px 0 10px;font-size:12px}.cols b{font-size:10px;letter-spacing:2px;color:var(--c2);margin-right:8px;font-weight:normal}
 #panel{padding-bottom:calc(env(safe-area-inset-bottom) + 18px + var(--slotpb,0px));padding-right:calc(16px + var(--slotpr,0px));padding-left:calc(16px + var(--slotpl,0px))}
 #panel::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,240,255,.05) 0 1px,transparent 1px 3px);pointer-events:none}
 #panel .x{position:absolute;top:10px;right:10px;flex:none;width:42px;max-width:42px;padding:8px 0;z-index:1}
@@ -205,7 +205,7 @@ body.tl-loading #mem{visibility:hidden}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v5.8</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.8</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
+  <div id="hud"><span>TABLE·LECTURE v5.9</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.9</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
   <div id="status">INITIALISATION</div>
   <div id="minis"></div>
   <div id="sel"></div>
@@ -337,7 +337,7 @@ window.__TL={ready:false,errors:[],last:null,objects:[]};
 /* ================= PARAMÈTRES (locaux) ================= */
 const PREF_DEF={wx:true,mem:true,fps:true,status:true,bMode:true,bFreeze:true,bSwitch:true,bPhoto:true,bLearn:true,bFilms:true,bTV:true,bReco:true,
   codes:true,history:true,framing:true,pct:true,details:true,low:true,anim:true,faces:true,faceExpr:true,faceReco:false,
-  slots:true,slotHide:false,slotCompact:false,slotReuse:true,slotIndex:true,slotOcr:true,slotFaces:false};
+  slots:true,slotHide:false,slotCompact:false,slotReuse:true,slotIndex:true,slotOcr:true,slotFaces:false,color:true};
 let PREF=(()=>{let o={};try{o=JSON.parse(localStorage.getItem("tableLecture.prefs"))||{};}catch(e){}return {...PREF_DEF,...o};})();
 const pref=k=>PREF[k]!==false;
 function applyPrefs(){
@@ -452,16 +452,22 @@ async function clipRecognize(canvas){
   const V=window.VOC,n=V.keys.length,lg=new Float32Array(n);let m=-1e9;
   for(let i=0;i<n;i++){lg[i]=100*dot(e,V.mat,i*512);if(lg[i]>m)m=lg[i];}
   let z=0;for(let i=0;i<n;i++){lg[i]=Math.exp(lg[i]-m);z+=lg[i];}
-  const idx=[...lg.keys()].sort((a,b)=>lg[b]-lg[a]).slice(0,3);
+  let idx=[...lg.keys()].sort((a,b)=>lg[b]-lg[a]).slice(0,3);
+  let colors=null;
+  if(pref("color")){const h=colorHist(canvas);colors=Object.entries(h).map(([n,v])=>({n,p:+v.toFixed(2)})).filter(x=>x.p>=0.12).sort((a,b)=>b.p-a.p).slice(0,3);
+    /* départage par la couleur : seulement si les deux meilleurs candidats ont des couleurs typiques connues, différentes, et des scores très proches */
+    const A=V.keys[idx[0]],B=V.keys[idx[1]],ta=V.tc&&V.tc[A],tb=V.tc&&V.tc[B];
+    if(ta&&tb&&ta.join()!==tb.join()&&Math.log(lg[idx[0]]/lg[idx[1]])<2){const ca=ta.reduce((s,c)=>s+(h[c]||0),0),cb=tb.reduce((s,c)=>s+(h[c]||0),0);
+      if(Math.log(lg[idx[1]]/lg[idx[0]])+6*cb>6*ca){idx=[idx[1],idx[0],idx[2]];window.__TL.colorSwap=(window.__TL.colorSwap||0)+1;window.__TL.lastSwap=A+"→"+B;}}}
   const top=idx.map(i=>({key:V.keys[i],p:lg[i]/z}));
-  const r={key:top[0].key,p:top[0].p,top,emb:e,pOf:k=>{const i=V.keys.indexOf(k);return i<0?0:lg[i]/z;}};
+  const r={key:top[0].key,p:top[0].p,top,emb:e,colors,pOf:k=>{const i=V.keys.indexOf(k);return i<0?0:lg[i]/z;}};
   if(bl&&bl.s>=LEARN_T){r.learned=true;r.card=learnedCard(bl.L,bl.s);r.sim=bl.s;}
   window.__TL.lastClip=top.map(t=>t.key+":"+t.p.toFixed(2)).join(" ")+(bl?" | appris "+bl.L.name+":"+bl.s.toFixed(2):"");
   return r;
 }
 /* applique le résultat CLIP à une détection (track ou hit) ; renvoie false si à rejeter */
 function applyClip(t,r,weak){
-  if(r.emb)t.emb=r.emb;
+  if(r.emb)t.emb=r.emb;if(r.colors)t.colors=r.colors;
   if(r.learned){t.card=r.card;t.score=r.sim;t.src="learned";return true;}
   if(t.label==="person"&&!weak){ // une « personne » peu sûre n'est remplacée que si la mémoire étendue est quasi certaine
     if(t.score<0.7&&r.p>=0.9){t.card=cardFor(r.key,"clip");t.score=r.p;t.src="clip";} return true;}
@@ -540,7 +546,7 @@ function drawLink(r,m){
 function cardHTML(info,score){
   const id="OBJ-"+String(Math.floor(Math.random()*9000)+1000);
   return `<div class="id"><span>${id}</span><span>${new Date().toLocaleTimeString("fr-FR")}</span></div>
-   <h2 class="nm type"></h2><span class="cat${info.code?" codecat":""}">${esc(info.cat.toUpperCase())}</span>
+   <h2 class="nm type"></h2><span class="cat${info.code?" codecat":""}">${esc(info.cat.toUpperCase())}</span>${info.colors&&info.colors.length&&pref("color")?`<div class="cols"><b>COULEURS</b> ${swatchHTML(info.colors,true)}</div>`:""}
    ${info.code?`<div class="id"><span>${esc(info.fmt||"CODE")}</span><span>${esc(info.key.length>28?info.key.slice(0,28)+"…":info.key)}</span></div>`
      :`<div class="id pctrow"><span>CORRESPONDANCE</span><span>${pct(score)}</span></div><div class="conf"><i></i></div>`}
    ${info.img?`<img class="pimg" alt="" referrerpolicy="no-referrer" src="${info.img}">`:""}
@@ -568,7 +574,7 @@ function placeCard(r){
 }
 function openPanel(t){
   panelTrackId=t.id;
-  const low=isLow(t),info=low?lowCard(t):t.card;
+  const low=isLow(t),info=low?lowCard(t):(t.colors&&pref("color")?{...t.card,n:colorTitle(t.card,t.colors),colors:t.colors}:t.card);
   fillCard($("pc"),info,t.score);
   if(low){const f=document.createElement("form");f.className="lsrch";
     f.innerHTML=`<input type="search" placeholder="Nom de l'objet…" aria-label="Rechercher l'objet"><button class="pbtn" type="submit">🔍 Rechercher</button>`;
@@ -596,7 +602,8 @@ $("px").onclick=e=>{e.stopPropagation();closePanel();};
 function mkMini(t){
   const el=document.createElement("div");el.className="mini"+(t.card.code?" code":"");el.dataset.id=t.id;
   const line=t.card.short||(t.card.d.startsWith("Objet identifié")?"Fiche simplifiée":t.card.d.split(/[.:;]/)[0]);
-  el.innerHTML=`<b><em>${esc(t.card.n)}</em><span class="p">${pct(t.score)}</span></b><small>${esc(t.card.cat)} · ${esc(line)}</small><i class="tap">TOUCHER POUR LA FICHE ▸</i>`;
+  const cw=t.colors&&pref("color")?swatchHTML(t.colors,false):"";
+  el.innerHTML=`<b><em>${esc(colorTitle(t.card,t.colors)||t.card.n)}</em><span class="p">${pct(t.score)}</span></b><small>${cw}${esc(t.card.cat)} · ${esc(line)}</small><i class="tap">TOUCHER POUR LA FICHE ▸</i>`;
   minis.appendChild(el);return el;
 }
 function layoutMinis(list,W,H){
@@ -1124,6 +1131,7 @@ const SETTINGS=[["AFFICHAGE",[["wx","Pastille météo","Masquée : la météo n'
  ["BOUTONS",[["bMode","Multi / Un seul"],["bFreeze","⏸ Figer","Toucher une zone vide fige toujours l'image"],["bSwitch","⟲ Caméra (avant/arrière)"],["bPhoto","▣ Photo"],["bLearn","✚ Apprendre","Reste possible depuis une fiche (« Pas ça ? »)"],["bFilms","🎬 Films & Séries"],["bTV","📺 Prog. TV"],["bReco","🔍 C'est quoi ?"]]],
  ["FONCTIONS",[["codes","Lecture codes-barres / QR","Désactivée : le lecteur n'est ni chargé ni lancé"],["history","Historique des codes scannés","Désactivé : plus rien n'est enregistré"],["framing","Cadre à deux doigts / glisser à la souris"],
    ["faces","Détection des visages","Cadre sur chaque visage ; modèle chargé seulement si activé"],["faceExpr","Estimation de l'expression","Indicative (joie, surprise…)"],
+   ["color","Utiliser la couleur","Couleurs dominantes (noms + pastilles) dans les fiches, départage des objets qui se ressemblent (tomate/pomme, citron/citron vert…), nom précisé (« Tasse rouge »)"],
    ["faceReco","Reconnaissance de mes proches enregistrés","Désactivée par défaut · jamais d'inconnus ni de célébrités · voir MÉMOIRE › Visages"]]],
  ["SLOTS",[["slots","Barre de slots","Chaque objet identifié est gardé en vignette avec sa fiche"],["slotHide","Masquer les cadres des objets déjà enregistrés","Ils restent dans la barre ; toucher l'objet ouvre toujours la fiche"],
    ["slotCompact","Mode compact pour les objets enregistrés","Petit cadre + nom seulement, sans mini-fiche"],["slotReuse","Réutiliser la fiche d'un slot","Un objet déjà en slot n'est pas réanalysé (plus rapide)"],
@@ -1316,7 +1324,7 @@ function selClick(e){ // renvoie true si le clic concerne le cadre
 }
 window.TLSEL={get SEL(){return SEL;},get selT(){return selT;},dismissSel,analyzeSel};
 addEventListener("error",e=>window.__TL.errors.push(String(e.message)));
-const APP_VER="5.8";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
+const APP_VER="5.9";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
 function checkUpdate(manual){if(window.TLPWA&&TLPWA.reg)return TLPWA.check(manual);if(!manual&&navigator.serviceWorker&&navigator.serviceWorker.controller)return;fetch(location.pathname+"?nv="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const APP_VER="([^"]+)"/);const nv=m&&m[1];
   if(nv&&nv!==APP_VER){const k="tableLecture.upd."+nv;if(manual||!sessionStorage.getItem(k)){sessionStorage.setItem(k,"1");location.replace(location.pathname+"?v="+encodeURIComponent(nv));}}
   else if(manual)alert("Vous avez la dernière version (v"+APP_VER+").");}).catch(()=>{if(manual)alert("Vérification impossible (hors ligne ?).");});}
@@ -1511,10 +1519,29 @@ function slotReuse(t){if(!pref("slots")||!pref("slotReuse")||t.code||t.src==="fa
 /* ================= INDEXATION APPROFONDIE (basse priorité) ================= */
 const COLORS=[["rouge",[200,30,40]],["orange",[240,130,30]],["jaune",[240,210,40]],["vert",[50,160,60]],["turquoise",[40,180,180]],["bleu",[40,80,200]],["violet",[130,60,170]],
   ["rose",[240,130,180]],["marron",[120,70,35]],["beige",[220,200,160]],["blanc",[240,240,240]],["gris",[128,128,128]],["noir",[20,20,20]]];
-function domColors(c){const o=document.createElement("canvas");o.width=o.height=32;const g=o.getContext("2d");g.drawImage(c,0,0,32,32);const d=g.getImageData(0,0,32,32).data,cnt={};let tot=0;
-  for(let y=0;y<32;y++)for(let x=0;x<32;x++){const w=1-Math.hypot(x-15.5,y-15.5)/23;if(w<=0)continue;const i=(y*32+x)*4,p=[d[i],d[i+1],d[i+2]];
-    let best=null,bd=1e9;for(const [n,q] of COLORS){const v=(p[0]-q[0])**2*0.3+(p[1]-q[1])**2*0.59+(p[2]-q[2])**2*0.11;if(v<bd){bd=v;best=n;}}cnt[best]=(cnt[best]||0)+w;tot+=w;}
-  return Object.entries(cnt).map(([n,v])=>({n,p:+(v/tot).toFixed(2)})).filter(x=>x.p>=0.12).sort((a,b)=>b.p-a.p).slice(0,3);}
+const COLOR_HEX={rouge:"#d7263d",orange:"#f28c28",jaune:"#f4d03f",vert:"#3fa34d",turquoise:"#2bb8b8",bleu:"#2f5fd0",violet:"#8e44ad",rose:"#f49ac2",marron:"#7b4a24",beige:"#e3d3b0",blanc:"#f4f4f4",gris:"#8a8a8a",noir:"#1b1b1b"};
+function colorName(R,G,B){const r=R/255,g=G/255,b=B/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn,v=mx,sat=mx>0?d/mx:0;
+  if(sat<0.2||v<0.18)return v>=0.8?"blanc":v<0.25?"noir":"gris";
+  let h=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4;h*=60;if(h<0)h+=360;
+  const red=h<15||h>=345,warm=h<50||red;
+  if(red&&sat<0.5&&v>=0.75)return "rose";if(red&&v<0.45&&sat<0.6)return "marron";
+  if(warm&&!red&&v<0.55)return "marron";if(warm&&!red&&sat<0.4&&v>=0.7)return "beige";
+  if(red)return "rouge";if(h<40)return "orange";if(h<70)return "jaune";if(h<165)return "vert";if(h<200)return "turquoise";if(h<260)return "bleu";if(h<300)return "violet";return h<345&&sat<0.5&&v>=0.75?"rose":"rose";}
+/* histogramme des couleurs, pondéré vers le centre du cadrage (l'objet plutôt que le fond) */
+function colorHist(c){const o=document.createElement("canvas");o.width=o.height=32;const g=o.getContext("2d");g.drawImage(c,0,0,32,32);const d=g.getImageData(0,0,32,32).data,cnt={};let tot=0;
+  for(let y=0;y<32;y++)for(let x=0;x<32;x++){const w=1-Math.hypot(x-15.5,y-15.5)/23;if(w<=0)continue;const i=(y*32+x)*4;
+    if(Math.abs(d[i]-127)<3&&Math.abs(d[i+1]-127)<3&&Math.abs(d[i+2]-127)<3)continue; // bord neutre ajouté au recadrage
+    const n=colorName(d[i],d[i+1],d[i+2]);cnt[n]=(cnt[n]||0)+w;tot+=w;}
+  for(const k in cnt)cnt[k]/=tot||1;return cnt;}
+function domColors(c){const h=colorHist(c);return Object.entries(h).map(([n,v])=>({n,p:+v.toFixed(2)})).filter(x=>x.p>=0.12).sort((a,b)=>b.p-a.p).slice(0,3);}
+function swatchHTML(cols,big){return (cols||[]).map(x=>`<span class="sw${big?" big":""}"><i style="background:${COLOR_HEX[x.n]||"#888"}"></i>${big?esc(x.n)+(x.p!=null?" "+Math.round(x.p*100)+" %":""):""}</span>`).join("");}
+/* « Tasse rouge » : seulement pour les objets de couleur variable, une couleur nette, et des adjectifs qui ne varient pas au féminin */
+const COL_INV={rouge:1,orange:2,jaune:1,rose:1,beige:1,marron:2,turquoise:1};
+function colorTitle(card,cols){if(!pref("color")||!cols||!cols.length||!card||card.code||card.face)return card&&card.n;const c=cols[0];
+  if(c.p<0.4||!COL_INV[c.n]||(window.VOC&&VOC.tc&&VOC.tc[card.key])||/\b(rouge|orange|jaune|rose|beige|marron|turquoise|vert|bleu|noir|blanc|gris|violet)/i.test(card.n))return card.n;
+  const head=card.n.split(/[\s/,'’]/)[0];const pl=COL_INV[c.n]===1&&/[sx]$/i.test(head)&&head.length>3;
+  if(/^(Animal|Plante|Végétal|Nature|Fruit|Légume|Légume-fruit|Aliment|Boisson|Plat|Céréale|Condiment|Viennoiserie|Confiserie|Dessert|Minéral|Monnaie|Document|Média)$/.test(card.cat||""))return card.n;
+  return card.n+" "+c.n+(pl?"s":"");}
 let idxRun=false;window.__TL.idx={done:0,run:0};
 const idle=()=>new Promise(r=>window.requestIdleCallback?requestIdleCallback(()=>r(),{timeout:3000}):setTimeout(r,300));
 async function idxYield(){await idle();let n=0;while((clipBusy||analysing||(SEL&&SEL.state==="busy"))&&n++<60)await new Promise(r=>setTimeout(r,250));}
@@ -2248,7 +2275,7 @@ const fire=(n,d)=>dispatchEvent(new CustomEvent(n,{detail:d}));
       CLIPVisionModelWithProjection.from_pretrained(ID,{dtype:"fp16",device:"wasm",progress_callback}),vocabP]);
     const bin=Uint8Array.from(atob(voc.emb),c=>c.charCodeAt(0)),i8=new Int8Array(bin.buffer),D=voc.dim,n=voc.keys.length,mat=new Float32Array(n*D);
     for(let i=0;i<n;i++){let z=0;for(let j=0;j<D;j++){const v=i8[i*D+j];mat[i*D+j]=v;z+=v*v;}z=Math.sqrt(z)||1;for(let j=0;j<D;j++)mat[i*D+j]/=z;}
-    window.VOC={keys:voc.keys,mat,cards:voc.cards,th:voc.th||{}};
+    window.VOC={keys:voc.keys,mat,cards:voc.cards,th:voc.th||{},tc:voc.tc||{}};
     const run=async canvas=>{const inp=await proc(RawImage.fromCanvas(canvas));const {image_embeds}=await model(inp);
       return Float32Array.from(image_embeds.normalize().tolist()[0]);};
     let queue=Promise.resolve(); // une seule inférence à la fois (la session ONNX n'est pas réentrante)
