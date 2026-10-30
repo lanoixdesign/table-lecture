@@ -205,7 +205,7 @@ body.tl-loading #mem{visibility:hidden}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v5.7</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.7</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
+  <div id="hud"><span>TABLE·LECTURE v5.8</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.8</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
   <div id="status">INITIALISATION</div>
   <div id="minis"></div>
   <div id="sel"></div>
@@ -419,11 +419,13 @@ const clipOK=()=>window.CLIPX&&window.CLIPX.ready;
 let CONF_T=(()=>{const v=parseFloat(localStorage.getItem("tableLecture.seuil"));return v>=0.4&&v<=0.9?v:0.65;})();window.__TL.seuil=CONF_T;
 function setConfT(v){CONF_T=clamp(+v,0.4,0.9);try{localStorage.setItem("tableLecture.seuil",String(CONF_T));}catch(e){}window.__TL.seuil=CONF_T;}
 /* codes (lecture exacte) et objets appris (seuil propre LEARN_T) ne sont pas concernés */
-function isLow(t){return !!t&&t.src!=="face"&&t.src!=="ai"&&!(t.card&&t.card.src==="ai")&&!t.code&&!(t.card&&t.card.code)&&t.src!=="learned"&&!(t.card&&t.card.src==="learned")&&((t.card&&t.card.key==="cadre")||!(t.score>=CONF_T));}
+/* seuil propre à chaque label (v5.8) : calibré hors ligne sur ~14 000 photos de référence (précision mesurée par label) */
+function thrFor(t){const f=t&&t.src==="clip"&&t.card&&window.VOC&&window.VOC.th&&window.VOC.th[t.card.key];return f?clamp(CONF_T/f,0.4,0.95):CONF_T;}
+function isLow(t){return !!t&&t.src!=="face"&&t.src!=="ai"&&!(t.card&&t.card.src==="ai")&&!t.code&&!(t.card&&t.card.code)&&t.src!=="learned"&&!(t.card&&t.card.src==="learned")&&((t.card&&t.card.key==="cadre")||!(t.score>=thrFor(t)));}
 function lowCard(t){
   if(t.card.key==="cadre") return {...t.card,lowSearch:true};
-  return {n:"Objet non identifié",cat:"Confiance trop faible",key:"bas",src:t.card.src,srcLabel:"SEUIL D'AFFICHAGE "+Math.round(CONF_T*100)+" %",lowSearch:true,
-    d:"La table n'est pas assez sûre d'elle pour afficher une fiche (seuil réglé à "+Math.round(CONF_T*100)+" %).",fh:"QUE FAIRE ?",
+  return {n:"Objet non identifié",cat:"Confiance trop faible",key:"bas",src:t.card.src,srcLabel:"SEUIL D'AFFICHAGE "+Math.round(thrFor(t)*100)+" %",lowSearch:true,
+    d:"La table n'est pas assez sûre d'elle pour afficher une fiche (seuil "+Math.round(thrFor(t)*100)+" % pour cet objet"+(thrFor(t)!==CONF_T?", réglage général "+Math.round(CONF_T*100)+" %":"")+").",fh:"QUE FAIRE ?",
     f:["Meilleure piste, peu sûre : "+t.card.n+" ("+pct(t.score)+").","Recherchez l'objet vous-même ci-dessous, ou touchez « Pas ça ? Apprendre cet objet » pour l'enseigner.","Le seuil se règle dans MÉMOIRE › Réglages."]};}
 function cropSquare(src,sw,sh,box,scale,flip){
   const cx=box[0]+box[2]/2, cy=box[1]+box[3]/2; const s=Math.min(Math.max(box[2],box[3])*(scale||1.15),Math.max(sw,sh));
@@ -1314,7 +1316,7 @@ function selClick(e){ // renvoie true si le clic concerne le cadre
 }
 window.TLSEL={get SEL(){return SEL;},get selT(){return selT;},dismissSel,analyzeSel};
 addEventListener("error",e=>window.__TL.errors.push(String(e.message)));
-const APP_VER="5.7";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
+const APP_VER="5.8";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
 function checkUpdate(manual){if(window.TLPWA&&TLPWA.reg)return TLPWA.check(manual);if(!manual&&navigator.serviceWorker&&navigator.serviceWorker.controller)return;fetch(location.pathname+"?nv="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const APP_VER="([^"]+)"/);const nv=m&&m[1];
   if(nv&&nv!==APP_VER){const k="tableLecture.upd."+nv;if(manual||!sessionStorage.getItem(k)){sessionStorage.setItem(k,"1");location.replace(location.pathname+"?v="+encodeURIComponent(nv));}}
   else if(manual)alert("Vous avez la dernière version (v"+APP_VER+").");}).catch(()=>{if(manual)alert("Vérification impossible (hors ligne ?).");});}
@@ -2246,7 +2248,7 @@ const fire=(n,d)=>dispatchEvent(new CustomEvent(n,{detail:d}));
       CLIPVisionModelWithProjection.from_pretrained(ID,{dtype:"fp16",device:"wasm",progress_callback}),vocabP]);
     const bin=Uint8Array.from(atob(voc.emb),c=>c.charCodeAt(0)),i8=new Int8Array(bin.buffer),D=voc.dim,n=voc.keys.length,mat=new Float32Array(n*D);
     for(let i=0;i<n;i++){let z=0;for(let j=0;j<D;j++){const v=i8[i*D+j];mat[i*D+j]=v;z+=v*v;}z=Math.sqrt(z)||1;for(let j=0;j<D;j++)mat[i*D+j]/=z;}
-    window.VOC={keys:voc.keys,mat,cards:voc.cards};
+    window.VOC={keys:voc.keys,mat,cards:voc.cards,th:voc.th||{}};
     const run=async canvas=>{const inp=await proc(RawImage.fromCanvas(canvas));const {image_embeds}=await model(inp);
       return Float32Array.from(image_embeds.normalize().tolist()[0]);};
     let queue=Promise.resolve(); // une seule inférence à la fois (la session ONNX n'est pas réentrante)
