@@ -74,6 +74,22 @@ body.off-anim #sel.run{animation:none}
 #upd button{flex:none;padding:8px 12px;max-width:none}
 #toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 120px);z-index:12;max-width:88vw;padding:9px 12px;font-size:12px;line-height:1.4;background:rgba(26,18,0,.94);color:#ffe7a8;border:1px solid #ffd166;box-shadow:0 0 12px rgba(255,209,102,.4)}
 #offbox .bar{height:8px;border:1px solid var(--c);margin:8px 0;background:rgba(0,30,38,.7)}#offbox .bar i{display:block;height:100%;width:0;background:var(--c);box-shadow:0 0 8px var(--c);transition:width .3s}
+#slots{position:fixed;z-index:4;display:flex;gap:6px;align-items:stretch;left:calc(env(safe-area-inset-left) + 4px);right:calc(env(safe-area-inset-right) + 4px);pointer-events:auto;font-family:inherit}
+#slots[hidden]{display:none!important}body.off-slots #slots{display:none!important}
+#slots .stool{display:flex;flex-direction:column;gap:4px;flex:none}#slots .stool button{width:36px;height:30px;min-width:0;padding:0;font-size:14px;max-width:none;flex:none}
+#slist{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;flex:1;min-width:0;scrollbar-width:none;touch-action:pan-x;-webkit-overflow-scrolling:touch}#slist::-webkit-scrollbar{display:none}
+#sq{position:absolute;bottom:100%;left:0;right:0;margin-bottom:4px;background:rgba(0,12,16,.95);border:1px solid var(--c2);color:#e8fbff;padding:8px;font:inherit;font-size:13px}
+.slot{position:relative;flex:none;width:64px;height:64px;border:1px solid rgba(0,240,255,.6);background:rgba(0,14,20,.82);box-shadow:0 0 8px rgba(0,240,255,.35);overflow:hidden;cursor:pointer;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:inherit}
+.slot img,.slot .ic{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.85}.slot .ic{display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--c2)}
+.slot b{position:absolute;left:0;right:0;bottom:11px;font-size:9px;font-weight:normal;line-height:1.1;padding:1px 2px;background:rgba(0,9,13,.75);color:#e8feff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot small{position:absolute;left:0;right:0;bottom:0;font-size:8px;padding:1px 2px;background:rgba(0,9,13,.85);color:var(--c2);white-space:nowrap;overflow:hidden}
+.slot u{position:absolute;top:1px;left:2px;text-decoration:none;font-size:10px}.slot em{position:absolute;top:1px;right:2px;font-style:normal;font-size:10px;color:#ffd166;text-shadow:0 0 4px #000}
+.slot[data-st="done"] em{color:#7dffb0}.slot[data-st="run"] em{animation:blink 1s infinite}.slot.pin{border-color:#ffd166}
+.sempty{font-size:10px;opacity:.6;align-self:center;padding:0 6px;white-space:nowrap}
+#slots.pos-gauche,#slots.pos-droite{flex-direction:column;width:68px}#slots.pos-gauche{right:auto}#slots.pos-droite{left:auto}
+#slots.pos-gauche .stool,#slots.pos-droite .stool{flex-direction:row}#slots.pos-gauche .stool button,#slots.pos-droite .stool button{width:32px}
+#slots.pos-gauche #slist,#slots.pos-droite #slist{flex-direction:column;overflow-x:hidden;overflow-y:auto;touch-action:pan-y}
+#slots.pos-gauche #sq,#slots.pos-droite #sq{position:fixed;top:calc(env(safe-area-inset-top) + 86px);bottom:auto;left:8px;right:8px;width:auto}
 #ver{position:fixed;right:calc(env(safe-area-inset-right) + 8px);bottom:calc(env(safe-area-inset-bottom) + 1px);z-index:4;font-size:9px;letter-spacing:1px;opacity:.7;pointer-events:none;text-shadow:0 0 6px var(--c)}
 .setg{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid rgba(0,240,255,.12);font-size:13px;cursor:pointer}
 .setg input{width:20px;height:20px;accent-color:#00f0ff;flex:none}.setg small{display:block;opacity:.65;font-size:10px}
@@ -174,7 +190,7 @@ body.off-anim #sel.run{animation:none}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v5.4</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.4</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
+  <div id="hud"><span>TABLE·LECTURE v5.5</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.5</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
   <div id="status">INITIALISATION</div>
   <div id="minis"></div>
   <div id="sel"></div>
@@ -305,7 +321,8 @@ const STABLE_MS=1000, LOST_MS=1500, PENDING_LOST_MS=900, MIN_SCORE=0.5, MNET_MIN
 window.__TL={ready:false,errors:[],last:null,objects:[]};
 /* ================= PARAMÈTRES (locaux) ================= */
 const PREF_DEF={wx:true,mem:true,fps:true,status:true,bMode:true,bFreeze:true,bSwitch:true,bPhoto:true,bLearn:true,bFilms:true,bTV:true,bReco:true,
-  codes:true,history:true,framing:true,pct:true,details:true,low:true,anim:true,faces:true,faceExpr:true,faceReco:false};
+  codes:true,history:true,framing:true,pct:true,details:true,low:true,anim:true,faces:true,faceExpr:true,faceReco:false,
+  slots:true,slotHide:false,slotCompact:false,slotReuse:true,slotIndex:true,slotOcr:true,slotFaces:false};
 let PREF=(()=>{let o={};try{o=JSON.parse(localStorage.getItem("tableLecture.prefs"))||{};}catch(e){}return {...PREF_DEF,...o};})();
 const pref=k=>PREF[k]!==false;
 function applyPrefs(){
@@ -403,6 +420,7 @@ async function clipRecognize(canvas){
 }
 /* applique le résultat CLIP à une détection (track ou hit) ; renvoie false si à rejeter */
 function applyClip(t,r,weak){
+  if(r.emb)t.emb=r.emb;
   if(r.learned){t.card=r.card;t.score=r.sim;t.src="learned";return true;}
   if(t.label==="person"&&!weak){ // une « personne » peu sûre n'est remplacée que si la mémoire étendue est quasi certaine
     if(t.score<0.7&&r.p>=0.9){t.card=cardFor(r.key,"clip");t.score=r.p;t.src="clip";} return true;}
@@ -439,6 +457,9 @@ function resize(){const d=devicePixelRatio||1;ov.width=ov.clientWidth*d;ov.heigh
 addEventListener("resize",resize);
 
 /* ================= DESSIN ================= */
+function drawTag(r,label){ // mode compact : petit cadre + nom
+  const cx=r[0]+r[2]/2,cy=r[1]+r[3]/2,s=Math.min(28,r[2]/3,r[3]/3);ctx.save();ctx.strokeStyle="rgba(127,252,255,.8)";ctx.lineWidth=1.5;ctx.strokeRect(cx-s/2,cy-s/2,s,s);
+  ctx.font="11px ui-monospace,monospace";const tw=ctx.measureText(label).width;ctx.fillStyle="rgba(0,9,13,.75)";ctx.fillRect(cx-tw/2-4,cy+s/2+3,tw+8,15);ctx.fillStyle="#e8feff";ctx.textAlign="center";ctx.fillText(label,cx,cy+s/2+14);ctx.restore();}
 function drawBox(r,label,progress,locked,hl,code){
   const [x,y,w,h]=r, c=code?"#ff3df0":"#00f0ff", rgb=code?"255,61,240":"0,240,255", L=Math.min(22,w/4,h/4);
   ctx.save();ctx.strokeStyle=c;ctx.shadowColor=c;ctx.shadowBlur=hl?22:12;ctx.lineWidth=2;
@@ -537,7 +558,7 @@ function mkMini(t){
   minis.appendChild(el);return el;
 }
 function layoutMinis(list,W,H){
-  const placed=[], m=6, top=74, bot=84;
+  const placed=[], m=6, top=74, bot=84+SLOT_IN.b, ml=m+SLOT_IN.l, mr=m+SLOT_IN.r;
   list.slice().sort((a,b)=>a.r[1]-b.r[1]).forEach(t=>{
     if(!t.el) t.el=mkMini(t);
     const p=t.el.querySelector(".p"), v=t.card.code?(t.card.kind==="qr"?"QR":"EAN"):pct(t.score); if(p.textContent!==v) p.textContent=v;
@@ -545,7 +566,7 @@ function layoutMinis(list,W,H){
     const cands=[[x+w+m,y],[x-cw-m,y],[x,y+h+m],[x,y-ch-m],[x+w-cw-m,y+h-ch-m]];
     let best=null;
     for(const [ax,ay] of cands){
-      const r=[clamp(ax,m,W-cw-m),clamp(ay,top,H-ch-bot),cw,ch];
+      const r=[clamp(ax,ml,W-cw-mr),clamp(ay,top,H-ch-bot),cw,ch];
       const cost=placed.reduce((s,q)=>s+overlap(r,q),0)*10+Math.abs(r[0]-ax)+Math.abs(r[1]-ay);
       if(!best||cost<best.cost)best={r,cost};
       if(cost===0)break;
@@ -555,7 +576,7 @@ function layoutMinis(list,W,H){
       for(let d=1;d<30;d++){const dy=(d%2?1:-1)*Math.ceil(d/2)*(ch/2+3);
         const r2=[r[0],clamp(r[1]+dy,top,H-ch-bot),cw,ch];
         if(!placed.some(q=>overlap(r2,q))){r=r2;break;}
-        const r3=[clamp(W-cw-m-r[0]+m,m,W-cw-m),r2[1],cw,ch];
+        const r3=[clamp(W-cw-m-r[0]+m,ml,W-cw-mr),r2[1],cw,ch];
         if(!placed.some(q=>overlap(r3,q))){r=r3;break;}}
     }
     placed.push(r);
@@ -583,7 +604,7 @@ function filterPreds(preds){
   return out;
 }
 function mkTrack(h,now,stable){return {id:nextId++,label:h.label,src:h.src,box:h.box,score:h.score,since:now,seen:now,stable:!!stable,card:h.card||cardFor(h.label,h.src),sm:null,
-  weak:!!h.weak,refined:!!h.refined,confirmed:!!h.refined||!h.weak,code:h.code||null};}
+  weak:!!h.weak,refined:!!h.refined,confirmed:!!h.refined||!h.weak,code:h.code||null,emb:h.emb||null};}
 function dropTrack(t){if(t.el){t.el.remove();t.el=null;}if(cardTrackId===t.id)hideCard();}
 function clearTracks(){tracks.forEach(dropTrack);tracks=[];}
 function updateTracks(hits,now){
@@ -642,7 +663,7 @@ async function detectStep(vw,vh){
     const t2=performance.now();
     const c=tracks.filter(t=>!t.refined&&!t.refining&&t2-t.since>250&&t2-t.seen<200&&!(t.label==="person"&&!t.weak&&t2-t.since<1200))
                   .sort((a,b)=>(a.weak-b.weak)||((a.label==="person")-(b.label==="person"))||(a.since-b.since))[0];
-    if(c) refineTrack(c,video,vw,vh);
+    if(c&&!(c.label!=="person"&&window.TLS&&TLS.reuse(c))) refineTrack(c,video,vw,vh);
   }
 }
 
@@ -658,7 +679,7 @@ function loop(){
     if(vw){geo={w:vw,h:vh,mirror:facing==="user"};
       if(!busy&&coco){busy=true;detectStep(vw,vh).catch(e=>window.__TL.errors.push(e.message)).finally(()=>{busy=false;fpsN++;});}}
   }
-  if(now-fpsT>1000){$("fps").textContent=(frozenMode?"FIGÉ":fpsN+" FPS")+" · "+(window.tf?tf.getBackend().toUpperCase():"");fpsN=0;fpsT=now;}
+  if(now-fpsT>1000){if(window.TLS)TLS.place();$("fps").textContent=(frozenMode?"FIGÉ":fpsN+" FPS")+" · "+(window.tf?tf.getBackend().toUpperCase():"");fpsN=0;fpsT=now;}
   if(analysing){
     drawReticle();if(pref("anim")){const y=(now%1200)/1200*H;ctx.fillStyle="rgba(0,240,255,.35)";ctx.fillRect(0,y,W,3);}
     setStatus("ANALYSE"+".".repeat(1+Math.floor(now/300)%3),true);return;
@@ -671,8 +692,13 @@ function loop(){
   pending.forEach(t=>drawBox(t.r,isLow(t)?"ANALYSE…":t.card.n.toUpperCase()+" "+pct(t.score),(now-t.since)/STABLE_MS,false));
   const lows=stable.filter(isLow),shown=stable.filter(t=>!isLow(t));
   lows.forEach(t=>{if(t.el){t.el.remove();t.el=null;}if(pref("low"))drawLow(t.r,t.id===panelTrackId||t.id===selId);});
-  shown.forEach(t=>drawBox(t.r,t.code?(t.code.kind==="qr"?"QR · ":"CODE-BARRES · ")+t.card.n.toUpperCase():t.card.n.toUpperCase(),null,true,t.id===panelTrackId||t.id===selId,!!t.code));
-  layoutMinis(shown,W,H); // Multi et « Un seul » : même affichage compact, fiche complète au toucher
+  if(window.TLS)for(const t of shown)if(!t.slotDone&&!t.refining&&(t.refined||t.code||t.src==="face"||(!clipOK()&&now-t.since>3000)))TLS.capture(t);
+  const sH=pref("slots")&&pref("slotHide"),sC=pref("slots")&&pref("slotCompact"),isS=t=>t.slotId&&(sH||sC)&&t.id!==panelTrackId&&t.id!==selId;
+  const saved=shown.filter(isS),full=shown.filter(t=>!isS(t));
+  saved.forEach(t=>{if(t.el){t.el.remove();t.el=null;}if(!sH)drawTag(t.r,t.card.n);});
+  full.forEach(t=>drawBox(t.r,t.code?(t.code.kind==="qr"?"QR · ":"CODE-BARRES · ")+t.card.n.toUpperCase():t.card.n.toUpperCase(),null,true,t.id===panelTrackId||t.id===selId,!!t.code));
+  window.__TL.slotHidden=saved.length;
+  layoutMinis(full,W,H); // Multi et « Un seul » : même affichage compact, fiche complète au toucher
   if(cardTrackId!==null) hideCard();
   window.__TL.objects=stable.map(t=>t.card.n);
   if(pending.length&&!frozenMode) setStatus("ANALYSE"+".".repeat(1+Math.floor(now/300)%3)+(stable.length?" ("+stable.length+" IDENTIFIÉ"+(stable.length>1?"S":"")+")":""),true);
@@ -904,6 +930,7 @@ function productCard(code,{p,base,name,cat}){
 function refreshCodeTracks(raw){
   const card=codeCache.get(raw);
   for(const t of tracks.concat(selT?[selT]:[])) if(t.code&&t.code.raw===raw){t.card=card;if(t.el){t.el.remove();t.el=null;}if(cardTrackId===t.id)cardTrackId=null;if(panelTrackId===t.id)openPanel(t);}
+  if(window.TLS&&card)TLS.updCode(raw,card);
   if(window.__TL.still) window.__TL.still=tracks.map(t=>({name:t.card.n,key:t.card.key,src:t.card.src,score:+(+t.score).toFixed(2),low:isLow(t),code:t.code?t.code.kind+":"+t.code.format:undefined}));
 }
 /* --- QR codes : décodage et affichage, jamais d'action automatique --- */
@@ -1042,6 +1069,7 @@ function openMemory(){
   renderCodeMemory(pc);
   const rg=document.createElement("div");rg.className="lf";
   rg.innerHTML=`<h2 style="margin-top:18px">Visages</h2><p>${pref("faceReco")?faceDB.length+" proche(s) enregistré(s).":"Reconnaissance des proches désactivée (par défaut)."}</p><button class="pbtn" id="tofaces">☺ Visages connus…</button><button class="pbtn" id="toset">⚙ Paramètres (affichage, seuil des fiches…)</button>`;pc.appendChild(rg);
+  if(window.TLS){const sg=document.createElement("div");sg.innerHTML=`<h2 style="margin-top:18px">Slots</h2><p>${TLS.slots.length} slot(s) gardé(s), ${TLS.slots.filter(x=>x.idx&&x.idx.status==="done").length} indexé(s).</p><button class="pbtn" id="toslots">▦ Gérer les slots…</button>`;rg.prepend(sg);sg.querySelector("#toslots").onclick=e=>{e.stopPropagation();TLS.manager();};}
   rg.querySelector("#tofaces").onclick=e=>{e.stopPropagation();openFaces();};
   rg.querySelector("#toset").onclick=e=>{e.stopPropagation();openSettings();};
   panel.classList.add("open");window.__TL.panel={memory:true};
@@ -1053,14 +1081,18 @@ const SETTINGS=[["AFFICHAGE",[["wx","Pastille météo","Masquée : la météo n'
  ["BOUTONS",[["bMode","Multi / Un seul"],["bFreeze","⏸ Figer","Toucher une zone vide fige toujours l'image"],["bSwitch","⟲ Caméra (avant/arrière)"],["bPhoto","▣ Photo"],["bLearn","✚ Apprendre","Reste possible depuis une fiche (« Pas ça ? »)"],["bFilms","🎬 Films & Séries"],["bTV","📺 Prog. TV"],["bReco","🔍 C'est quoi ?"]]],
  ["FONCTIONS",[["codes","Lecture codes-barres / QR","Désactivée : le lecteur n'est ni chargé ni lancé"],["history","Historique des codes scannés","Désactivé : plus rien n'est enregistré"],["framing","Cadre à deux doigts / glisser à la souris"],
    ["faces","Détection des visages","Cadre sur chaque visage ; modèle chargé seulement si activé"],["faceExpr","Estimation de l'expression","Indicative (joie, surprise…)"],
-   ["faceReco","Reconnaissance de mes proches enregistrés","Désactivée par défaut · jamais d'inconnus ni de célébrités · voir MÉMOIRE › Visages"]]]];
+   ["faceReco","Reconnaissance de mes proches enregistrés","Désactivée par défaut · jamais d'inconnus ni de célébrités · voir MÉMOIRE › Visages"]]],
+ ["SLOTS",[["slots","Barre de slots","Chaque objet identifié est gardé en vignette avec sa fiche"],["slotHide","Masquer les cadres des objets déjà enregistrés","Ils restent dans la barre ; toucher l'objet ouvre toujours la fiche"],
+   ["slotCompact","Mode compact pour les objets enregistrés","Petit cadre + nom seulement, sans mini-fiche"],["slotReuse","Réutiliser la fiche d'un slot","Un objet déjà en slot n'est pas réanalysé (plus rapide)"],
+   ["slotIndex","Indexer automatiquement les slots","Analyse approfondie en arrière-plan : pistes, texte, couleurs, codes"],["slotOcr","Lire le texte pendant l'indexation (OCR)","Télécharge le lecteur de texte (≈ 8 Mo) au premier usage"],
+   ["slotFaces","Garder aussi les visages","Nom seulement, jamais de photo"]]]];
 function openSettings(){
   const pc=$("pc");
   pc.innerHTML=`<div class="lf"><div class="id"><span>PARAMÈTRES</span><span>STOCKÉS SUR CET APPAREIL</span></div><h2>Paramètres</h2>
    <div class="id" style="margin-top:12px"><span>SEUIL DES FICHES</span><span id="seuilv">${Math.round(CONF_T*100)} %</span></div>
    <input type="range" id="seuil" min="40" max="90" step="5" value="${Math.round(CONF_T*100)}" aria-label="Seuil de confiance" style="width:100%;accent-color:#00f0ff">
    <p style="font-size:12px;opacity:.8">En dessous de ce niveau, pas de fiche : seulement un cadre discret « Objet non identifié » (touchez-le pour chercher ou apprendre). Codes-barres/QR (lecture exacte) et objets appris (ressemblance ≥ ${Math.round(LEARN_T*100)} %) ne sont pas concernés.</p>
-   <div id="setl"></div><div id="offbox"></div><p style="font-size:12px;opacity:.85;margin-top:14px">Version installée : <b>v${APP_VER}</b> · <a href="#" id="supd" style="color:var(--c2)">vérifier les mises à jour</a></p><button class="pbtn" id="sreset">↺ Réinitialiser les paramètres</button></div>`;
+   <div id="setl"></div><div id="slotset" class="lf"></div><div id="offbox"></div><p style="font-size:12px;opacity:.85;margin-top:14px">Version installée : <b>v${APP_VER}</b> · <a href="#" id="supd" style="color:var(--c2)">vérifier les mises à jour</a></p><button class="pbtn" id="sreset">↺ Réinitialiser les paramètres</button></div>`;
   const L=$("setl");
   SETTINGS.forEach(([g,items])=>{const h=document.createElement("h3");h.textContent=g;L.appendChild(h);
     items.forEach(([k,lab,sub])=>{const r=document.createElement("label");r.className="setg";
@@ -1068,6 +1100,7 @@ function openSettings(){
       r.onclick=e=>e.stopPropagation();r.querySelector("input").onchange=e=>setPref(k,e.target.checked);L.appendChild(r);});});
   const sl=$("seuil");sl.onclick=e=>e.stopPropagation();
   sl.oninput=()=>{setConfT(sl.value/100);$("seuilv").textContent=Math.round(CONF_T*100)+" %";if(typeof drawSel==="function"&&window.TLSEL&&TLSEL.SEL)drawSel(true);};
+  if(window.TLS)TLS.controls($("slotset"));
   if(window.TLPWA)TLPWA.render($("offbox"));
   $("sreset").onclick=e=>{e.stopPropagation();if(confirm("Remettre tous les paramètres par défaut ?")){resetPrefs();CONF_T=0.65;window.__TL.seuil=CONF_T;openSettings();}};
   panel.classList.add("open");window.__TL.panel={settings:true};
@@ -1190,7 +1223,7 @@ async function analyzeSel(){
   if(my!==selSerial||!SEL)return;
   selT=t;t.sel=true;SEL.state="done";drawSel();
 }
-const uiHit=e=>e.target.closest("#bar,#panel,#xtra,#hud,#mem,#start,#card,button,input,label,a,select,textarea");
+const uiHit=e=>e.target.closest("#bar,#panel,#xtra,#hud,#mem,#start,#card,#slots,button,input,label,a,select,textarea");
 $("stage").addEventListener("pointerdown",e=>{
   if(e.isPrimary&&PTR.size){PTR.clear();G2=null;dragM=null;selDrag=null;gestureLatch=false;} // nouveau geste : on oublie d'éventuels pointeurs perdus
   if(!running||analysing)return;
@@ -1239,7 +1272,7 @@ function selClick(e){ // renvoie true si le clic concerne le cadre
 }
 window.TLSEL={get SEL(){return SEL;},get selT(){return selT;},dismissSel,analyzeSel};
 addEventListener("error",e=>window.__TL.errors.push(String(e.message)));
-const APP_VER="5.4";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
+const APP_VER="5.5";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
 function checkUpdate(manual){if(window.TLPWA&&TLPWA.reg)return TLPWA.check(manual);if(!manual&&navigator.serviceWorker&&navigator.serviceWorker.controller)return;fetch(location.pathname+"?nv="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const APP_VER="([^"]+)"/);const nv=m&&m[1];
   if(nv&&nv!==APP_VER){const k="tableLecture.upd."+nv;if(manual||!sessionStorage.getItem(k)){sessionStorage.setItem(k,"1");location.replace(location.pathname+"?v="+encodeURIComponent(nv));}}
   else if(manual)alert("Vous avez la dernière version (v"+APP_VER+").");}).catch(()=>{if(manual)alert("Vérification impossible (hors ligne ?).");});}
@@ -1375,6 +1408,222 @@ addEventListener("tl-pref",e=>{const k=e.detail.k;if(["faces","faceExpr","faceRe
   if((k==="faces"||k==="*")&&!pref("faces")){tracks.filter(t=>t.src==="face").forEach(t=>{dropTrack(t);});tracks=tracks.filter(t=>t.src!=="face");}});
 window.TLF={openFaces,openFaceEnroll,detectFaces,ensureFaceModels,get FACE(){return FACE;},get db(){return faceDB;}};
 
+/* ================= SLOTS (v5.5) : barre de vignettes des objets identifiés + indexation approfondie en arrière-plan ================= */
+const SLOT_DB="tableLecture-slots", SLOT_ST="slots";
+let slots=[], slotIdb=null, SLOT_IN={b:0,l:0,r:0};
+const slotMax=()=>{const v=+localStorage.getItem("tableLecture.slotMax");return v>=6&&v<=200?v:24;};
+const slotPos=()=>{const v=localStorage.getItem("tableLecture.slotPos");return ["bas","gauche","droite"].includes(v)?v:"bas";};
+const nrm=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const cos=(a,b)=>{if(!a||!b||a.length!==b.length)return 0;let s=0,x=0,y=0;for(let i=0;i<a.length;i++){s+=a[i]*b[i];x+=a[i]*a[i];y+=b[i]*b[i];}return s/Math.sqrt(x*y||1);};
+function slotOpen(){return new Promise((res,rej)=>{if(!window.indexedDB)return rej(new Error("IndexedDB indisponible"));const r=indexedDB.open(SLOT_DB,1);
+  r.onupgradeneeded=()=>{r.result.createObjectStore(SLOT_ST,{keyPath:"id"});};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+function slotTx(mode,fn){return slotIdb?new Promise((res,rej)=>{const tx=slotIdb.transaction(SLOT_ST,mode),st=tx.objectStore(SLOT_ST);const out=fn(st);tx.oncomplete=()=>res(out&&out.result);tx.onerror=()=>rej(tx.error);}):Promise.resolve();}
+const slotStrip=s=>{const o={...s};delete o.live;return o;};
+function slotSave(s){return slotTx("readwrite",st=>st.put(slotStrip(s))).catch(e=>window.__TL.errors.push("slots: "+e.message));}
+function slotDel(id){return slotTx("readwrite",st=>st.delete(id)).catch(()=>{});}
+const cardJSON=c=>{try{return JSON.parse(JSON.stringify(c,(k,v)=>k==="actions"||k==="pending"?undefined:v));}catch(e){return {n:c.n,cat:c.cat,key:c.key,src:c.src,d:c.d||"",f:c.f||[]};}};
+function slotName(s){return s.userName||s.name;}
+function slotOrder(){slots.sort((a,b)=>(b.pinned-a.pinned)||(b.last-a.last));}
+function slotEvict(){const max=slotMax();slotOrder();while(slots.length>max){const v=slots.filter(s=>!s.pinned).sort((a,b)=>a.last-b.last)[0];if(!v)break;slots.splice(slots.indexOf(v),1);slotDel(v.id);}}
+/* --- capture d'une vignette (au moment de l'identification) --- */
+function slotCrop(t,px,q){const src=frozenMode?frozen:video,sw=frozenMode?frozen.width:video.videoWidth,sh=frozenMode?frozen.height:video.videoHeight;
+  if(!sw||!t.box)return null;const c=cropSquare(src,sw,sh,t.box,1.1),o=document.createElement("canvas");o.width=o.height=px;o.getContext("2d").drawImage(c,0,0,px,px);
+  if(px>256){/* recadrage plus fin à pleine résolution pour l'indexation */const b=t.box,s=Math.min(Math.max(b[2],b[3])*1.1,Math.max(sw,sh)),cx=b[0]+b[2]/2,cy=b[1]+b[3]/2;
+    const g=o.getContext("2d");g.fillStyle="#7f7f7f";g.fillRect(0,0,px,px);const x0=Math.max(0,cx-s/2),y0=Math.max(0,cy-s/2),x1=Math.min(sw,cx+s/2),y1=Math.min(sh,cy+s/2),k=px/s;
+    if(x1>x0&&y1>y0)g.drawImage(src,x0,y0,x1-x0,y1-y0,(x0-(cx-s/2))*k,(y0-(cy-s/2))*k,(x1-x0)*k,(y1-y0)*k);}
+  return o.toDataURL("image/jpeg",q||.75);}
+function slotKeyOf(t){if(t.code)return "code:"+t.code.raw;if(t.src==="face")return "face:"+nrm(t.card.n);return "obj:"+t.card.key;}
+function slotFind(t,key){
+  let c=slots.filter(s=>s.key===key);
+  if(c.length&&t.emb&&!t.code&&t.src!=="face"){const e=c.filter(s=>!s.emb||cos(s.emb,t.emb)>=0.8);c=e;}
+  if(c.length)return c[0];
+  if(t.emb&&!t.code&&t.src!=="face"){let best=null,bs=0.92;for(const s of slots){const v=cos(s.emb,t.emb);if(v>bs){bs=v;best=s;}}return best;}
+  return null;}
+function slotCapture(t){
+  t.slotDone=true;if(!pref("slots"))return;
+  if(t.src==="face"&&!pref("slotFaces"))return;
+  if(t.card.key==="cadre"||t.rejected)return;
+  const key=slotKeyOf(t),now=Date.now();let s=slotFind(t,key);
+  if(s){s.count++;s.last=now;if(t.score>s.score&&!s.idx.refined)s.score=t.score;if(t.code&&!t.card.pending&&!s.userName){s.card=cardJSON(t.card);s.name=t.card.n;}s.live=t.card;t.slotId=s.id;
+    window.__TL.slotHits=(window.__TL.slotHits||0)+1;slotOrder();slotSave(s);slotRender();return s;}
+  const face=t.src==="face";
+  s={id:now+"-"+Math.random().toString(36).slice(2,7),key,kind:t.code?"code":face?"face":"obj",label:t.label,name:t.card.n,userName:"",card:cardJSON(t.card),score:+(+t.score||0).toFixed(3),
+     emb:t.emb?Array.from(t.emb,x=>+x.toFixed(4)):null,thumb:face?"":slotCrop(t,112,.7),img:face?"":slotCrop(t,384,.85),count:1,first:now,last:now,pinned:false,
+     idx:{status:(pref("slotIndex")&&!face)?"wait":"off",labels:[],tags:[],text:"",colors:[],codes:[]},live:t.card};
+  t.slotId=s.id;slots.unshift(s);slotEvict();slotSave(s);slotRender();idxKick();return s;}
+function slotUpdCode(raw,card){for(const s of slots)if(s.key==="code:"+raw&&!s.userName){s.card=cardJSON(card);s.name=card.n;s.live=card;slotSave(s);}slotRender();}
+function slotAddFilm(meta,html){if(!pref("slots"))return;const key="film:"+nrm(meta.work),now=Date.now();
+  const clean=String(html).replace(/\sdata-x="[^"]*"/g,' disabled');const m=clean.match(/<img[^>]+src="([^"]+)"/);
+  let s=slots.find(x=>x.key===key);
+  if(s){s.count++;s.last=now;s.html=clean;}
+  else{s={id:now+"-f",key,kind:"film",label:"film",name:meta.work,userName:"",card:{n:meta.work,cat:meta.human?"Personnalité":"Film / série",key:meta.work,src:meta.src||"wiki",d:"",f:[]},
+    score:1,emb:null,thumb:m?m[1]:"",img:"",count:1,first:now,last:now,pinned:false,html:clean,idx:{status:"done",labels:[],tags:[nrm(meta.work),meta.human?"personnalite":"film"],text:"",colors:[],codes:[]}};slots.unshift(s);slotEvict();}
+  slotOrder();slotSave(s);slotRender();}
+/* --- réutilisation : évite de relancer CLIP pour un objet déjà en slot (même détection COCO, vu récemment) --- */
+function slotReuse(t){if(!pref("slots")||!pref("slotReuse")||t.code||t.src==="face"||t.weak)return false;
+  const s=slots.find(x=>x.kind==="obj"&&x.label===t.label&&Date.now()-x.last<10*60000);
+  if(!s)return false;t.card=s.live||s.card;if(s.userName)t.card={...t.card,n:s.userName};t.score=s.score;t.src=t.card.src||"clip";t.refined=true;t.confirmed=true;t.slotId=s.id;t.slotDone=true;
+  s.count++;s.last=Date.now();slotSave(s);slotRender();window.__TL.slotReuse=(window.__TL.slotReuse||0)+1;return true;}
+/* ================= INDEXATION APPROFONDIE (basse priorité) ================= */
+const COLORS=[["rouge",[200,30,40]],["orange",[240,130,30]],["jaune",[240,210,40]],["vert",[50,160,60]],["turquoise",[40,180,180]],["bleu",[40,80,200]],["violet",[130,60,170]],
+  ["rose",[240,130,180]],["marron",[120,70,35]],["beige",[220,200,160]],["blanc",[240,240,240]],["gris",[128,128,128]],["noir",[20,20,20]]];
+function domColors(c){const o=document.createElement("canvas");o.width=o.height=32;const g=o.getContext("2d");g.drawImage(c,0,0,32,32);const d=g.getImageData(0,0,32,32).data,cnt={};let tot=0;
+  for(let y=0;y<32;y++)for(let x=0;x<32;x++){const w=1-Math.hypot(x-15.5,y-15.5)/23;if(w<=0)continue;const i=(y*32+x)*4,p=[d[i],d[i+1],d[i+2]];
+    let best=null,bd=1e9;for(const [n,q] of COLORS){const v=(p[0]-q[0])**2*0.3+(p[1]-q[1])**2*0.59+(p[2]-q[2])**2*0.11;if(v<bd){bd=v;best=n;}}cnt[best]=(cnt[best]||0)+w;tot+=w;}
+  return Object.entries(cnt).map(([n,v])=>({n,p:+(v/tot).toFixed(2)})).filter(x=>x.p>=0.12).sort((a,b)=>b.p-a.p).slice(0,3);}
+let idxRun=false;window.__TL.idx={done:0,run:0};
+const idle=()=>new Promise(r=>window.requestIdleCallback?requestIdleCallback(()=>r(),{timeout:3000}):setTimeout(r,300));
+async function idxYield(){await idle();let n=0;while((clipBusy||analysing||(SEL&&SEL.state==="busy"))&&n++<60)await new Promise(r=>setTimeout(r,250));}
+function idxKick(){if(!idxRun&&pref("slots")&&pref("slotIndex"))setTimeout(idxPump,800);}
+function loadImgURL(u){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error("image"));i.src=u;});}
+async function idxPump(){
+  if(idxRun)return;idxRun=true;
+  try{for(;;){
+    if(!pref("slots")||!pref("slotIndex"))break;
+    const s=slots.find(x=>x.idx&&x.idx.status==="wait");if(!s)break;
+    if(s.kind==="obj"&&!clipOK()){await new Promise(r=>setTimeout(r,3000));continue;}
+    s.idx.status="run";slotRender();window.__TL.idx.run++;
+    try{await indexSlot(s);s.idx.status="done";s.idx.date=Date.now();window.__TL.idx.done++;}
+    catch(e){s.idx.status="err";s.idx.err=e.message;window.__TL.errors.push("indexation: "+e.message);}
+    slotSave(s);slotRender();if(panel.classList.contains("open")&&window.__TL.panel&&window.__TL.panel.slot===s.id)openSlot(s);
+  }}finally{idxRun=false;}
+}
+async function indexSlot(s){
+  const X=s.idx,tags=new Set([nrm(s.name),nrm(s.card.cat)]);X.labels=[];X.codes=[];X.text="";X.colors=[];
+  if(s.kind==="code")tags.add(nrm(s.key.slice(5)));
+  if(s.img){
+    const im=await loadImgURL(s.img),W=im.naturalWidth,H=im.naturalHeight,c=document.createElement("canvas");c.width=W;c.height=H;c.getContext("2d").drawImage(im,0,0);
+    await idxYield();X.colors=domColors(c);X.colors.forEach(x=>tags.add(x.n));
+    if(s.kind==="obj"&&clipOK()){
+      const box=[0,0,W,H],acc=new Float32Array(512);
+      for(const [k,f] of [[1,0],[0.8,0],[1,1],[0.65,0],[0.8,1]]){await idxYield();clipBusy=true;try{const e=await window.CLIPX.embed(cropSquare(c,W,H,box,k,f));for(let i=0;i<512;i++)acc[i]+=e[i];}finally{clipBusy=false;}}
+      let z=0;for(let i=0;i<512;i++)z+=acc[i]*acc[i];z=Math.sqrt(z)||1;for(let i=0;i<512;i++)acc[i]/=z;
+      const V=window.VOC,n=V.keys.length,lg=new Float32Array(n);let m=-1e9;for(let i=0;i<n;i++){lg[i]=100*dot(acc,V.mat,i*512);if(lg[i]>m)m=lg[i];}
+      let zz=0;for(let i=0;i<n;i++){lg[i]=Math.exp(lg[i]-m);zz+=lg[i];}
+      const top=[...lg.keys()].sort((a,b)=>lg[b]-lg[a]).slice(0,5).map(i=>({key:V.keys[i],n:cardFor(V.keys[i],"clip").n,p:+(lg[i]/zz).toFixed(3)}));
+      X.labels=top;top.filter(x=>x.p>=0.25).forEach(x=>tags.add(nrm(x.n)));
+      s.emb=Array.from(acc,x=>+x.toFixed(4));
+      let bl=null;for(const L of learned)for(const v of L.embs){const q=dot(acc,v,0);if(!bl||q>bl.q)bl={q,L};}
+      if(!s.userName){
+        if(bl&&bl.q>=LEARN_T){s.card=cardJSON(learnedCard(bl.L,bl.q));s.name=bl.L.name;s.score=+bl.q.toFixed(3);s.live=null;X.refined="appris";}
+        else if(s.card.src!=="learned"&&top[0].key!==s.card.key&&top[0].p>=Math.max(0.5,(+s.score||0)+0.1)){
+          const nc=cardFor(top[0].key,"clip");nc.srcLabel="MOBILECLIP · INDEXATION APPROFONDIE (5 vues)";s.card=cardJSON(nc);s.name=nc.n;s.score=top[0].p;s.live=null;X.refined="clip";}
+      }
+    }
+    if(s.kind==="obj"&&pref("codes")&&SCAN.ready&&SCAN.det){await idxYield();try{const r=await SCAN.det.detect(c);for(const x of r||[])if(x.rawValue){X.codes.push(x.rawValue);tags.add(nrm(x.rawValue));}}catch(e){}}
+    if(s.kind==="obj"&&pref("slotOcr")&&window.TLloadTess){await idxYield();
+      try{const w=await window.TLloadTess();const big=document.createElement("canvas");big.width=W*2;big.height=H*2;big.getContext("2d").drawImage(c,0,0,W*2,H*2);
+        const {data}=await w.recognize(big);const words=(data.words||[]).filter(x=>x.confidence>=70&&/[\p{L}\p{N}]{3,}/u.test(x.text)).map(x=>x.text.replace(/[^\p{L}\p{N}'-]/gu,"")).filter(x=>x.length>=3);
+        X.text=[...new Set(words)].slice(0,20).join(" ");words.slice(0,12).forEach(x=>tags.add(nrm(x)));}catch(e){X.ocrErr=e.message;}}
+    if(s.kind==="obj"&&pref("faces")&&FACE.det&&FACE.api){await idxYield();try{const f=await FACE.api.detectAllFaces(c,new FACE.api.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:0.5}));if(f.length){X.faces=f.length;tags.add("visage");}}catch(e){}}
+  }
+  if(s.userName)tags.add(nrm(s.userName));
+  X.tags=[...tags].filter(Boolean);
+}
+/* ================= INTERFACE ================= */
+const slotsEl=document.createElement("div");slotsEl.id="slots";
+slotsEl.innerHTML=`<div class="stool"><button type="button" id="sfind" aria-label="Chercher dans les slots">🔎</button><button type="button" id="smenu" aria-label="Gérer les slots">⋯</button></div><input type="search" id="sq" placeholder="nom, texte, couleur, code…" aria-label="Chercher dans les slots" hidden><div id="slist"></div>`;
+document.body.appendChild(slotsEl);
+const slistEl=slotsEl.querySelector("#slist"),sqEl=slotsEl.querySelector("#sq");
+const ST_FR={wait:["⏳","en attente"],run:["⟳","analyse…"],done:["✓","indexé"],err:["!","erreur d'indexation"],off:["",""]};
+function slotMatch(s,q){if(!q)return true;const hay=nrm([slotName(s),s.name,s.card.cat,s.key,(s.idx.tags||[]).join(" "),s.idx.text,(s.idx.codes||[]).join(" "),(s.idx.colors||[]).map(c=>c.n).join(" "),(s.idx.labels||[]).map(l=>l.n).join(" ")].join(" "));
+  return nrm(q).split(/\s+/).filter(Boolean).every(w=>hay.includes(w));}
+function slotRender(){
+  slotOrder();const q=sqEl.value.trim(),list=slots.filter(s=>slotMatch(s,q));
+  slistEl.innerHTML="";
+  for(const s of list){const d=document.createElement("div");d.className="slot"+(s.pinned?" pin":"")+" k-"+s.kind;d.dataset.id=s.id;d.dataset.st=s.idx.status;
+    const st=ST_FR[s.idx.status]||["",""];
+    d.innerHTML=`${s.thumb?`<img alt="" src="${esc(s.thumb)}" referrerpolicy="no-referrer">`:`<span class="ic">${s.kind==="face"?"☺":s.kind==="film"?"🎬":"▣"}</span>`}<b>${esc(slotName(s))}</b><small>${s.kind==="code"?"CODE":s.kind==="film"?"FILM":pct(s.score)}${s.count>1?" · ×"+s.count:""}</small>${s.pinned?'<u>📌</u>':""}${st[0]?`<em title="${st[1]}">${st[0]}</em>`:""}`;
+    d.title=slotName(s)+(st[1]?" · "+st[1]:"");slistEl.appendChild(d);}
+  if(!list.length){const e=document.createElement("div");e.className="sempty";e.textContent=q?"Aucun slot ne correspond.":"Les objets identifiés apparaîtront ici.";slistEl.appendChild(e);}
+  window.__TL.slots=slots.map(s=>({id:s.id,name:slotName(s),kind:s.kind,key:s.key,count:s.count,pinned:s.pinned,st:s.idx.status,score:s.score,tags:s.idx.tags,labels:(s.idx.labels||[]).slice(0,3).map(l=>l.n+":"+l.p),text:s.idx.text,ocrErr:s.idx.ocrErr||null,colors:(s.idx.colors||[]).map(c=>c.n),refined:s.idx.refined||null,thumb:!!s.thumb}));
+  window.__TL.slotsShown=list.length;placeSlots();}
+function placeSlots(){
+  const on=pref("slots"),pos=slotPos();slotsEl.className="pos-"+pos;slotsEl.hidden=!on||!running;
+  SLOT_IN={b:0,l:0,r:0};if(slotsEl.hidden)return;
+  const bar=$("bar"),br=bar&&bar.offsetParent?bar.getBoundingClientRect():null,bottom=br?Math.max(0,innerHeight-br.top)+6:10;
+  if(pos==="bas"){slotsEl.style.bottom=bottom+"px";slotsEl.style.top="";SLOT_IN.b=slotsEl.offsetHeight+6;}
+  else{slotsEl.style.bottom=bottom+"px";slotsEl.style.top="calc(env(safe-area-inset-top) + 124px)";SLOT_IN[pos==="gauche"?"l":"r"]=slotsEl.offsetWidth+4;}
+  window.__TL.slotIn=SLOT_IN;}
+addEventListener("resize",()=>setTimeout(placeSlots,50));
+slotsEl.querySelector("#sfind").onclick=e=>{e.stopPropagation();sqEl.hidden=!sqEl.hidden;if(!sqEl.hidden)sqEl.focus();else{sqEl.value="";slotRender();}placeSlots();};
+sqEl.addEventListener("input",()=>slotRender());
+slotsEl.querySelector("#smenu").onclick=e=>{e.stopPropagation();openSlotsManager();};
+/* toucher = fiche ; appui long = menu */
+let lp=null;
+slistEl.addEventListener("pointerdown",e=>{const d=e.target.closest(".slot");if(!d)return;lp={id:d.dataset.id,x:e.clientX,y:e.clientY,long:false,t:setTimeout(()=>{if(lp){lp.long=true;const s=slots.find(x=>x.id===lp.id);if(s){navigator.vibrate&&navigator.vibrate(20);openSlotMenu(s);}}},550)};});
+slistEl.addEventListener("pointermove",e=>{if(lp&&Math.hypot(e.clientX-lp.x,e.clientY-lp.y)>10){clearTimeout(lp.t);lp=null;}});
+const lpEnd=e=>{if(!lp)return;clearTimeout(lp.t);const L=lp;lp=null;if(L.long||e.type!=="pointerup")return;const s=slots.find(x=>x.id===L.id);if(s)openSlot(s);};
+slistEl.addEventListener("pointerup",lpEnd);slistEl.addEventListener("pointercancel",lpEnd);
+slistEl.addEventListener("contextmenu",e=>e.preventDefault());
+slotsEl.addEventListener("click",e=>e.stopPropagation());
+function slotInfoHTML(s){const X=s.idx||{},st=ST_FR[X.status]||["",""];
+  return `<h3>SLOT</h3><ul><li>Vu ${s.count} fois · d'abord le ${new Date(s.first).toLocaleString("fr-FR")} · dernière fois le ${new Date(s.last).toLocaleString("fr-FR")}</li>
+   ${s.userName?`<li>Renommé par vous (nom d'origine : ${esc(s.name)})</li>`:""}
+   <li>Indexation : ${esc(st[1]||"désactivée")}${X.refined?" · fiche affinée par l'analyse approfondie":""}</li>
+   ${X.labels&&X.labels.length?`<li>Pistes : ${X.labels.slice(0,5).map(l=>esc(l.n)+" "+Math.round(l.p*100)+" %").join(", ")}</li>`:""}
+   ${X.text?`<li>Texte lu : « ${esc(X.text)} »</li>`:""}${X.colors&&X.colors.length?`<li>Couleurs : ${X.colors.map(c=>esc(c.n)+" "+Math.round(c.p*100)+" %").join(", ")}</li>`:""}
+   ${X.codes&&X.codes.length?`<li>Code lu : ${X.codes.map(esc).join(", ")}</li>`:""}${X.faces?`<li>${X.faces} visage(s) sur l'image (non identifiés)</li>`:""}</ul>`;}
+function openSlot(s){
+  const pc=$("pc");closePanel();
+  if(s.kind==="film"&&s.html){pc.innerHTML=s.html;}
+  else{const info={...(s.live||s.card)};if(s.userName)info.n=s.userName;if(!info.f)info.f=[];if(!info.d)info.d="";fillCard(pc,info,s.score);}
+  const x=document.createElement("div");x.className="lf";x.innerHTML=slotInfoHTML(s)+`<div class="row"><button class="pbtn" data-a="menu">⋯ Options du slot</button>${s.kind==="obj"&&s.img?'<button class="pbtn" data-a="learn">✚ Apprendre</button>':""}</div>`;
+  x.querySelector('[data-a="menu"]').onclick=e=>{e.stopPropagation();openSlotMenu(s);};
+  const lb=x.querySelector('[data-a="learn"]');if(lb)lb.onclick=e=>{e.stopPropagation();slotLearn(s,lb);};
+  pc.appendChild(x);panel.classList.add("open");panelTrackId=null;window.__TL.panel={slot:s.id,name:slotName(s)};}
+function openSlotMenu(s){
+  const pc=$("pc");closePanel();
+  pc.innerHTML=`<div class="lf"><div class="id"><span>SLOT</span><span>${esc(s.kind.toUpperCase())}</span></div><h2>${esc(slotName(s))}</h2>
+   ${s.thumb?`<img class="pimg" alt="" src="${esc(s.thumb)}" referrerpolicy="no-referrer" style="max-width:120px">`:""}
+   <label for="srn">RENOMMER</label><input id="srn" maxlength="40" value="${esc(slotName(s))}" autocomplete="off">
+   <div class="row"><button class="pbtn" id="srnok">✔ Renommer</button><button class="pbtn" id="spin">${s.pinned?"📌 Désépingler":"📌 Épingler"}</button></div>
+   <div class="row"><button class="pbtn" id="sopen">▸ Ouvrir la fiche</button>${s.kind!=="film"&&s.kind!=="face"?'<button class="pbtn" id="sreidx">⟳ Réindexer</button>':""}</div>
+   <div class="row">${s.kind==="obj"&&s.img?'<button class="pbtn" id="slearn">✚ Envoyer à Apprendre</button>':""}<button class="pbtn" id="sdel">🗑 Supprimer</button></div></div>`;
+  const on=(id,fn)=>{const b=$(id);if(b)b.onclick=e=>{e.stopPropagation();fn(b);};};
+  on("srnok",()=>{const v=$("srn").value.trim();s.userName=v&&v!==s.name?v:"";if(s.idx&&s.idx.tags&&v)s.idx.tags=[...new Set(s.idx.tags.concat(nrm(v)))];slotSave(s);slotRender();openSlot(s);});
+  on("spin",()=>{s.pinned=!s.pinned;slotSave(s);slotRender();openSlotMenu(s);});
+  on("sopen",()=>openSlot(s));
+  on("sreidx",()=>{s.idx.status="wait";s.idx.refined=null;slotSave(s);slotRender();idxRun=false;idxPump();openSlot(s);});
+  on("slearn",b=>slotLearn(s,b));
+  on("sdel",()=>{if(!confirm("Supprimer le slot « "+slotName(s)+" » ?"))return;slots=slots.filter(x=>x!==s);slotDel(s.id);slotRender();closePanel();});
+  panel.classList.add("open");panelTrackId=null;window.__TL.panel={slotMenu:s.id,name:slotName(s)};}
+async function slotLearn(s,btn){
+  if(!clipOK()){alert("La mémoire étendue est encore en chargement… réessayez dans un instant.");return;}
+  if(btn)btn.textContent="… ANALYSE";
+  const im=await loadImgURL(s.img),W=im.naturalWidth,H=im.naturalHeight,c=document.createElement("canvas");c.width=W;c.height=H;c.getContext("2d").drawImage(im,0,0);
+  const name=slotName(s),embs=[];
+  for(const [k,f] of [[1,0],[0.85,0],[1,1],[0.7,0]]){const e=await window.CLIPX.embed(cropSquare(c,W,H,[0,0,W,H],k,f));embs.push(Array.from(e,x=>+x.toFixed(4)));}
+  const th=document.createElement("canvas");th.width=th.height=64;th.getContext("2d").drawImage(c,0,0,64,64);
+  let L=learned.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(L)L.embs=L.embs.concat(embs).slice(-16);else{L={id:Date.now(),name,note:"Appris depuis un slot",date:Date.now(),embs,thumb:th.toDataURL("image/jpeg",.7)};learned.push(L);}
+  saveLearned();window.__TL.learnedCount=learned.length;
+  s.card=cardJSON(learnedCard(L,1));s.live=null;s.score=1;slotSave(s);slotRender();
+  if(btn)btn.textContent="✔ Appris : "+name;setStatus("✔ OBJET APPRIS : "+name.toUpperCase());}
+function slotsExport(){const blob=new Blob([JSON.stringify({app:"Table de lecture",version:APP_VER,date:new Date().toISOString(),slots:slots.map(slotStrip)},null,1)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="table-lecture-slots.json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},2000);}
+function slotsClear(){if(!confirm("Vider tous les slots ("+slots.length+") ? Les objets appris et l'historique des codes sont conservés."))return false;slots=[];slotTx("readwrite",st=>st.clear());slotRender();return true;}
+function slotsControls(el){
+  el.innerHTML=`<h3>SLOTS : RÉGLAGES</h3><label for="spos">POSITION DE LA BARRE</label><select id="spos"><option value="bas">En bas</option><option value="gauche">À gauche</option><option value="droite">À droite</option></select>
+   <label for="smax">NOMBRE MAXIMUM DE SLOTS</label><select id="smax">${[12,24,48,96].map(n=>`<option value="${n}">${n}</option>`).join("")}</select>
+   <p style="font-size:12px;opacity:.8">${slots.length} slot(s) · les plus anciens non épinglés sont retirés en premier. Les visages ne sont jamais gardés en photo.</p>
+   <div class="row"><button class="pbtn" id="sexp">⇩ Exporter (JSON)</button><button class="pbtn" id="sclr">🗑 Tout vider</button></div>`;
+  const p=el.querySelector("#spos"),m=el.querySelector("#smax");p.value=slotPos();m.value=String(slotMax());
+  p.onchange=()=>{localStorage.setItem("tableLecture.slotPos",p.value);placeSlots();};m.onchange=()=>{localStorage.setItem("tableLecture.slotMax",m.value);slotEvict();slotRender();};
+  [p,m].forEach(x=>x.onclick=e=>e.stopPropagation());
+  el.querySelector("#sexp").onclick=e=>{e.stopPropagation();slotsExport();};
+  el.querySelector("#sclr").onclick=e=>{e.stopPropagation();if(slotsClear())slotsControls(el);};}
+function openSlotsManager(){const pc=$("pc");closePanel();
+  pc.innerHTML=`<div class="lf"><div class="id"><span>SLOTS</span><span>${slots.length} / ${slotMax()}</span></div><h2>Mes slots</h2>
+   <p>Chaque objet identifié est gardé ici avec sa fiche : touchez une vignette pour la rouvrir sans nouvelle analyse, appuyez longuement pour la renommer, l'épingler ou la supprimer. ${pref("slotIndex")?"Une analyse approfondie (pistes, texte, couleurs, codes) les indexe en arrière-plan.":"Indexation automatique désactivée (⚙)."}</p>
+   <p style="font-size:12px">Indexés : ${slots.filter(s=>s.idx.status==="done").length} · en attente : ${slots.filter(s=>s.idx.status==="wait"||s.idx.status==="run").length}</p><div id="smgr"></div></div>`;
+  slotsControls(pc.querySelector("#smgr"));panel.classList.add("open");panelTrackId=null;window.__TL.panel={slots:true};}
+addEventListener("tl-pref",e=>{const k=e.detail.k;if(k==="slots"||k==="*"){slotRender();}if(k==="slotIndex"||k==="*"){for(const s of slots)if(s.idx.status==="off"&&s.kind!=="face"&&s.kind!=="film"&&pref("slotIndex"))s.idx.status="wait";idxKick();}});
+slotOpen().then(async db=>{slotIdb=db;const all=await new Promise((res,rej)=>{const r=db.transaction(SLOT_ST).objectStore(SLOT_ST).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});
+  slots=all.map(s=>({...s,idx:s.idx||{status:"wait",tags:[]}}));for(const s of slots)if(s.idx.status==="run")s.idx.status="wait";slotRender();window.__TL.slotsLoaded=true;
+  addEventListener("clip-ready",idxKick);idxKick();}).catch(e=>{window.__TL.errors.push("slots: "+e.message);window.__TL.slotsLoaded=true;});
+window.TLS={get slots(){return slots;},capture:slotCapture,open:openSlot,menu:openSlotMenu,manager:openSlotsManager,render:slotRender,place:placeSlots,updCode:slotUpdCode,addFilm:slotAddFilm,clear:()=>{slots=[];slotTx("readwrite",st=>st.clear());slotRender();},controls:slotsControls,pump:idxPump,reuse:slotReuse,learn:slotLearn,exportJSON:slotsExport};
+
 loadModels();
 </script>
 <script>
@@ -1391,7 +1640,7 @@ const pc=$("pc");
 let ACT={},actN=0;
 function act(fn){const k="x"+(++actN);ACT[k]=fn;return `data-x="${k}"`;}
 pc.addEventListener("click",e=>{const b=e.target.closest("[data-x]");if(!b)return;const f=ACT[b.dataset.x];if(f){e.stopPropagation();e.preventDefault();f(b,e);}});
-function page(html,meta){ACT=Object.fromEntries(Object.entries(ACT).slice(-400));pc.innerHTML=html;panelTrackId=null;panel.classList.add("open");panel.scrollTop=0;T.panel=Object.assign({page:true},meta||{});return pc;}
+function page(html,meta){ACT=Object.fromEntries(Object.entries(ACT).slice(-400));pc.innerHTML=html;panelTrackId=null;panel.classList.add("open");panel.scrollTop=0;T.panel=Object.assign({page:true},meta||{});if(meta&&meta.work&&window.TLS)try{TLS.addFilm(meta,html);}catch(e){}return pc;}
 function onEnter(id,fn){const el=$(id);if(el)el.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();fn();}});}
 const hhmm=t=>new Date(t).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
 const openExt=u=>{try{const x=new URL(u);if(x.protocol==="https:")window.open(x.href,"_blank","noopener,noreferrer");}catch(e){}};
