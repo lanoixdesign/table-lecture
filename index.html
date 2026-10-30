@@ -3,6 +3,7 @@
 <head>
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta charset="utf-8">
+<script>try{performance.setResourceTimingBufferSize(2000);}catch(e){}</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#00141a">
 <link rel="manifest" href="manifest.webmanifest">
@@ -173,7 +174,7 @@ body.off-anim #sel.run{animation:none}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v5.3</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.3</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
+  <div id="hud"><span>TABLE·LECTURE v5.4</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.4</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
   <div id="status">INITIALISATION</div>
   <div id="minis"></div>
   <div id="sel"></div>
@@ -1238,7 +1239,7 @@ function selClick(e){ // renvoie true si le clic concerne le cadre
 }
 window.TLSEL={get SEL(){return SEL;},get selT(){return selT;},dismissSel,analyzeSel};
 addEventListener("error",e=>window.__TL.errors.push(String(e.message)));
-const APP_VER="5.3";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
+const APP_VER="5.4";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
 function checkUpdate(manual){if(window.TLPWA&&TLPWA.reg)return TLPWA.check(manual);if(!manual&&navigator.serviceWorker&&navigator.serviceWorker.controller)return;fetch(location.pathname+"?nv="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const APP_VER="([^"]+)"/);const nv=m&&m[1];
   if(nv&&nv!==APP_VER){const k="tableLecture.upd."+nv;if(manual||!sessionStorage.getItem(k)){sessionStorage.setItem(k,"1");location.replace(location.pathname+"?v="+encodeURIComponent(nv));}}
   else if(manual)alert("Vous avez la dernière version (v"+APP_VER+").");}).catch(()=>{if(manual)alert("Vérification impossible (hors ligne ?).");});}
@@ -1857,6 +1858,17 @@ const fmt=b=>b>1e9?(b/1e9).toFixed(2)+" Go":b>1e6?(b/1e6).toFixed(1)+" Mo":Math.
 async function usage(){if(!navigator.storage||!navigator.storage.estimate)return null;const e=await navigator.storage.estimate();return e;}
 async function cacheInfo(){const out={};if(!window.caches)return out;for(const k of await caches.keys()){const c=await caches.open(k);out[k]=(await c.keys()).length;}return out;}
 P.usage=usage;P.cacheInfo=cacheInfo;
+/* « réchauffage » : les fichiers chargés avant que le service worker contrôle la page (1re visite)
+   sont redemandés à travers lui pour être mis en cache (sinon ils ne vivraient que dans le cache HTTP). */
+const MODEL_RE=/(^|\.)(jsdelivr\.net|unpkg\.com|storage\.googleapis\.com|tfhub\.dev|kaggle\.com|kaggleusercontent\.com|huggingface\.co|hf\.co|projectnaptha\.com)$/;
+P.warm=async()=>{if(!navigator.serviceWorker||!navigator.serviceWorker.controller||!window.caches||!navigator.onLine)return 0;
+  const c=await caches.open("tl-models-1");let n=0;
+  const urls=[...new Set(performance.getEntriesByType("resource").map(e=>e.name))].filter(u=>{try{const x=new URL(u);return /^https:/.test(x.protocol)&&MODEL_RE.test(x.hostname);}catch(e){return false;}});
+  for(const u of urls){if(await c.match(u))continue;try{const r=await fetch(u,{mode:"cors",credentials:"omit"});if(r.ok){await r.arrayBuffer();n++;}}catch(e){}}
+  window.__TL.warmed=(window.__TL.warmed||0)+n;return n;};
+let warmT=null;const warmSoon=ms=>{clearTimeout(warmT);warmT=setTimeout(()=>P.warm().catch(()=>{}),ms);};
+addEventListener("clip-ready",()=>warmSoon(3000));
+if(navigator.serviceWorker){navigator.serviceWorker.addEventListener("controllerchange",()=>warmSoon(5000));addEventListener("load",()=>warmSoon(25000));}
 async function refreshUse(el){const u=await usage(),ci=await cacheInfo(),pers=navigator.storage&&navigator.storage.persisted?await navigator.storage.persisted():false;
   const n=Object.entries(ci).filter(([k])=>k.startsWith("tl-models")).reduce((a,[,v])=>a+v,0);
   el.textContent=(u?"Espace utilisé : "+fmt(u.usage)+" sur "+fmt(u.quota)+" disponibles. ":"")+n+" fichier(s) de modèles en cache"+(pers?" · stockage protégé":"")+".";}
@@ -1867,6 +1879,7 @@ P.download=async(onStep)=>{
   try{navigator.storage&&navigator.storage.persist&&await navigator.storage.persist();}catch(e){}
   const steps=[
     ["Appli et vocabulaire",async()=>{const c=await caches.open("tl-shell-"+APP_VER).catch(()=>null);for(const u of ["./","index.html","credits.html","vocab.json","manifest.webmanifest"]){const r=await fetch(u);if(c&&r.ok)await c.put(u,r.clone()).catch(()=>{});}}],
+    ["Bibliothèques déjà chargées",async()=>{if(navigator.serviceWorker&&!navigator.serviceWorker.controller)await wait(()=>navigator.serviceWorker.controller,10000);await P.warm();}],
     ["Détection rapide (COCO-SSD)",async()=>{if(!window.__TL.coco)await wait(()=>window.__TL.coco,180000);}],
     ["Mémoire étendue (MobileCLIP)",async()=>{if(!(window.CLIPX&&window.CLIPX.ready)){const ok=await wait(()=>window.CLIPX&&window.CLIPX.ready,300000);if(!ok)throw new Error("MobileCLIP non chargé");}}],
     ["Visages (détection, expressions, reconnaissance)",async()=>{await faceModel("det");await faceModel("expr");await faceModel("rec");}],
@@ -1877,6 +1890,7 @@ P.download=async(onStep)=>{
   for(let i=0;i<steps.length;i++){onStep&&onStep(i,steps.length,steps[i][0],null);
     try{await steps[i][1]();res.push([steps[i][0],true]);}catch(e){res.push([steps[i][0],false,e.message]);}
     onStep&&onStep(i+1,steps.length,steps[i][0],res[res.length-1]);}
+  try{await P.warm();}catch(e){}
   localStorage.setItem("tableLecture.offlineReady",JSON.stringify({v:APP_VER,date:Date.now(),ok:res.every(r=>r[1])}));
   window.__TL.offlineDl=res;return res;};
 P.clear=async()=>{if(!window.caches)return 0;let n=0;for(const k of await caches.keys()){if(k.startsWith("tl-models")||k.startsWith("tl-data")||k==="transformers-cache"){await caches.delete(k);n++;}}localStorage.removeItem("tableLecture.offlineReady");return n;};
