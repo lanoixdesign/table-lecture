@@ -5,6 +5,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#00141a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Table·Lecture">
+<meta name="application-name" content="Table de lecture">
 <title>Table de lecture — Analyse holographique</title>
 <style>
 :root{--c:#00f0ff;--c2:#7ffcff;--bg:#00090d;--warn:#ffb347}
@@ -56,8 +65,14 @@ body.off-wx #wx,body.off-mem #mem,body.off-fps #fps,body.off-status #status,body
 body.off-bPhoto #bar label.btn,body.off-bLearn #bLearn,body.off-bFilms #bFilms,body.off-bTV #bTV,body.off-bReco #bReco,body.off-history #chist,
 body.off-anim .scan,body.off-details .mini small,body.off-details .mini .tap,body.off-pct .mini .p,body.off-pct .fc .conf,body.off-pct .fc .pctrow{display:none!important}
 body.off-anim #sel.run{animation:none}
-#gear{position:fixed;top:calc(env(safe-area-inset-top) + 4px);left:calc(env(safe-area-inset-left) + 4px);z-index:6;width:44px;height:44px;max-width:44px;flex:none;padding:0;display:flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center;font-size:24px;letter-spacing:0;line-height:1;border-radius:50%;background:rgba(0,20,26,.85);text-shadow:0 0 8px var(--c);pointer-events:auto;text-transform:none}
+#gear{position:fixed;top:calc(env(safe-area-inset-top) + 4px);left:calc(env(safe-area-inset-left) + 4px);z-index:11;width:44px;height:44px;max-width:44px;flex:none;padding:0;display:flex!important;visibility:visible!important;opacity:1!important;align-items:center;justify-content:center;font-size:24px;letter-spacing:0;line-height:1;border-radius:50%;background:rgba(0,20,26,.85);text-shadow:0 0 8px var(--c);pointer-events:auto;text-transform:none}
 #hud{overflow:hidden}#hud span{min-width:0;flex:0 1 auto;overflow:hidden;text-overflow:ellipsis}
+#offl{position:fixed;top:calc(env(safe-area-inset-top) + 52px);left:calc(env(safe-area-inset-left) + 4px);z-index:6;font-size:9px;letter-spacing:1px;padding:3px 6px;color:#ffd166;border:1px solid #ffd166;background:rgba(26,18,0,.85);box-shadow:0 0 8px rgba(255,209,102,.4);pointer-events:none}
+#offl[hidden],#upd[hidden],#toast[hidden]{display:none}
+#upd{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 96px);z-index:12;display:flex;gap:10px;align-items:center;padding:8px 10px 8px 14px;font-size:12px;letter-spacing:1px;background:rgba(0,20,26,.95);border:1px solid var(--c);box-shadow:0 0 14px rgba(0,240,255,.5);white-space:nowrap}
+#upd button{flex:none;padding:8px 12px;max-width:none}
+#toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top) + 120px);z-index:12;max-width:88vw;padding:9px 12px;font-size:12px;line-height:1.4;background:rgba(26,18,0,.94);color:#ffe7a8;border:1px solid #ffd166;box-shadow:0 0 12px rgba(255,209,102,.4)}
+#offbox .bar{height:8px;border:1px solid var(--c);margin:8px 0;background:rgba(0,30,38,.7)}#offbox .bar i{display:block;height:100%;width:0;background:var(--c);box-shadow:0 0 8px var(--c);transition:width .3s}
 #ver{position:fixed;right:calc(env(safe-area-inset-right) + 8px);bottom:calc(env(safe-area-inset-bottom) + 1px);z-index:4;font-size:9px;letter-spacing:1px;opacity:.7;pointer-events:none;text-shadow:0 0 6px var(--c)}
 .setg{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid rgba(0,240,255,.12);font-size:13px;cursor:pointer}
 .setg input{width:20px;height:20px;accent-color:#00f0ff;flex:none}.setg small{display:block;opacity:.65;font-size:10px}
@@ -158,7 +173,7 @@ body.off-anim #sel.run{animation:none}
   <canvas id="ov"></canvas>
   <div class="scan"></div><div class="vign"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div id="hud"><span>TABLE·LECTURE v5.1</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.1</div>
+  <div id="hud"><span>TABLE·LECTURE v5.3</span><span id="mem">MÉMOIRE …</span><span id="fps">-- FPS</span></div><button id="gear" type="button" aria-label="Paramètres" title="Paramètres">⚙</button><div id="ver">v5.3</div><div id="offl" role="status" hidden>⚠ HORS CONNEXION</div><div id="upd" hidden><span>Nouvelle version disponible</span><button type="button" id="updgo">Recharger</button></div><div id="toast" role="status" hidden></div>
   <div id="status">INITIALISATION</div>
   <div id="minis"></div>
   <div id="sel"></div>
@@ -177,7 +192,7 @@ body.off-anim #sel.run{animation:none}
   <div class="ring"></div>
   <h1>TABLE DE LECTURE</h1>
   <p>Pointez la caméra vers la table et posez un objet. Le système l'identifie et affiche sa fiche d'analyse. Touchez un objet pour ouvrir sa fiche complète, ou ailleurs pour figer l'image. « Multi » / « Un seul » change le mode d'affichage. Avec deux doigts (ou en glissant à la souris), encadrez un objet pour analyser seulement cette zone.</p>
-  <p>Aussi : météo locale, films & séries, programme TV et « C'est quoi ce film ? » en haut de l'écran. Visages : cadre et expression ; reconnaissance de vos proches seulement si vous l'activez (MÉMOIRE › Visages). ⚙ Paramètres en haut à droite.</p>
+  <p>Aussi : météo locale, films & séries, programme TV et « C'est quoi ce film ? » en haut de l'écran. Visages : cadre et expression ; reconnaissance de vos proches seulement si vous l'activez (MÉMOIRE › Visages). ⚙ Paramètres : bouton rond en haut à gauche.</p>
   <button id="bStart" disabled>Chargement…</button>
   <div id="load">CHARGEMENT DES MODÈLES IA…</div>
   <div id="load2"></div>
@@ -1044,7 +1059,7 @@ function openSettings(){
    <div class="id" style="margin-top:12px"><span>SEUIL DES FICHES</span><span id="seuilv">${Math.round(CONF_T*100)} %</span></div>
    <input type="range" id="seuil" min="40" max="90" step="5" value="${Math.round(CONF_T*100)}" aria-label="Seuil de confiance" style="width:100%;accent-color:#00f0ff">
    <p style="font-size:12px;opacity:.8">En dessous de ce niveau, pas de fiche : seulement un cadre discret « Objet non identifié » (touchez-le pour chercher ou apprendre). Codes-barres/QR (lecture exacte) et objets appris (ressemblance ≥ ${Math.round(LEARN_T*100)} %) ne sont pas concernés.</p>
-   <div id="setl"></div><p style="font-size:12px;opacity:.85;margin-top:14px">Version installée : <b>v${APP_VER}</b> · <a href="#" id="supd" style="color:var(--c2)">vérifier les mises à jour</a></p><button class="pbtn" id="sreset">↺ Réinitialiser les paramètres</button></div>`;
+   <div id="setl"></div><div id="offbox"></div><p style="font-size:12px;opacity:.85;margin-top:14px">Version installée : <b>v${APP_VER}</b> · <a href="#" id="supd" style="color:var(--c2)">vérifier les mises à jour</a></p><button class="pbtn" id="sreset">↺ Réinitialiser les paramètres</button></div>`;
   const L=$("setl");
   SETTINGS.forEach(([g,items])=>{const h=document.createElement("h3");h.textContent=g;L.appendChild(h);
     items.forEach(([k,lab,sub])=>{const r=document.createElement("label");r.className="setg";
@@ -1052,10 +1067,14 @@ function openSettings(){
       r.onclick=e=>e.stopPropagation();r.querySelector("input").onchange=e=>setPref(k,e.target.checked);L.appendChild(r);});});
   const sl=$("seuil");sl.onclick=e=>e.stopPropagation();
   sl.oninput=()=>{setConfT(sl.value/100);$("seuilv").textContent=Math.round(CONF_T*100)+" %";if(typeof drawSel==="function"&&window.TLSEL&&TLSEL.SEL)drawSel(true);};
+  if(window.TLPWA)TLPWA.render($("offbox"));
   $("sreset").onclick=e=>{e.stopPropagation();if(confirm("Remettre tous les paramètres par défaut ?")){resetPrefs();CONF_T=0.65;window.__TL.seuil=CONF_T;openSettings();}};
   panel.classList.add("open");window.__TL.panel={settings:true};
 }
-$("gear").addEventListener("click",e=>{e.stopPropagation();openSettings();});
+$("gear").addEventListener("click",e=>{e.stopPropagation();const st=$("start");
+  if(st&&getComputedStyle(st).display!=="none"){st.dataset.hid="1";st.style.display="none";} // Paramètres depuis l'écran d'accueil
+  openSettings();});
+new MutationObserver(()=>{const st=$("start");if(st&&st.dataset.hid&&!$("panel").classList.contains("open")){delete st.dataset.hid;if(!running)st.style.display="";}}).observe($("panel"),{attributes:true,attributeFilter:["class"]});
 document.addEventListener("click",e=>{if(e.target&&e.target.id==="supd"){e.preventDefault();e.stopPropagation();checkUpdate(true);}},true);
 addEventListener("tl-pref",e=>{const k=e.detail.k;
   if((k==="codes"||k==="*")&&pref("codes")&&coco)initScanner();
@@ -1219,8 +1238,8 @@ function selClick(e){ // renvoie true si le clic concerne le cadre
 }
 window.TLSEL={get SEL(){return SEL;},get selT(){return selT;},dismissSel,analyzeSel};
 addEventListener("error",e=>window.__TL.errors.push(String(e.message)));
-const APP_VER="5.1";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
-function checkUpdate(manual){fetch(location.pathname+"?nv="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const APP_VER="([^"]+)"/);const nv=m&&m[1];
+const APP_VER="5.3";window.__TL=window.__TL||{};window.__TL.ver=APP_VER;
+function checkUpdate(manual){if(window.TLPWA&&TLPWA.reg)return TLPWA.check(manual);if(!manual&&navigator.serviceWorker&&navigator.serviceWorker.controller)return;fetch(location.pathname+"?nv="+Date.now(),{cache:"no-store"}).then(r=>r.text()).then(t=>{const m=t.match(/const APP_VER="([^"]+)"/);const nv=m&&m[1];
   if(nv&&nv!==APP_VER){const k="tableLecture.upd."+nv;if(manual||!sessionStorage.getItem(k)){sessionStorage.setItem(k,"1");location.replace(location.pathname+"?v="+encodeURIComponent(nv));}}
   else if(manual)alert("Vous avez la dernière version (v"+APP_VER+").");}).catch(()=>{if(manual)alert("Vérification impossible (hors ligne ?).");});}
 setTimeout(()=>checkUpdate(false),800);
@@ -1638,6 +1657,7 @@ function loadTess(){if(!tessP){tessP=(async()=>{
     if(!window.Tesseract)await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";s.onload=res;s.onerror=()=>rej(new Error("tesseract.js injoignable"));document.head.appendChild(s);});
     return await Tesseract.createWorker(["fra","eng"],1,{logger:m=>{if(tessLog)tessLog(m);}});})();
   tessP.catch(()=>{tessP=null;});}return tessP;}
+window.TLloadTess=loadTess;
 function grabFrame(){let src,w,h;
   if(frozenMode&&frozen.width&&frozen.style.display!=="none"){src=frozen;w=frozen.width;h=frozen.height;}
   else if(stream&&video.videoWidth){src=video;w=video.videoWidth;h=video.videoHeight;}else return null;
@@ -1797,6 +1817,87 @@ const fire=(n,d)=>dispatchEvent(new CustomEvent(n,{detail:d}));
     window.CLIPX.ready=true;window.__TL.clipLoadMs=Math.round(performance.now()-t0);
     fire("clip-ready");
   }catch(e){console.error(e);fire("clip-failed",e.message||String(e));}
+})();
+</script>
+<script>
+/* ================= PWA : service worker, mises à jour, hors connexion (v5.2) ================= */
+(()=>{
+const $=id=>document.getElementById(id);
+const P=window.TLPWA={reg:null,offline:!navigator.onLine};
+["upd","toast","offl","gear"].forEach(id=>{const e=$(id);if(e)document.body.appendChild(e);}); // hors de tout contexte d'empilement
+function toast(msg,ms){const t=$("toast");if(!t)return;t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true;},ms||4500);}
+P.toast=toast;
+function setOff(){P.offline=!navigator.onLine;$("offl").hidden=!P.offline;window.__TL.offline=P.offline;}
+addEventListener("online",()=>{setOff();toast("Connexion rétablie.",2500);});
+addEventListener("offline",()=>{setOff();toast("Hors connexion : la reconnaissance continue avec les modèles téléchargés. Météo, fiches en ligne, films et guide TV ne sont plus à jour.",6000);});
+setOff();
+/* messages clairs pour les fonctions qui ont besoin d'Internet */
+const NEED={bFilms:"Films & Séries (recherche Wikipédia/TMDB)",bTV:"Le programme TV",bReco:"« C'est quoi ? » (guide TV en ligne)",wx:"La météo"};
+document.addEventListener("click",e=>{if(navigator.onLine)return;const el=e.target.closest&&e.target.closest("#bFilms,#bTV,#bReco,#wx");
+  if(el)toast("Hors connexion : "+NEED[el.id]+" a besoin d'Internet. Les dernières données déjà consultées s'affichent si elles sont en cache.",6000);},true);
+/* service worker */
+let reloading=false;
+function showUpd(w){P.waiting=w;$("upd").hidden=false;window.__TL.updateReady=true;}
+$("updgo").onclick=e=>{e.stopPropagation();P.userUpd=true;$("updgo").disabled=true;const w=(P.reg&&P.reg.waiting)||P.waiting;if(w&&w.state==="installed"){w.postMessage({type:"SKIP_WAITING"});setTimeout(()=>location.reload(),4000);}else location.reload();};
+P.check=async manual=>{try{await P.reg.update();}catch(e){if(manual)alert("Vérification impossible (hors connexion ?).");return;}
+  if(P.reg.waiting){showUpd(P.reg.waiting);return;}
+  if(P.reg.installing){P.reg.installing.addEventListener("statechange",function(){if(this.state==="installed"&&navigator.serviceWorker.controller)showUpd(this);});if(manual)toast("Nouvelle version en cours de téléchargement…");return;}
+  if(manual)alert("Vous avez la dernière version (v"+APP_VER+").");};
+if("serviceWorker" in navigator&&location.protocol!=="file:"){
+  const hadCtl=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{if((!hadCtl&&!P.userUpd)||reloading)return;reloading=true;location.reload();});
+  addEventListener("load",()=>{navigator.serviceWorker.register("sw.js",{scope:"./"}).then(reg=>{P.reg=reg;window.__TL.sw="registered";
+    if(reg.waiting&&navigator.serviceWorker.controller)showUpd(reg.waiting);
+    reg.addEventListener("updatefound",()=>{const w=reg.installing;w&&w.addEventListener("statechange",()=>{if(w.state==="installed"&&navigator.serviceWorker.controller)showUpd(w);});});
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&navigator.onLine)reg.update().catch(()=>{});});
+  }).catch(e=>{window.__TL.sw="erreur: "+e.message;});});
+}
+/* stockage */
+const fmt=b=>b>1e9?(b/1e9).toFixed(2)+" Go":b>1e6?(b/1e6).toFixed(1)+" Mo":Math.round(b/1e3)+" ko";
+async function usage(){if(!navigator.storage||!navigator.storage.estimate)return null;const e=await navigator.storage.estimate();return e;}
+async function cacheInfo(){const out={};if(!window.caches)return out;for(const k of await caches.keys()){const c=await caches.open(k);out[k]=(await c.keys()).length;}return out;}
+P.usage=usage;P.cacheInfo=cacheInfo;
+async function refreshUse(el){const u=await usage(),ci=await cacheInfo(),pers=navigator.storage&&navigator.storage.persisted?await navigator.storage.persisted():false;
+  const n=Object.entries(ci).filter(([k])=>k.startsWith("tl-models")).reduce((a,[,v])=>a+v,0);
+  el.textContent=(u?"Espace utilisé : "+fmt(u.usage)+" sur "+fmt(u.quota)+" disponibles. ":"")+n+" fichier(s) de modèles en cache"+(pers?" · stockage protégé":"")+".";}
+/* téléchargement complet pour usage hors connexion */
+const wait=(c,ms)=>new Promise(r=>{const t=setInterval(()=>{if(c()){clearInterval(t);r(true);}},250);setTimeout(()=>{clearInterval(t);r(false);},ms);});
+P.download=async(onStep)=>{
+  if(!navigator.onLine)throw new Error("Pas de connexion : impossible de télécharger maintenant.");
+  try{navigator.storage&&navigator.storage.persist&&await navigator.storage.persist();}catch(e){}
+  const steps=[
+    ["Appli et vocabulaire",async()=>{const c=await caches.open("tl-shell-"+APP_VER).catch(()=>null);for(const u of ["./","index.html","credits.html","vocab.json","manifest.webmanifest"]){const r=await fetch(u);if(c&&r.ok)await c.put(u,r.clone()).catch(()=>{});}}],
+    ["Détection rapide (COCO-SSD)",async()=>{if(!window.__TL.coco)await wait(()=>window.__TL.coco,180000);}],
+    ["Mémoire étendue (MobileCLIP)",async()=>{if(!(window.CLIPX&&window.CLIPX.ready)){const ok=await wait(()=>window.CLIPX&&window.CLIPX.ready,300000);if(!ok)throw new Error("MobileCLIP non chargé");}}],
+    ["Visages (détection, expressions, reconnaissance)",async()=>{await faceModel("det");await faceModel("expr");await faceModel("rec");}],
+    ["Codes-barres et QR (ZXing)",async()=>{const keep=[SCAN.det,SCAN.native,SCAN.ready];try{await useZXing();}finally{if(keep[0]){SCAN.det=keep[0];SCAN.native=keep[1];}}}],
+    ["Lecture de texte (Tesseract, pour « C'est quoi ? »)",async()=>{if(!window.TLloadTess)throw new Error("indisponible");await window.TLloadTess();}],
+  ];
+  const res=[];
+  for(let i=0;i<steps.length;i++){onStep&&onStep(i,steps.length,steps[i][0],null);
+    try{await steps[i][1]();res.push([steps[i][0],true]);}catch(e){res.push([steps[i][0],false,e.message]);}
+    onStep&&onStep(i+1,steps.length,steps[i][0],res[res.length-1]);}
+  localStorage.setItem("tableLecture.offlineReady",JSON.stringify({v:APP_VER,date:Date.now(),ok:res.every(r=>r[1])}));
+  window.__TL.offlineDl=res;return res;};
+P.clear=async()=>{if(!window.caches)return 0;let n=0;for(const k of await caches.keys()){if(k.startsWith("tl-models")||k.startsWith("tl-data")||k==="transformers-cache"){await caches.delete(k);n++;}}localStorage.removeItem("tableLecture.offlineReady");return n;};
+P.render=el=>{if(!el)return;const st=JSON.parse(localStorage.getItem("tableLecture.offlineReady")||"null");
+  el.innerHTML=`<h3>HORS CONNEXION</h3><p style="font-size:12px;opacity:.85">${"serviceWorker" in navigator?"Après téléchargement, la reconnaissance (objets, mémoire étendue, objets appris, codes, visages) fonctionne sans Internet. Météo, fiches Wikipédia/Open Food Facts, films et guide TV restent en ligne (dernières données gardées en secours).":"Ce navigateur ne permet pas le mode hors connexion."}</p>
+   <p style="font-size:12px" id="offst">${st?(st.ok?"✔ Prêt pour le hors connexion":"⚠ Téléchargement partiel")+" (v"+st.v+", "+new Date(st.date).toLocaleDateString("fr-FR")+")":"Pas encore téléchargé pour le hors connexion."}</p>
+   <div class="bar"><i id="offbar"></i></div><p style="font-size:11px;opacity:.8" id="offmsg"></p>
+   <button class="pbtn" id="offdl">⬇ Télécharger pour usage hors connexion</button>
+   <p style="font-size:11px;opacity:.8" id="offuse">…</p>
+   <button class="pbtn" id="offclr">🗑 Vider le cache (modèles et données)</button>`;
+  const use=el.querySelector("#offuse");refreshUse(use);
+  el.querySelector("#offdl").onclick=async e=>{e.stopPropagation();const b=e.currentTarget,bar=el.querySelector("#offbar"),msg=el.querySelector("#offmsg");b.disabled=true;
+    const onClip=ev=>{msg.textContent="Mémoire étendue (MobileCLIP) : "+ev.detail+" %";};addEventListener("clip-progress",onClip);
+    try{const r=await P.download((i,n,name,done)=>{bar.style.width=Math.round(100*i/n)+"%";if(!done)msg.textContent="Étape "+(i+1)+"/"+n+" : "+name+"…";});
+      const bad=r.filter(x=>!x[1]);msg.textContent=bad.length?"Terminé, sauf : "+bad.map(x=>x[0]).join(", ")+".":"Terminé : tout est disponible hors connexion.";
+      el.querySelector("#offst").textContent=bad.length?"⚠ Téléchargement partiel":"✔ Prêt pour le hors connexion (v"+APP_VER+")";}
+    catch(err){msg.textContent=err.message;}
+    finally{removeEventListener("clip-progress",onClip);b.disabled=false;refreshUse(use);}};
+  el.querySelector("#offclr").onclick=async e=>{e.stopPropagation();if(!confirm("Vider le cache des modèles et des données ? Ils seront retéléchargés au prochain usage en ligne."))return;
+    const n=await P.clear();el.querySelector("#offst").textContent="Cache vidé ("+n+" ensemble(s)).";refreshUse(use);};
+};
 })();
 </script>
 </body>
